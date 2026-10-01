@@ -52,6 +52,7 @@ gboolean girara_callback_view_button_release_event(GtkGestureClick* gesture, gin
  * @return false to propagate the event further.
  */
 gboolean girara_process_view_key(girara_session_t* session, guint keyval, guint clean);
+gboolean girara_process_view_key_with_code(girara_session_t* session, guint keyval, guint keycode, guint clean);
 
 gboolean girara_callback_view_button_motion_notify_event(GtkEventControllerMotion* controller, gdouble x, gdouble y,
                                                          girara_session_t* session);

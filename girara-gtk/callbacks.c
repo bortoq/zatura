@@ -18,17 +18,11 @@ static const guint ALL_ACCELS_MASK = GDK_CONTROL_MASK | GDK_SHIFT_MASK | GDK_ALT
 static const guint MOUSE_MASK = GDK_CONTROL_MASK | GDK_SHIFT_MASK | GDK_ALT_MASK | GDK_BUTTON1_MASK | GDK_BUTTON2_MASK |
                                 GDK_BUTTON3_MASK | GDK_BUTTON4_MASK | GDK_BUTTON5_MASK;
 
-bool girara_clean_key_mask(GtkEventControllerKey* controller, guint keycode, GdkModifierType state, guint* clean,
-                           guint* keyval) {
+bool girara_clean_key_mask(GtkEventControllerKey* UNUSED(controller), guint keycode, GdkModifierType state,
+                           guint* clean, guint* keyval) {
   *keyval = girara_keycode_to_keyval(keycode, state, *keyval);
-  GdkModifierType consumed = 0;
-  GdkEvent* event          = gtk_event_controller_get_current_event(GTK_EVENT_CONTROLLER(controller));
-  if (event != NULL && gdk_event_get_event_type(event) == GDK_KEY_PRESS) {
-    consumed = gdk_key_event_get_consumed_modifiers(event);
-  }
-
   if (clean != NULL) {
-    *clean = state & ~consumed & ALL_ACCELS_MASK;
+    *clean = state & ALL_ACCELS_MASK;
   }
 
   /* numpad numbers */
@@ -80,10 +74,14 @@ gboolean girara_callback_view_key_press_event(GtkEventControllerKey* controller,
     return false;
   }
 
-  return girara_process_view_key(session, keyval, clean);
+  return girara_process_view_key_with_code(session, keyval, girara_shortcut_keycode(keycode, keyval_in), clean);
 }
 
 gboolean girara_process_view_key(girara_session_t* session, guint keyval, guint clean) {
+  return girara_process_view_key_with_code(session, keyval, 0, clean);
+}
+
+gboolean girara_process_view_key_with_code(girara_session_t* session, guint keyval, guint keycode, guint clean) {
   g_return_val_if_fail(session != NULL, FALSE);
 
   girara_session_private_t* session_private = session->private_data;
@@ -95,9 +93,14 @@ gboolean girara_process_view_key(girara_session_t* session, guint keyval, guint 
       break;
     }
 
-    if (keyval == shortcut->key &&
-        (clean == shortcut->mask || (shortcut->key >= 0x21 && shortcut->key <= 0x7E && clean == GDK_SHIFT_MASK)) &&
-        (session->modes.current_mode == shortcut->mode || shortcut->mode == 0) && shortcut->function != NULL) {
+    const bool matched =
+        keycode != 0 && shortcut->physical_keycode != 0
+            ? keycode == shortcut->physical_keycode && clean == shortcut->physical_mask
+            : keyval == shortcut->key &&
+                  (clean == shortcut->mask ||
+                   (shortcut->key >= 0x21 && shortcut->key <= 0x7E && clean == GDK_SHIFT_MASK));
+    if (matched && (session->modes.current_mode == shortcut->mode || shortcut->mode == 0) &&
+        shortcut->function != NULL) {
       const int t = (session_private->buffer.n > 0) ? session_private->buffer.n : 1;
       for (int i = 0; i < t; i++) {
         if (shortcut->function(session, &(shortcut->argument), NULL, session_private->buffer.n) == false) {

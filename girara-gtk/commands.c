@@ -9,6 +9,7 @@
 #include <string.h>
 
 #include "internal.h"
+#include "keycodes.h"
 #include "session.h"
 #include "settings.h"
 #include "shortcuts.h"
@@ -38,15 +39,20 @@ static void girara_cmd_display_shortcut(girara_session_t* session, const char* k
   g_strv_builder_add(builder, ": ");
 
   /* find shortcut */
+  guint implicit_modifiers     = 0;
+  const guint physical_keycode = girara_keyval_to_keycode(key, &implicit_modifiers);
+  const guint physical_mask    = modifier | implicit_modifiers;
   girara_shortcut_t* shortcut = NULL;
   for (size_t idx = 0; idx != girara_list_size(session->bindings.shortcuts); ++idx) {
     girara_shortcut_t* shortcuts_it = girara_list_nth(session->bindings.shortcuts, idx);
-    bool eq_mask                    = shortcuts_it->mask == modifier;
-    bool eq_key                     = shortcuts_it->key == key;
-    bool eq_mode                    = shortcuts_it->mode == mode || mode == 0;
-    bool zero_mask_key              = (modifier != 0 || key != 0);
+    bool eq_mask       = shortcuts_it->mask == modifier;
+    bool eq_key        = shortcuts_it->key == key;
+    bool eq_physical   = physical_keycode != 0 && shortcuts_it->physical_keycode == physical_keycode &&
+                         shortcuts_it->physical_mask == physical_mask;
+    bool eq_mode       = shortcuts_it->mode == mode || mode == 0;
+    bool zero_mask_key = (modifier != 0 || key != 0);
 
-    if ((eq_mask && eq_key && eq_mode && zero_mask_key) == false) {
+    if (((eq_mask && eq_key && zero_mask_key) || eq_physical) == false || eq_mode == false) {
       continue;
     }
 

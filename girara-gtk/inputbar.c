@@ -12,6 +12,7 @@
 #include "internal.h"
 #include "session.h"
 #include "shortcuts.h"
+#include "keycodes.h"
 
 typedef struct {
   GtkEntry* entry;
@@ -67,11 +68,19 @@ GtkEntry* girara_inputbar_get_entry(GiraraInputbar* inputbar) {
 }
 
 gboolean girara_process_inputbar_key(girara_session_t* session, guint keyval, guint clean) {
+  return girara_process_inputbar_key_with_code(session, keyval, 0, clean);
+}
+
+gboolean girara_process_inputbar_key_with_code(girara_session_t* session, guint keyval, guint keycode, guint clean) {
   g_return_val_if_fail(session != NULL, FALSE);
 
   for (size_t idx = 0; idx != girara_list_size(session->bindings.inputbar_shortcuts); ++idx) {
     girara_inputbar_shortcut_t* inputbar_shortcut = girara_list_nth(session->bindings.inputbar_shortcuts, idx);
-    if (inputbar_shortcut->key == keyval && inputbar_shortcut->mask == clean) {
+    const bool matched =
+        keycode != 0 && inputbar_shortcut->physical_keycode != 0
+            ? keycode == inputbar_shortcut->physical_keycode && clean == inputbar_shortcut->physical_mask
+            : inputbar_shortcut->key == keyval && inputbar_shortcut->mask == clean;
+    if (matched) {
       girara_debug("found shortcut for key %u and mask %x", keyval, clean);
       if (inputbar_shortcut->function) {
         inputbar_shortcut->function(session, &(inputbar_shortcut->argument), NULL, 0);
@@ -135,7 +144,7 @@ static gboolean inputbar_key_press_event(GtkEventControllerKey* controller, guin
   }
   girara_debug("Proccessing key %u with mask %x.", keyval, clean);
 
-  if (girara_process_inputbar_key(session, keyval, clean)) {
+  if (girara_process_inputbar_key_with_code(session, keyval, girara_shortcut_keycode(keycode, keyval_in), clean)) {
     return TRUE;
   }
 

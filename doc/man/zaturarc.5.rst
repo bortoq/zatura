@@ -122,6 +122,10 @@ the *zaturarc* file to make those changes permanent:
       map ! shortcut_function optional_argument
       map ? shortcut_function optional_argument
 
+  Keyboard shortcuts use physical US keyboard positions. For example, ``map a``
+  uses the same key when the active layout is English or Russian. Text typed
+  into the input bar and dialogs still follows the active layout.
+
 *Using modifiers*
   It is also possible to use modifiers like the Control or Alt button on the
   keyboard. It is possible to use the following modifiers:

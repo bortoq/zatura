@@ -4,6 +4,7 @@
 
 #include "internal.h"
 #include "shortcuts.h"
+#include "keycodes.h"
 
 struct _GiraraDialog {
   GiraraInputbar parent_instance;
@@ -26,11 +27,13 @@ static void dialog_activate(GtkEntry* entry, GiraraDialog* dialog) {
 
 static gboolean dialog_key_press(GtkEventControllerKey* controller, guint keyval, guint keycode,
                                  GdkModifierType state, GiraraDialog* dialog) {
+  const guint active_keyval = keyval;
   guint clean = 0;
   if (!girara_clean_key_mask(controller, keycode, state, &clean, &keyval)) {
     return FALSE;
   }
-  return girara_process_inputbar_key(dialog->session, keyval, clean);
+  return girara_process_inputbar_key_with_code(dialog->session, keyval,
+                                                girara_shortcut_keycode(keycode, active_keyval), clean);
 }
 
 static void girara_dialog_class_init(GiraraDialogClass* klass) {

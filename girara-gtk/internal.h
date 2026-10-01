@@ -154,6 +154,8 @@ struct girara_argument_mapping_s {
 struct girara_shortcut_s {
   guint mask;                          /**< Mask */
   guint key;                           /**< Key */
+  guint physical_keycode;              /**< Reference US hardware keycode */
+  guint physical_mask;                 /**< Explicit modifiers plus implicit Shift */
   char* buffered_command;              /**< Buffer command */
   girara_argument_t argument;          /**< Given argument */
   girara_shortcut_function_t function; /**< The correspondending function */
@@ -166,6 +168,8 @@ struct girara_shortcut_s {
 struct girara_inputbar_shortcut_s {
   guint mask;                          /**< Mask */
   guint key;                           /**< Key */
+  guint physical_keycode;              /**< Reference US hardware keycode */
+  guint physical_mask;                 /**< Explicit modifiers plus implicit Shift */
   girara_shortcut_function_t function; /**< Function */
   girara_argument_t argument;          /**< Given argument */
 };

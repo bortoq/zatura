@@ -6,6 +6,7 @@
 #include <string.h>
 #include <girara-gtk/session.h>
 #include <girara-gtk/callbacks.h>
+#include <girara-gtk/keycodes.h>
 #include <girara/datastructures.h>
 
 #include "callbacks.h"
@@ -18,8 +19,8 @@
 static void mark_add(zathura_t* zathura, int key);
 static void mark_evaluate(zathura_t* zathura, int key);
 
-static gboolean cb_marks_one_shot(GtkEventControllerKey* controller, guint keyval, guint UNUSED(keycode),
-                                  GdkModifierType UNUSED(state), gpointer user_data) {
+static gboolean cb_marks_one_shot(GtkEventControllerKey* controller, guint keyval, guint keycode,
+                                  GdkModifierType state, gpointer user_data) {
   girara_session_t* session = user_data;
   g_return_val_if_fail(session != NULL && session->global.data != NULL, FALSE);
   zathura_t* zathura = session->global.data;
@@ -30,6 +31,8 @@ static gboolean cb_marks_one_shot(GtkEventControllerKey* controller, guint keyva
 
   /* remove the controller from its own callback so it only fires once */
   gtk_widget_remove_controller(win, ctrl);
+
+  keyval = girara_keycode_to_keyval(keycode, state, keyval);
 
   if (((keyval >= '0' && keyval <= '9') || (keyval >= 'a' && keyval <= 'z') || (keyval >= 'A' && keyval <= 'Z')) ==
       false) {

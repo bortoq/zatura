@@ -10,6 +10,7 @@
 
 #include "callbacks.h"
 #include "internal.h"
+#include "keycodes.h"
 #include "session.h"
 #include "settings.h"
 
@@ -19,20 +20,29 @@ bool girara_shortcut_add(girara_session_t* session, guint modifier, guint key, c
   g_return_val_if_fail(buffer || key || modifier, false);
   g_return_val_if_fail(function != NULL, false);
 
-  girara_argument_t argument = {.n = argument_n, .data = g_strdup(argument_data)};
+  girara_argument_t argument   = {.n = argument_n, .data = g_strdup(argument_data)};
+  guint implicit_modifiers     = 0;
+  const guint physical_keycode = girara_keyval_to_keycode(key, &implicit_modifiers);
+  const guint physical_mask    = modifier | implicit_modifiers;
 
   /* search for existing binding */
   for (size_t idx = 0; idx != girara_list_size(session->bindings.shortcuts); ++idx) {
     girara_shortcut_t* shortcuts_it = girara_list_nth(session->bindings.shortcuts, idx);
-    if (((shortcuts_it->mask == modifier && shortcuts_it->key == key && (modifier != 0 || key != 0)) ||
+    const bool same_physical = physical_keycode != 0 && shortcuts_it->physical_keycode == physical_keycode &&
+                               shortcuts_it->physical_mask == physical_mask;
+    if (((shortcuts_it->mask == modifier && shortcuts_it->key == key && (modifier != 0 || key != 0)) || same_physical ||
          (buffer && shortcuts_it->buffered_command && !g_strcmp0(shortcuts_it->buffered_command, buffer))) &&
         ((shortcuts_it->mode == mode) || (mode == 0))) {
       if (shortcuts_it->argument.data != NULL) {
         g_free(shortcuts_it->argument.data);
       }
 
-      shortcuts_it->function = function;
-      shortcuts_it->argument = argument;
+      shortcuts_it->function         = function;
+      shortcuts_it->argument         = argument;
+      shortcuts_it->mask             = modifier;
+      shortcuts_it->key              = key;
+      shortcuts_it->physical_keycode = physical_keycode;
+      shortcuts_it->physical_mask    = physical_mask;
       return true;
     }
   }
@@ -42,6 +52,8 @@ bool girara_shortcut_add(girara_session_t* session, guint modifier, guint key, c
 
   shortcut->mask             = modifier;
   shortcut->key              = key;
+  shortcut->physical_keycode = physical_keycode;
+  shortcut->physical_mask    = physical_mask;
   shortcut->buffered_command = g_strdup(buffer);
   shortcut->function         = function;
   shortcut->mode             = mode;
@@ -56,10 +68,16 @@ bool girara_shortcut_remove(girara_session_t* session, guint modifier, guint key
   g_return_val_if_fail(session != NULL, false);
   g_return_val_if_fail(buffer || key || modifier, false);
 
+  guint implicit_modifiers     = 0;
+  const guint physical_keycode = girara_keyval_to_keycode(key, &implicit_modifiers);
+  const guint physical_mask    = modifier | implicit_modifiers;
+
   /* search for existing binding */
   for (size_t idx = 0; idx != girara_list_size(session->bindings.shortcuts); ++idx) {
     girara_shortcut_t* shortcuts_it = girara_list_nth(session->bindings.shortcuts, idx);
-    if (((shortcuts_it->mask == modifier && shortcuts_it->key == key && (modifier != 0 || key != 0)) ||
+    const bool same_physical = physical_keycode != 0 && shortcuts_it->physical_keycode == physical_keycode &&
+                               shortcuts_it->physical_mask == physical_mask;
+    if (((shortcuts_it->mask == modifier && shortcuts_it->key == key && (modifier != 0 || key != 0)) || same_physical ||
          (buffer && shortcuts_it->buffered_command && !g_strcmp0(shortcuts_it->buffered_command, buffer))) &&
         shortcuts_it->mode == mode) {
       girara_list_remove(session->bindings.shortcuts, shortcuts_it);
@@ -83,14 +101,23 @@ bool girara_inputbar_shortcut_add(girara_session_t* session, guint modifier, gui
   g_return_val_if_fail(session != NULL, false);
   g_return_val_if_fail(function != NULL, false);
 
-  girara_argument_t argument = {.n = argument_n, .data = argument_data};
+  girara_argument_t argument   = {.n = argument_n, .data = argument_data};
+  guint implicit_modifiers     = 0;
+  const guint physical_keycode = girara_keyval_to_keycode(key, &implicit_modifiers);
+  const guint physical_mask    = modifier | implicit_modifiers;
 
   /* search for existing special command */
   for (size_t idx = 0; idx != girara_list_size(session->bindings.inputbar_shortcuts); ++idx) {
     girara_inputbar_shortcut_t* inp_sh_it = girara_list_nth(session->bindings.inputbar_shortcuts, idx);
-    if (inp_sh_it->mask == modifier && inp_sh_it->key == key) {
-      inp_sh_it->function = function;
-      inp_sh_it->argument = argument;
+    if ((inp_sh_it->mask == modifier && inp_sh_it->key == key) ||
+        (physical_keycode != 0 && inp_sh_it->physical_keycode == physical_keycode &&
+         inp_sh_it->physical_mask == physical_mask)) {
+      inp_sh_it->function         = function;
+      inp_sh_it->argument         = argument;
+      inp_sh_it->mask             = modifier;
+      inp_sh_it->key              = key;
+      inp_sh_it->physical_keycode = physical_keycode;
+      inp_sh_it->physical_mask    = physical_mask;
 
       return true;
     }
@@ -99,10 +126,12 @@ bool girara_inputbar_shortcut_add(girara_session_t* session, guint modifier, gui
   /* create new inputbar shortcut */
   girara_inputbar_shortcut_t* inputbar_shortcut = g_malloc(sizeof(girara_inputbar_shortcut_t));
 
-  inputbar_shortcut->mask     = modifier;
-  inputbar_shortcut->key      = key;
-  inputbar_shortcut->function = function;
-  inputbar_shortcut->argument = argument;
+  inputbar_shortcut->mask             = modifier;
+  inputbar_shortcut->key              = key;
+  inputbar_shortcut->physical_keycode = physical_keycode;
+  inputbar_shortcut->physical_mask    = physical_mask;
+  inputbar_shortcut->function         = function;
+  inputbar_shortcut->argument         = argument;
 
   girara_list_append(session->bindings.inputbar_shortcuts, inputbar_shortcut);
 
@@ -112,10 +141,16 @@ bool girara_inputbar_shortcut_add(girara_session_t* session, guint modifier, gui
 bool girara_inputbar_shortcut_remove(girara_session_t* session, guint modifier, guint key) {
   g_return_val_if_fail(session != NULL, false);
 
+  guint implicit_modifiers = 0;
+  const guint physical_keycode = girara_keyval_to_keycode(key, &implicit_modifiers);
+  const guint physical_mask = modifier | implicit_modifiers;
+
   /* search for existing special command */
   for (size_t idx = 0; idx != girara_list_size(session->bindings.inputbar_shortcuts); ++idx) {
     girara_inputbar_shortcut_t* inp_sh_it = girara_list_nth(session->bindings.inputbar_shortcuts, idx);
-    if (inp_sh_it->mask == modifier && inp_sh_it->key == key) {
+    if ((inp_sh_it->mask == modifier && inp_sh_it->key == key) ||
+        (physical_keycode != 0 && inp_sh_it->physical_keycode == physical_keycode &&
+         inp_sh_it->physical_mask == physical_mask)) {
       girara_list_remove(session->bindings.inputbar_shortcuts, inp_sh_it);
       break;
     }
