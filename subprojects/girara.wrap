@@ -1,0 +1,7 @@
+[wrap-git]
+directory = girara
+url = https://github.com/pwmt/girara.git
+revision = e120cc0c4f486af935f09a07420606925a6f9305
+
+[provide]
+dependency_names = girara

@@ -58,3 +58,29 @@ developer and excludes a full UI redesign. Risk is highest in configuration
 compatibility and the plugin ABI. A practical sequence is to first replace
 girara types behind adapters, then move configuration and bindings, then
 remove the remaining `girara-gtk` layer and the `girara` Meson dependency.
+
+## Minimal plugin compatibility path
+
+The branding commit also renamed public C symbols and the plugin definition
+symbol. Existing zathura plugins therefore cannot be loaded just by adding
+the old plugin directory: they refer to `zathura_*` functions and export a
+`zathura_plugin` definition, while Zatura currently expects `zatura_*` and
+`zatura_plugin`.
+
+The smallest maintainable fix is to restore the historical `zathura_*` C API,
+`ZATHURA_*` plugin macros, and plugin definition symbol in the core source.
+Keep `zatura` for the executable, application ID, UI text, configuration
+directory, and repository. Keep the plugin API and ABI version numbers at 8
+and 9 only if their structs and signatures still match upstream exactly.
+Install the original `zathura.pc` and `<zathura/...>` headers as compatibility
+development files, and search the original `libdir/zathura` plugin directory
+alongside `libdir/zatura`. This also lets upstream plugin source build without
+edits. If co-installation with upstream zathura is required, put the legacy
+development files in a separate prefix or make them an opt-in package to
+avoid file conflicts.
+
+Validate with at least one real upstream plugin built against the original
+headers: confirm its definition symbol, unresolved host symbols, matching
+struct layout, successful load, and document rendering. A second path, adding
+dozens of exported `zathura_*` forwarding symbols to the renamed API, would
+be more code to maintain and more likely to miss a symbol.
