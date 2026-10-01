@@ -743,8 +743,6 @@ static gboolean document_info_open(gpointer data) {
       if (document_info->mode != NULL) {
         if (g_strcmp0(document_info->mode, "presentation") == 0) {
           sc_toggle_presentation(zathura->ui.session, NULL, NULL, 0);
-        } else if (g_strcmp0(document_info->mode, "fullscreen") == 0) {
-          sc_toggle_fullscreen(zathura->ui.session, NULL, NULL, 0);
         } else {
           girara_error("Unknown mode: %s", document_info->mode);
         }

@@ -98,11 +98,13 @@ the *zaturarc* file to make those changes permanent:
   argument which can take one of the following values:
 
   * normal (default)
-  * fullscreen
   * presentation
   * index
+  * insert
 
   The brackets around the value are mandatory.
+  For older configurations, ``[fullscreen]`` is accepted as a deprecated alias
+  for ``[normal]``.
 
 *Single key binding*
   The (possible) second argument defines the used key binding that should be

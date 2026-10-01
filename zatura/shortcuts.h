@@ -285,7 +285,7 @@ bool sc_toggle_index(girara_session_t* session, girara_argument_t* argument, gir
 bool sc_toggle_page_mode(girara_session_t* session, girara_argument_t* argument, girara_event_t* event, unsigned int t);
 
 /**
- * Toggle fullscreen mode
+ * Toggle the window's fullscreen state without changing the shortcut mode.
  *
  * @param session The used girara session
  * @param argument The used argument

@@ -281,6 +281,13 @@ static bool girara_cmd_map_unmap(girara_session_t* session, girara_list_t* argum
   if (tmp_length >= 3 && tmp[0] == '[' && tmp[tmp_size - 1] == ']') {
     g_autofree char* tmp_inner = g_strndup(tmp + 1, tmp_size - 2);
 
+    if (g_strcmp0(tmp_inner, "fullscreen") == 0) {
+      /* Old configuration files used a separate fullscreen shortcut mode. */
+      shortcut_mode = session->modes.normal;
+      is_mode       = true;
+      girara_warning("[fullscreen] is deprecated; using [normal]");
+    }
+
     for (size_t idx = 0; idx != girara_list_size(session->modes.identifiers); ++idx) {
       girara_mode_string_t* mode = girara_list_nth(session->modes.identifiers, idx);
       if (!g_strcmp0(tmp_inner, mode->name)) {

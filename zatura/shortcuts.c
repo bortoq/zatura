@@ -1429,20 +1429,14 @@ bool sc_toggle_fullscreen(girara_session_t* session, girara_argument_t* UNUSED(a
   g_return_val_if_fail(session->global.data != NULL, false);
   zathura_t* zathura = session->global.data;
 
-  if (!zathura_has_document(zathura)) {
-    girara_notify(session, GIRARA_WARNING, _("No document opened."));
-    return false;
+  GtkWindow* window = GTK_WINDOW(session->gtk.window);
+  if (gtk_window_is_fullscreen(window)) {
+    gtk_window_unfullscreen(window);
+  } else {
+    gtk_window_fullscreen(window);
   }
-
-  const girara_mode_t old_mode = girara_mode_get(session);
-  if (old_mode == zathura->modes.fullscreen) {
-    gtk_window_unfullscreen(GTK_WINDOW(session->gtk.window));
+  if (zathura_has_document(zathura)) {
     refresh_view(zathura);
-    girara_mode_set(session, zathura->modes.normal);
-  } else if (old_mode == zathura->modes.normal) {
-    gtk_window_fullscreen(GTK_WINDOW(session->gtk.window));
-    refresh_view(zathura);
-    girara_mode_set(session, zathura->modes.fullscreen);
   }
 
   return false;
@@ -1485,8 +1479,12 @@ bool sc_toggle_presentation(girara_session_t* session, girara_argument_t* UNUSED
       gtk_widget_set_visible(GTK_WIDGET(session->gtk.inputbar), TRUE);
     }
 
-    /* set full screen */
-    gtk_window_unfullscreen(GTK_WINDOW(session->gtk.window));
+    /* restore the window state from before presentation */
+    if (zathura->shortcut.toggle_presentation_mode.was_fullscreen) {
+      gtk_window_fullscreen(GTK_WINDOW(session->gtk.window));
+    } else {
+      gtk_window_unfullscreen(GTK_WINDOW(session->gtk.window));
+    }
 
     /* reset zoom */
     zathura_document_set_zoom(zathura->document, zathura->shortcut.toggle_presentation_mode.zoom);
@@ -1496,6 +1494,8 @@ bool sc_toggle_presentation(girara_session_t* session, girara_argument_t* UNUSED
     /* set mode */
     girara_mode_set(session, zathura->modes.normal);
   } else if (old_mode == zathura->modes.normal) {
+    zathura->shortcut.toggle_presentation_mode.was_fullscreen =
+        gtk_window_is_fullscreen(GTK_WINDOW(session->gtk.window));
     /* backup pages per row */
     girara_setting_get(session, "pages-per-row", &zathura->shortcut.toggle_presentation_mode.pages);
 

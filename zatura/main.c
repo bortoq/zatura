@@ -130,6 +130,7 @@ typedef struct {
   const char* password;
   const char* synctex_fwd;
   const char* mode;
+  bool fullscreen;
   const char* bookmark_name;
   const char* search_string;
   /* file argument exactly as given on the command line */
@@ -151,6 +152,9 @@ static void cb_app_startup(GApplication* app, gpointer data) {
   }
 
   gtk_application_add_window(GTK_APPLICATION(app), GTK_WINDOW(ctx->zathura->ui.session->gtk.window));
+  if (ctx->fullscreen) {
+    gtk_window_fullscreen(GTK_WINDOW(ctx->zathura->ui.session->gtk.window));
+  }
 }
 
 static void cb_app_activate(GApplication* UNUSED(app), gpointer data) {
@@ -266,6 +270,7 @@ GIRARA_VISIBLE int main(int argc, char* argv[]) {
   g_autofree gchar* search_string  = NULL;
   gboolean forkback                = false;
   gboolean print_version           = false;
+  gboolean fullscreen              = false;
   gint page_number                 = ZATHURA_PAGE_NUMBER_UNSPECIFIED;
   gint synctex_pid                 = -1;
 
@@ -286,6 +291,7 @@ GIRARA_VISIBLE int main(int argc, char* argv[]) {
       {"synctex-pid", '\0', 0, G_OPTION_ARG_INT, &synctex_pid, _("Highlight given position in the given process"),
        "pid"},
       {"mode", '\0', 0, G_OPTION_ARG_STRING, &mode, _("Start in a non-default mode"), "mode"},
+      {"fullscreen", '\0', 0, G_OPTION_ARG_NONE, &fullscreen, _("Start with a fullscreen window"), NULL},
       {"bookmark", 'b', 0, G_OPTION_ARG_STRING, &bookmark_name, _("Bookmark to go to"), "bookmark"},
       {"find", 'f', 0, G_OPTION_ARG_STRING, &search_string, _("Search for the given phrase and display results"),
        "string"},
@@ -334,7 +340,11 @@ GIRARA_VISIBLE int main(int argc, char* argv[]) {
 #endif
 
   /* check mode */
-  if (mode && g_strcmp0(mode, "presentation") && g_strcmp0(mode, "fullscreen")) {
+  if (g_strcmp0(mode, "fullscreen") == 0) {
+    /* Accept the old command line spelling as a window state request. */
+    fullscreen = true;
+    g_clear_pointer(&mode, g_free);
+  } else if (mode && g_strcmp0(mode, "presentation")) {
     girara_error("Invalid argument for --mode: %s", mode);
     return -1;
   }
@@ -422,6 +432,7 @@ GIRARA_VISIBLE int main(int argc, char* argv[]) {
       .password       = password,
       .synctex_fwd    = synctex_fwd,
       .mode           = mode,
+      .fullscreen     = fullscreen,
       .bookmark_name  = bookmark_name,
       .search_string  = search_string,
       .raw_file       = NULL,

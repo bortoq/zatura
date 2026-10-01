@@ -46,7 +46,8 @@ complete -c zatura -s l -l log-level -d 'Log level' -x -a 'debug info warning er
 complete -c zatura -s x -l synctex-editor-command -d 'Synctex editor (forwarded to the synctex command)' -x
 complete -c zatura -l synctex-forward -d 'Move to given synctex position' -x
 complete -c zatura -l synctex-pid -d 'Highlight position in given process' -x -a '(__fish_complete_pids)'
-complete -c zatura -l mode -d 'Start in a non-default mode' -x -a 'presentation fullscreen'
+complete -c zatura -l mode -d 'Start in a non-default mode' -x -a 'presentation'
+complete -c zatura -l fullscreen -d 'Start with a fullscreen window'
 complete -c zatura -l fork -d 'Fork into the background'
 complete -c zatura -s h -l help -d 'Show help options'
 complete -c zatura -s v -l version -d 'Print version information'

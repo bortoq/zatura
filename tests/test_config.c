@@ -48,6 +48,26 @@ static void test_config_parse_modifier_keys(void) {
   girara_session_destroy(session);
 }
 
+static void test_fullscreen_binding_alias(void) {
+  setup_logger();
+
+  girara_session_t* session = girara_session_create();
+  g_assert_nonnull(session);
+  g_assert_true(girara_shortcut_mapping_add(session, "testfunc", test_shortcut_func));
+
+  char* filename = NULL;
+  int fd = g_file_open_tmp(NULL, &filename, NULL);
+  g_assert_cmpint(fd, !=, -1);
+  g_assert_true(g_file_set_contents(filename, "map [fullscreen] <F11> testfunc\n", -1, NULL));
+  g_assert_true(girara_config_parse(session, filename));
+  g_assert_true(girara_shortcut_remove(session, 0, GDK_KEY_F11, NULL, session->modes.normal));
+
+  close(fd);
+  g_remove(filename);
+  g_free(filename);
+  girara_session_destroy(session);
+}
+
 static void test_config_parse(void) {
   setup_logger();
 
@@ -92,5 +112,6 @@ int main(int argc, char* argv[]) {
   g_test_init(&argc, &argv, NULL);
   g_test_add_func("/config/parse", test_config_parse);
   g_test_add_func("/config/parse_modifier_keys", test_config_parse_modifier_keys);
+  g_test_add_func("/config/fullscreen_binding_alias", test_fullscreen_binding_alias);
   return g_test_run();
 }

@@ -164,7 +164,6 @@ struct zathura_s {
 
   struct {
     girara_mode_t normal;       /**< Normal mode */
-    girara_mode_t fullscreen;   /**< Fullscreen mode */
     girara_mode_t index;        /**< Index mode */
     girara_mode_t insert;       /**< Insert mode */
     girara_mode_t presentation; /**< Presentation mode */
@@ -229,6 +228,7 @@ struct zathura_s {
       double zoom;
       bool is_status_bar_visible;
       bool is_input_bar_visible;
+      bool was_fullscreen;
       document_widget_mode_t layout_mode;
     } toggle_presentation_mode;
   } shortcut;

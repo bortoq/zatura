@@ -4,6 +4,7 @@
 #include <girara-gtk/session.h>
 
 #include "zatura.h"
+#include "shortcuts.h"
 
 #include "tests.h"
 
@@ -33,6 +34,22 @@ static void test_create(void) {
   g_assert_nonnull(g_getenv("G_TEST_SRCDIR"));
   zathura_set_config_dir(zathura, g_getenv("G_TEST_SRCDIR"));
   g_assert_true(zathura_init(zathura));
+  g_assert_cmpuint(girara_list_size(zathura->ui.session->modes.identifiers), ==, 5);
+  g_assert_cmpint(girara_mode_get(zathura->ui.session), ==, zathura->modes.normal);
+  sc_toggle_fullscreen(zathura->ui.session, NULL, NULL, 0);
+  g_assert_cmpint(girara_mode_get(zathura->ui.session), ==, zathura->modes.normal);
+  girara_mode_set(zathura->ui.session, zathura->modes.index);
+  sc_toggle_fullscreen(zathura->ui.session, NULL, NULL, 0);
+  g_assert_cmpint(girara_mode_get(zathura->ui.session), ==, zathura->modes.index);
+  girara_mode_set(zathura->ui.session, zathura->modes.insert);
+  sc_toggle_fullscreen(zathura->ui.session, NULL, NULL, 0);
+  g_assert_cmpint(girara_mode_get(zathura->ui.session), ==, zathura->modes.insert);
+  girara_mode_set(zathura->ui.session, zathura->modes.presentation);
+  sc_toggle_fullscreen(zathura->ui.session, NULL, NULL, 0);
+  g_assert_cmpint(girara_mode_get(zathura->ui.session), ==, zathura->modes.presentation);
+  girara_mode_set(zathura->ui.session, zathura->ui.session->modes.inputbar);
+  sc_toggle_fullscreen(zathura->ui.session, NULL, NULL, 0);
+  g_assert_cmpint(girara_mode_get(zathura->ui.session), ==, zathura->ui.session->modes.inputbar);
   zathura_free(zathura);
 }
 

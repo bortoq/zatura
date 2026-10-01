@@ -616,7 +616,7 @@ void cb_page_widget_text_selected(ZathuraPageWidget* page, const char* text, voi
 
   zathura_t* zathura = data;
   girara_mode_t mode = girara_mode_get(zathura->ui.session);
-  if (mode != zathura->modes.normal && mode != zathura->modes.fullscreen) {
+  if (mode != zathura->modes.normal) {
     return;
   }
 

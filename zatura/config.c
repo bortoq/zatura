@@ -431,7 +431,6 @@ void config_load_default(zathura_t* zathura) {
 
   /* mode settings */
   zathura->modes.normal       = gsession->modes.normal;
-  zathura->modes.fullscreen   = girara_mode_add(gsession, "fullscreen");
   zathura->modes.index        = girara_mode_add(gsession, "index");
   zathura->modes.insert       = girara_mode_add(gsession, "insert");
   zathura->modes.presentation = girara_mode_add(gsession, "presentation");
@@ -439,11 +438,10 @@ void config_load_default(zathura_t* zathura) {
 #define NORMAL zathura->modes.normal
 #define INSERT zathura->modes.insert
 #define INDEX zathura->modes.index
-#define FULLSCREEN zathura->modes.fullscreen
 #define PRESENTATION zathura->modes.presentation
 
   const girara_mode_t all_modes[] = {
-      NORMAL, INSERT, INDEX, FULLSCREEN, PRESENTATION,
+      NORMAL, INSERT, INDEX, PRESENTATION,
   };
 
   /* Set default mode */
@@ -648,15 +646,8 @@ void config_load_default(zathura_t* zathura) {
   /* Normal mode - Mouse events */
   add_default_mouse_events(gsession, NORMAL);
 
-  /* Fullscreen mode */
-  girara_shortcut_add(gsession, 0, GDK_KEY_F11, NULL, sc_toggle_fullscreen, FULLSCREEN, 0, NULL);
-
-  add_default_shortcuts(gsession, FULLSCREEN);
-
-  /* Fullscreen mode - Mouse events */
-  add_default_mouse_events(gsession, FULLSCREEN);
-
   /* Index mode */
+  girara_shortcut_add(gsession, 0,                GDK_KEY_F11,         NULL, sc_toggle_fullscreen, INDEX, 0,             NULL);
   girara_shortcut_add(gsession, 0,                GDK_KEY_Tab,         NULL, sc_toggle_index,   INDEX, 0,                  NULL);
   girara_shortcut_add(gsession, 0,                GDK_KEY_k,           NULL, sc_navigate_index, INDEX, UP,                 NULL);
   girara_shortcut_add(gsession, 0,                GDK_KEY_j,           NULL, sc_navigate_index, INDEX, DOWN,               NULL);
@@ -689,7 +680,11 @@ void config_load_default(zathura_t* zathura) {
   girara_shortcut_add(gsession, GDK_CONTROL_MASK, GDK_KEY_bracketleft, NULL, sc_toggle_index,   INDEX, 0,                  NULL);
   girara_shortcut_add(gsession, GDK_CONTROL_MASK, GDK_KEY_c,           NULL, sc_toggle_index,   INDEX, 0,                  NULL);
 
+  /* Insert mode */
+  girara_shortcut_add(gsession, 0, GDK_KEY_F11, NULL, sc_toggle_fullscreen, INSERT, 0, NULL);
+
   /* Presentation mode */
+  girara_shortcut_add(gsession, 0, GDK_KEY_F11, NULL, sc_toggle_fullscreen, PRESENTATION, 0, NULL);
   girara_shortcut_add(gsession, 0,              GDK_KEY_J,             NULL, sc_navigate,            PRESENTATION, NEXT,         NULL);
   girara_shortcut_add(gsession, 0,              GDK_KEY_Down,          NULL, sc_navigate,            PRESENTATION, NEXT,         NULL);
   girara_shortcut_add(gsession, 0,              GDK_KEY_KP_Down,       NULL, sc_navigate,            PRESENTATION, NEXT,         NULL);
@@ -724,6 +719,7 @@ void config_load_default(zathura_t* zathura) {
   girara_mouse_event_add(gsession, GDK_CONTROL_MASK, 0,                    sc_mouse_zoom,   PRESENTATION, GIRARA_EVENT_SCROLL_DOWN,  DOWN,     NULL);
 
   /* inputbar shortcuts */
+  girara_inputbar_shortcut_add(gsession, 0, GDK_KEY_F11, sc_toggle_fullscreen, 0, NULL);
   girara_inputbar_shortcut_add(gsession, 0,                GDK_KEY_Escape,       sc_abort,                       0,                           NULL);
   girara_inputbar_shortcut_add(gsession, GDK_CONTROL_MASK, GDK_KEY_c,            sc_abort,                       0,                           NULL);
   girara_inputbar_shortcut_add(gsession, GDK_CONTROL_MASK, GDK_KEY_j,            girara_isc_activate,            0,                           NULL);

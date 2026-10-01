@@ -1,40 +1,20 @@
-# Zatura: removing fullscreen mode and girara
+# Zatura: fullscreen cleanup and girara removal
 
 ## Fullscreen and normal mode cleanup
 
-Keep fullscreen as a GTK window state, controlled by F11 and the existing
-`toggle_fullscreen` command. It must not change the active shortcut mode.
-This retains a useful window feature while making document interaction the
-same in both window states.
+Fullscreen is now a GTK window state. F11 and `toggle_fullscreen` change the
+window state without changing the active Girara shortcut mode. F11 is bound
+in normal, index, insert, presentation, and inputbar contexts. The former
+fullscreen mode and its duplicate key and mouse tables have been removed.
+Presentation remains a separate mode because it also changes page layout,
+zoom, and bar visibility. Leaving presentation restores the window state
+from before it started.
 
-1. In `zatura/config.c`, stop registering the `fullscreen` girara mode. Delete
-   `FULLSCREEN`, the second call to `add_default_shortcuts`, the second call to
-   `add_default_mouse_events`, and the fullscreen F11 binding. Register F11
-   once in normal mode. Remove fullscreen from `all_modes`.
-2. In `zatura/shortcuts.c`, change `sc_toggle_fullscreen` to toggle the GTK
-   window state only. Handle F11 while the index or insert view is active if
-   fullscreen must be available there as well. Keep presentation separate:
-   it changes zoom, page layout, and bar visibility in addition to window
-   state. Review its exit path so it restores the previous window state.
-3. Remove `modes.fullscreen` from `zatura/zatura.h`. In
-   `zatura/callbacks.c`, permit selection based on document view context,
-   without checking a fullscreen mode. Audit all `girara_mode_get` branches
-   for assumptions that fullscreen has a unique shortcut table.
-4. Replace `--mode fullscreen` and restored document mode `fullscreen` with
-   an initial window-state flag. Migrate saved `fullscreen` values on read;
-   write only the new representation. Update completions, manual pages,
-   configuration documentation, and tests. If old user configuration uses
-   `[fullscreen]`, accept it as a deprecated alias for `[normal]` for one
-   transition period, then remove the alias.
-5. Test F11 before and after opening a document, in normal/index/insert
-   views, after presentation, across restored sessions, and under both X11
-   and Wayland. Check that every normal shortcut, mouse action, selection,
-   and command behaves identically in fullscreen.
-
-This removes a whole mode, one duplicate default binding table, special case
-branches, and persisted mode semantics. It does not remove index, insert,
-inputbar, or presentation behavior; those have different purposes and need
-separate product decisions.
+Use `--fullscreen` to start with a fullscreen window, with or without a
+document. The old `--mode fullscreen` spelling is read as an alias for this
+flag. Existing `map [fullscreen]` and `unmap [fullscreen]` configuration
+entries are read as `[normal]` with a deprecation warning. There was no
+persisted fullscreen shortcut mode in the document database to migrate.
 
 ## Girara removal estimate
 

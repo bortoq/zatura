@@ -5,7 +5,7 @@ Synopsis
 --------
 
 zatura [-c PATH] [-d PATH] [-p PATH] [-w PASSWORD] [-P NUMBER]
-[--fork] [-l LEVEL] [-s] [-x CMD] [--synctex-forward INPUT] [--synctex-pid PID]
+[--fork] [--fullscreen] [--mode presentation] [-l LEVEL] [-s] [-x CMD] [--synctex-forward INPUT] [--synctex-pid PID]
 [-find STRING]
 <files>
 
@@ -62,7 +62,11 @@ Options
   correct file open or does not exist, no new instance will be spanned.
 
 --mode=mode
-  Start in a non-default mode
+  Start in presentation mode. The former ``--mode fullscreen`` spelling is
+  accepted as an alias for ``--fullscreen``.
+
+--fullscreen
+  Start with a fullscreen window. This does not change the shortcut mode.
 
 --fork
   Fork into background
@@ -133,7 +137,7 @@ General
   F5
     Switch to presentation mode
   F11
-    Switch to fullscreen mode
+    Toggle the fullscreen window state
   ^m
     Toggle inputbar
   ^n
