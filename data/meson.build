@@ -1,13 +1,13 @@
 gnome = import('gnome')
-zathura_resources = gnome.compile_resources(
+zatura_resources = gnome.compile_resources(
   'resources',
-  'zathura.gresource.xml',
-  c_name: 'zathura_resources',
-  dependencies: files('girara.css_t', 'zathura.css_t', 'org.pwmt.zathura.xml')
+  'zatura.gresource.xml',
+  c_name: 'zatura_resources',
+  dependencies: files('girara.css_t', 'zatura.css_t', 'io.github.bortoq.zatura.xml')
 )
 
-install_data('org.pwmt.zathura.xml', install_dir: dbusinterfacesdir)
-install_data('org.pwmt.zathura.svg', install_dir: join_paths(datadir, 'icons', 'hicolor', 'scalable', 'apps'))
+install_data('io.github.bortoq.zatura.xml', install_dir: dbusinterfacesdir)
+install_data('io.github.bortoq.zatura.svg', install_dir: join_paths(datadir, 'icons', 'hicolor', 'scalable', 'apps'))
 
 rsvg_convert = find_program('rsvg-convert', required: get_option('convert-icon'), native: true)
 if rsvg_convert.found()
@@ -20,8 +20,8 @@ i18n = import('i18n')
 podir = join_paths(meson.project_source_root(), 'po')
 
 desktop = i18n.merge_file(
-  input: 'org.pwmt.zathura.desktop.in',
-  output: 'org.pwmt.zathura.desktop',
+  input: 'io.github.bortoq.zatura.desktop.in',
+  output: 'io.github.bortoq.zatura.desktop',
   install: true,
   install_dir: desktopdir,
   po_dir: podir,
@@ -29,8 +29,8 @@ desktop = i18n.merge_file(
 )
 
 appdata = i18n.merge_file(
-  input: 'org.pwmt.zathura.metainfo.xml.in',
-  output: 'org.pwmt.zathura.metainfo.xml',
+  input: 'io.github.bortoq.zatura.metainfo.xml.in',
+  output: 'io.github.bortoq.zatura.metainfo.xml',
   install: true,
   install_dir: metainfodir,
   po_dir: podir,
@@ -58,17 +58,17 @@ if get_option('shell-completions').allowed()
   conf_data.set('PLUGINDIR', join_paths(prefix, plugindir))
   bash_completion = configure_file(
     input: 'bash-completion.in',
-    output: 'zathura',
+    output: 'zatura',
     configuration: conf_data
   )
   zsh_completion = configure_file(
     input: 'zsh-completion.in',
-    output: '_zathura',
+    output: '_zatura',
     configuration: conf_data
   )
   fish_completion = configure_file(
     input: 'fish-completion.in',
-    output: 'zathura.fish',
+    output: 'zatura.fish',
     configuration: conf_data
   )
 

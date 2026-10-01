@@ -1,4 +1,4 @@
-# zathura - language file (Greek)
+# zatura - language file (Greek)
 # SPDX-License-Identifier: Zlib
 #
 # Translators:
@@ -6,19 +6,19 @@
 # Nisok Kosin <nisok@in.gr>, 2012.
 msgid ""
 msgstr ""
-"Project-Id-Version: zathura\n"
+"Project-Id-Version: zatura\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-09-15 09:40+0200\n"
 "PO-Revision-Date: 2026-09-15 09:45+0200\n"
 "Last-Translator: Nisok Kosin <nisok@in.gr>, 2012\n"
-"Language-Team: Greek (http://app.transifex.com/pwmt/zathura/language/el/)\n"
+"Language-Team: Greek (http://app.transifex.com/pwmt/zatura/language/el/)\n"
 "Language: el\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-msgid "Zathura"
+msgid "Zatura"
 msgstr ""
 
 msgid "Minimalistic document viewer"
@@ -30,22 +30,22 @@ msgid "PDF;PS;PostScript;DjVU;document;presentation;viewer;"
 msgstr "PDF;PS;PostScript;DjVU;έγγραφο;παρουσίαση;προβολέας;"
 
 msgid ""
-"Zathura is a highly customizable and functional document viewer. It provides "
+"Zatura is a highly customizable and functional document viewer. It provides "
 "a minimalistic and space saving interface as well as an easy usage that "
-"mainly focuses on keyboard interaction. Zathura makes it possible to "
+"mainly focuses on keyboard interaction. Zatura makes it possible to "
 "completely view and navigate through documents without using a mouse."
 msgstr ""
-"Το Zathura είναι ένας εξαιρετικά παραμετροποιήσιμος και λειτουργικός "
+"Το Zatura είναι ένας εξαιρετικά παραμετροποιήσιμος και λειτουργικός "
 "προβολέας εγγράφων. Παρέχει μια μινιμαλιστική διεπαφή που εξοικονομεί χώρο, "
 "καθώς και εύκολη χρήση που εστιάζει κυρίως στην αλληλεπίδραση με το "
-"πληκτρολόγιο. Το Zathura επιτρέπει την πλήρη προβολή και πλοήγηση σε έγγραφα "
+"πληκτρολόγιο. Το Zatura επιτρέπει την πλήρη προβολή και πλοήγηση σε έγγραφα "
 "χωρίς τη χρήση ποντικιού."
 
 msgid ""
-"Zathura can be extended to support multiple document formats using plugins. "
+"Zatura can be extended to support multiple document formats using plugins. "
 "Other features include:"
 msgstr ""
-"Το Zathura μπορεί να επεκταθεί ώστε να υποστηρίζει πολλαπλές μορφές εγγράφων "
+"Το Zatura μπορεί να επεκταθεί ώστε να υποστηρίζει πολλαπλές μορφές εγγράφων "
 "με τη χρήση προσθέτων. Άλλες δυνατότητες περιλαμβάνουν:"
 
 msgid "SyncTeX forward and backward synchronization support."
@@ -285,7 +285,7 @@ msgstr ""
 msgid "Bump plugin ABI"
 msgstr ""
 
-msgid "Split sandbox functionality into separate zathura-sandbox binary"
+msgid "Split sandbox functionality into separate zatura-sandbox binary"
 msgstr ""
 
 msgid "Split off new command bjump from blist"
@@ -778,7 +778,7 @@ msgstr ""
 msgid "Fixed several memory leaks"
 msgstr ""
 
-msgid "Complete rewrite of zathura"
+msgid "Complete rewrite of zatura"
 msgstr ""
 
 msgid "Uses the girara interface library"
@@ -925,7 +925,7 @@ msgstr ""
 msgid "Implemented map function"
 msgstr ""
 
-msgid "`zathurarc` file"
+msgid "`zaturarc` file"
 msgstr ""
 
 msgid "Prevent buffer overflow in realpath"
@@ -1202,9 +1202,9 @@ msgid "No information available."
 msgstr "Δεν υπάρχουν διαθέσιμες πληροφορίες."
 
 msgid ""
-"Please check the man pages zathura(1) and zathurarc(5) for more information."
+"Please check the man pages zatura(1) and zaturarc(5) for more information."
 msgstr ""
-"Ανατρέξτε στις σελίδες εγχειριδίου zathura(1) και zathurarc(5) για "
+"Ανατρέξτε στις σελίδες εγχειριδίου zatura(1) και zaturarc(5) για "
 "περισσότερες πληροφορίες."
 
 msgid "No arguments given."
@@ -1646,7 +1646,7 @@ msgstr "Εμφάνιση βοήθειας"
 msgid "Open document"
 msgstr "Άνοιγμα αρχείου"
 
-msgid "Close zathura"
+msgid "Close zatura"
 msgstr "Κλείσιμο"
 
 msgid "Print document"

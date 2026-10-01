@@ -1,0 +1,117 @@
+/* SPDX-License-Identifier: Zlib */
+
+#ifndef PAGE_WIDGET_H
+#define PAGE_WIDGET_H
+
+#include <gtk/gtk.h>
+#include "types.h"
+#include "document.h"
+
+/**
+ * The page view widget. The widget handles all the rendering on its own. It
+ * only has to be resized. The widget also manages and handles all the
+ * rectangles for highlighting.
+ *
+ * Before the properties contain the correct values, 'draw-links' has to be set
+ * to TRUE at least one time.
+ * */
+struct zatura_page_widget_s {
+  GtkWidget parent;
+};
+
+struct zatura_page_widget_class_s {
+  GtkWidgetClass parent_class;
+};
+
+#define ZATURA_TYPE_PAGE_WIDGET (zatura_page_widget_get_type())
+#define ZATURA_PAGE_WIDGET(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj), ZATURA_TYPE_PAGE_WIDGET, ZaturaPageWidget))
+#define ZATURA_PAGE_WIDGET_CLASS(obj) (G_TYPE_CHECK_CLASS_CAST((obj), ZATURA_TYPE_PAGE_WIDGET, ZaturaPageClass))
+#define ZATURA_IS_PAGE_WIDGET(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj), ZATURA_TYPE_PAGE_WIDGET))
+#define ZATURA_IS_PAGE_WIDGET_CLASS(obj) (G_TYPE_CHECK_CLASS_TYPE((obj), ZATURA_TYPE_PAGE_WIDGET))
+#define ZATURA_PAGE_WIDGET_GET_CLASS(obj)                                                                             \
+  (G_TYPE_INSTANCE_GET_CLASS((obj), ZATURA_TYPE_PAGE_WIDGET, ZaturaPageClass))
+
+/**
+ * Returns the type of the page view widget.
+ * @return the type
+ */
+GType zatura_page_widget_get_type(void);
+/**
+ * Create a page view widget.
+ * @param zatura the zatura instance
+ * @param page the page to be displayed
+ * @return a page view widget
+ */
+GtkWidget* zatura_page_widget_new(zatura_t* zatura, zatura_page_t* page);
+/**
+ * Update the widget's surface. This should only be called from the render
+ * thread.
+ * @param widget the widget
+ * @param surface the new surface
+ * @param keep_thumbnail don't destroy when surface is NULL
+ */
+void zatura_page_widget_update_surface(ZaturaPageWidget* widget, cairo_surface_t* surface, bool keep_thumbnail);
+/**
+ * Clear highlight of the selection/highlighter.
+ * @param widget the widget
+ */
+void zatura_page_widget_clear_selection(ZaturaPageWidget* widget);
+/**
+ * Draw a rectangle to mark links or search results
+ * @param widget the widget
+ * @param rectangle the rectangle
+ * @param linkid the link id if it's a link, -1 otherwise
+ */
+zatura_link_t* zatura_page_widget_link_get(ZaturaPageWidget* widget, unsigned int index);
+/**
+ * Update the last view time of the page.
+ *
+ * @param widget the widget
+ */
+void zatura_page_widget_update_view_time(ZaturaPageWidget* widget);
+/**
+ * Check if we have a surface.
+ *
+ * @param widget the widget
+ * @returns true if the widget has a surface, false otherwise
+ */
+bool zatura_page_widget_have_surface(ZaturaPageWidget* widget);
+/**
+ * Abort outstanding render requests
+ *
+ * @param widget the widget
+ */
+void zatura_page_widget_abort_render_request(ZaturaPageWidget* widget);
+/**
+ * Get underlying page
+ *
+ * @param widget the widget
+ * @return underlying zatura_page_t instance
+ */
+zatura_page_t* zatura_page_widget_get_page(ZaturaPageWidget* widget);
+
+/**
+ * Set size request for the page widget
+ *
+ * @param widget the widget
+ * @param width  page width
+ * @param height page height
+ */
+void zatura_page_widget_set_size_request(ZaturaPageWidget* widget, int width, int height);
+
+/**
+ * Clear stored thumbnails
+ *
+ * @param widget the widget
+ */
+void zatura_page_widget_clear_thumbnail(ZaturaPageWidget* widget);
+
+/* scaled-button-release signal payload */
+typedef struct scaled_button_release_event_s {
+  double x;              /**< x in page coordinates */
+  double y;              /**< y in page coordinates */
+  guint button;          /**< button number */
+  GdkModifierType state; /**< modifier state */
+} scaled_button_release_event_t;
+
+#endif

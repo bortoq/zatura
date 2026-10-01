@@ -240,7 +240,7 @@ girara_session_t* girara_session_create(void) {
       girara_sorted_list_new_with_free(cb_sort_settings, (girara_free_function_t)girara_setting_free);
 
   /* CSS style provider */
-  GResource* css_resource = zathura_resources_get_resource();
+  GResource* css_resource = zatura_resources_get_resource();
   GBytes* css_data =
       g_resource_lookup_data(css_resource, "/org/pwmt/girara/CSS/girara.css_t", G_RESOURCE_LOOKUP_FLAGS_NONE, NULL);
   if (css_data != NULL) {

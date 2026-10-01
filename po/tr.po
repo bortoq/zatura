@@ -1,4 +1,4 @@
-# zathura - language file (Turkish)
+# zatura - language file (Turkish)
 # SPDX-License-Identifier: Zlib
 #
 # Translators:
@@ -10,19 +10,19 @@
 # spero, 2019
 msgid ""
 msgstr ""
-"Project-Id-Version: zathura\n"
+"Project-Id-Version: zatura\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-09-15 09:40+0200\n"
 "PO-Revision-Date: 2026-09-15 09:55+0200\n"
 "Last-Translator: spero, 2019\n"
-"Language-Team: Turkish (http://app.transifex.com/pwmt/zathura/language/tr/)\n"
+"Language-Team: Turkish (http://app.transifex.com/pwmt/zatura/language/tr/)\n"
 "Language: tr\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-msgid "Zathura"
+msgid "Zatura"
 msgstr ""
 
 msgid "Minimalistic document viewer"
@@ -34,22 +34,22 @@ msgid "PDF;PS;PostScript;DjVU;document;presentation;viewer;"
 msgstr "PDF;PS;PostScript;DjVU;dosya;sunum;görüntüleyici"
 
 msgid ""
-"Zathura is a highly customizable and functional document viewer. It provides "
+"Zatura is a highly customizable and functional document viewer. It provides "
 "a minimalistic and space saving interface as well as an easy usage that "
-"mainly focuses on keyboard interaction. Zathura makes it possible to "
+"mainly focuses on keyboard interaction. Zatura makes it possible to "
 "completely view and navigate through documents without using a mouse."
 msgstr ""
-"Zathura, yüksek düzeyde kişiselleştirilebilir ve işlevsel bir dosya "
+"Zatura, yüksek düzeyde kişiselleştirilebilir ve işlevsel bir dosya "
 "görüntüleyicisidir. Minimal ve boşluktan kurtaran bir arayüzünün yanında, "
-"klavye etkileşimine dayanan kolay bir kullanım sağlamaktadır. Zathura, fare "
+"klavye etkileşimine dayanan kolay bir kullanım sağlamaktadır. Zatura, fare "
 "kullanmadan dosyaların tümüyle görünümüne ve dosyalar arası etkileşime "
 "olanak tanımaktadır."
 
 msgid ""
-"Zathura can be extended to support multiple document formats using plugins. "
+"Zatura can be extended to support multiple document formats using plugins. "
 "Other features include:"
 msgstr ""
-"Zathura, eklentiler yoluyla çeşitli dosya formatlarını desteklemek amacıyla "
+"Zatura, eklentiler yoluyla çeşitli dosya formatlarını desteklemek amacıyla "
 "genişletilebilmektedir. Diğer özellikler:"
 
 msgid "SyncTeX forward and backward synchronization support."
@@ -289,7 +289,7 @@ msgstr ""
 msgid "Bump plugin ABI"
 msgstr ""
 
-msgid "Split sandbox functionality into separate zathura-sandbox binary"
+msgid "Split sandbox functionality into separate zatura-sandbox binary"
 msgstr ""
 
 msgid "Split off new command bjump from blist"
@@ -782,7 +782,7 @@ msgstr ""
 msgid "Fixed several memory leaks"
 msgstr ""
 
-msgid "Complete rewrite of zathura"
+msgid "Complete rewrite of zatura"
 msgstr ""
 
 msgid "Uses the girara interface library"
@@ -929,7 +929,7 @@ msgstr ""
 msgid "Implemented map function"
 msgstr ""
 
-msgid "`zathurarc` file"
+msgid "`zaturarc` file"
 msgstr ""
 
 msgid "Prevent buffer overflow in realpath"
@@ -1208,7 +1208,7 @@ msgid "No information available."
 msgstr "Bilgi mevcut değil."
 
 msgid ""
-"Please check the man pages zathura(1) and zathurarc(5) for more information."
+"Please check the man pages zatura(1) and zaturarc(5) for more information."
 msgstr ""
 
 msgid "No arguments given."
@@ -1638,8 +1638,8 @@ msgstr "Yardım bilgisi göster"
 msgid "Open document"
 msgstr "Belge aç"
 
-msgid "Close zathura"
-msgstr "Zathura'yı kapat"
+msgid "Close zatura"
+msgstr "Zatura'yı kapat"
 
 msgid "Print document"
 msgstr "Belge yazdır"

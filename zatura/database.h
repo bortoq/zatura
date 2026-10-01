@@ -1,0 +1,177 @@
+/* SPDX-License-Identifier: Zlib */
+
+#ifndef DATABASE_H
+#define DATABASE_H
+
+#include <stdbool.h>
+#include <stdint.h>
+
+#include <girara/types.h>
+#include <glib-object.h>
+
+#include "bookmarks.h"
+
+typedef struct zatura_fileinfo_s {
+  unsigned int current_page;
+  unsigned int page_offset;
+  unsigned int rotation;
+  unsigned int pages_per_row;
+  char* first_page_column_list;
+  double zoom;
+  double position_x;
+  double position_y;
+  bool page_right_to_left;
+} zatura_fileinfo_t;
+
+#define ZATURA_TYPE_DATABASE (zatura_database_get_type())
+#define ZATURA_DATABASE(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj), ZATURA_TYPE_DATABASE, ZaturaDatabase))
+#define ZATURA_IS_DATABASE(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj), ZATURA_TYPE_DATABASE))
+#define ZATURA_DATABASE_GET_INTERFACE(obj)                                                                            \
+  (G_TYPE_INSTANCE_GET_INTERFACE((obj), ZATURA_TYPE_DATABASE, ZaturaDatabaseInterface))
+
+typedef struct _ZaturaDatabase ZaturaDatabase;
+typedef struct _ZaturaDatabaseInterface ZaturaDatabaseInterface;
+
+struct _ZaturaDatabaseInterface {
+  GTypeInterface parent_iface;
+
+  /* interface methods */
+  bool (*add_bookmark)(ZaturaDatabase* db, const char* file, zatura_bookmark_t* bookmark);
+
+  bool (*remove_bookmark)(ZaturaDatabase* db, const char* file, const char* id);
+
+  bool (*load_bookmarks)(ZaturaDatabase* db, const char* file, girara_list_t* target_list);
+
+  girara_list_t* (*load_jumplist)(ZaturaDatabase* db, const char* file);
+
+  bool (*save_jumplist)(ZaturaDatabase* db, const char* file, girara_list_t* jumplist);
+
+  bool (*set_fileinfo)(ZaturaDatabase* db, const char* file, const uint8_t* hash, zatura_fileinfo_t* file_info);
+
+  bool (*get_fileinfo)(ZaturaDatabase* db, const char* file, const uint8_t* hash, zatura_fileinfo_t* file_info);
+
+  girara_list_t* (*get_recent_files)(ZaturaDatabase* db, int max, const char* basepath);
+
+  girara_list_t* (*load_quickmarks)(ZaturaDatabase* db, const char* file);
+
+  bool (*save_quickmarks)(ZaturaDatabase* db, const char* file, girara_list_t* jumplist);
+
+  bool (*supports_hash_queries)(ZaturaDatabase* db);
+};
+
+GType zatura_database_get_type(void);
+
+/**
+ * Add or update bookmark in the database.
+ *
+ * @param db The database instance
+ * @param file The file to which the bookmark belongs.
+ * @param bookmark The bookmark instance.
+ * @return true on success, false otherwise
+ */
+bool zatura_db_add_bookmark(zatura_database_t* db, const char* file, zatura_bookmark_t* bookmark);
+
+/**
+ * Remove a bookmark from the database.
+ *
+ * @param db The database instance
+ * @param file The file to which the bookmark belongs.
+ * @param id The id of the bookmark
+ * @return true on success, false otherwise
+ */
+bool zatura_db_remove_bookmark(zatura_database_t* db, const char* file, const char* id);
+
+/**
+ * Loads all bookmarks from the database belonging to a specific file.
+ *
+ * @param db The database instance.
+ * @param file The file for which the bookmarks should be loaded.
+ * @param target_list list to store bookmarks in
+ * @return true on success, false otherwise
+ */
+bool zatura_db_load_bookmarks(zatura_database_t* db, const char* file, girara_list_t* target_list);
+
+/**
+ * Load the jumplist belonging to the specified file from the database.
+ *
+ * @param db The database instance.
+ * @param file The file to which the jumplist belongs.
+ *
+ * return A linked list constituting the jumplist of the specified file.
+ */
+girara_list_t* zatura_db_load_jumplist(ZaturaDatabase* db, const char* file);
+
+/**
+ * Save the jumplist belonging to the specified file to the database.
+ *
+ * @param db The database instance.
+ * @param file The file to which the jumplist belongs.
+ * @param jumplist The jumplist to be saved
+ * @return true on success, false otherwise.
+ */
+bool zatura_db_save_jumplist(ZaturaDatabase* db, const char* file, girara_list_t* jumplist);
+
+/**
+ * Load the quickmarks belonging to the specified file from the database.
+ *
+ * @param db The database instance.
+ * @param file The file to which the quick marks belongs.
+ * @return A list constituting the quickmarks of the specified file.
+ */
+girara_list_t* zatura_db_load_quickmarks(ZaturaDatabase* db, const char* file);
+
+/**
+ * Save the quickmarks belonging to the specified file to the database.
+ *
+ * @param db The database instance.
+ * @param file The file to which the quickmarks belongs.
+ * @param quickmarks The quickmarks to be saved
+ * @return return true on success, false otherwise.
+ */
+bool zatura_db_save_quickmarks(ZaturaDatabase* db, const char* file, girara_list_t* quickmarks);
+
+/**
+ * Set file info (last site, ...) in the database.
+ *
+ * @param db The database instance
+ * @param file The file to which the file info belongs.
+ * @param hash The file's hash
+ * @param file_info The file info
+ * @return true on success, false otherwise.
+ */
+bool zatura_db_set_fileinfo(zatura_database_t* db, const char* file, const uint8_t* hash,
+                             zatura_fileinfo_t* file_info);
+
+/**
+ * Get file info (last site, ...) from the database. The info is first looked up by file and then by
+ * its hash.
+ *
+ * @param db The database instance
+ * @param file The file to which the file info belongs.
+ * @param hash  The file's hash
+ * @param file_info The file info
+ * @return true on success, false otherwise.
+ */
+bool zatura_db_get_fileinfo(zatura_database_t* db, const char* file, const uint8_t* hash,
+                             zatura_fileinfo_t* file_info);
+
+/**
+ * Get a list of recent files from the database. The most recent file is listed
+ * first.
+ *
+ * @param db The database instance
+ * @param max The maximum number of recent files. If max is less than zero, now
+ * limit is applied.
+ * @return list of files
+ */
+girara_list_t* zatura_db_get_recent_files(zatura_database_t* db, int max, const char* basepath);
+
+/**
+ * Check if database support hash-based queries.
+ *
+ * @param db The database instance
+ * @return true if supported, false otherwise.
+ */
+bool zatura_db_supports_hash_queries(zatura_database_t* db);
+
+#endif // DATABASE_H

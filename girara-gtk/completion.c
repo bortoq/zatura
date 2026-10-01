@@ -385,7 +385,7 @@ bool girara_isc_completion(girara_session_t* session, girara_argument_t* argumen
         /* generate completion result
          * XXX: the last argument should only be current_paramater ... but
          * therefore the completion functions would need to handle NULL correctly
-         * (see cc_open in zathura). */
+         * (see cc_open in zatura). */
         g_autoptr(girara_completion_t) result =
             command->completion(session, current_parameter ? current_parameter : "");
 

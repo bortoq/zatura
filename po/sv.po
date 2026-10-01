@@ -1,23 +1,23 @@
-# zathura - language file (Swedish)
+# zatura - language file (Swedish)
 # SPDX-License-Identifier: Zlib
 #
 # Translators:
 # Sebastian Rasmussen <sebras@gmail.com>, 2018
 msgid ""
 msgstr ""
-"Project-Id-Version: zathura\n"
+"Project-Id-Version: zatura\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-09-15 09:40+0200\n"
 "PO-Revision-Date: 2026-09-15 09:55+0200\n"
 "Last-Translator: Sebastian Rasmussen <sebras@gmail.com>, 2018-2020\n"
-"Language-Team: Swedish (http://app.transifex.com/pwmt/zathura/language/sv/)\n"
+"Language-Team: Swedish (http://app.transifex.com/pwmt/zatura/language/sv/)\n"
 "Language: sv\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-msgid "Zathura"
+msgid "Zatura"
 msgstr ""
 
 msgid "Minimalistic document viewer"
@@ -29,22 +29,22 @@ msgid "PDF;PS;PostScript;DjVU;document;presentation;viewer;"
 msgstr "PDF;PS;PostScript;DjVU;dokument;presentation;visare;"
 
 msgid ""
-"Zathura is a highly customizable and functional document viewer. It provides "
+"Zatura is a highly customizable and functional document viewer. It provides "
 "a minimalistic and space saving interface as well as an easy usage that "
-"mainly focuses on keyboard interaction. Zathura makes it possible to "
+"mainly focuses on keyboard interaction. Zatura makes it possible to "
 "completely view and navigate through documents without using a mouse."
 msgstr ""
-"Zathura är en mycket anpassningsbar och funktionell dokumentvisare. Den "
+"Zatura är en mycket anpassningsbar och funktionell dokumentvisare. Den "
 "tillhandahåller ett minimalistiskt och utrymmessparande gränssnitt så väl "
 "som enkel användning som i huvudsak fokuserar på tangentbordsinteraktion. "
 "Zathur gör det möjligt att helt visa och navigera genom dokument utan att "
 "använda en mus."
 
 msgid ""
-"Zathura can be extended to support multiple document formats using plugins. "
+"Zatura can be extended to support multiple document formats using plugins. "
 "Other features include:"
 msgstr ""
-"Zathura kan utökas för att stödja flera dokumentformat med hjälp av "
+"Zatura kan utökas för att stödja flera dokumentformat med hjälp av "
 "insticksmoduler. Andra funktioner inkluderar:"
 
 msgid "SyncTeX forward and backward synchronization support."
@@ -293,8 +293,8 @@ msgstr "Återställ ändringar för dokument med flera sidstorlekar"
 msgid "Bump plugin ABI"
 msgstr "Höj plugin-ABI"
 
-msgid "Split sandbox functionality into separate zathura-sandbox binary"
-msgstr "Dela upp sandlådefunktionalitet i separat zathura-sandbox-binär"
+msgid "Split sandbox functionality into separate zatura-sandbox binary"
+msgstr "Dela upp sandlådefunktionalitet i separat zatura-sandbox-binär"
 
 msgid "Split off new command bjump from blist"
 msgstr "Bryt ut det nya kommandot bjump från blist"
@@ -795,8 +795,8 @@ msgstr "Åtgärda flimmer i textmarkering"
 msgid "Fixed several memory leaks"
 msgstr "Åtgärdade flera minnesläckor"
 
-msgid "Complete rewrite of zathura"
-msgstr "Fullständig omskrivning av zathura"
+msgid "Complete rewrite of zatura"
+msgstr "Fullständig omskrivning av zatura"
 
 msgid "Uses the girara interface library"
 msgstr "Använder gränssnittsbiblioteket girara"
@@ -942,8 +942,8 @@ msgstr "Definiera utseende med funktionen set"
 msgid "Implemented map function"
 msgstr "Implementerad map-funktion"
 
-msgid "`zathurarc` file"
-msgstr "`zathurarc`-fil"
+msgid "`zaturarc` file"
+msgstr "`zaturarc`-fil"
 
 msgid "Prevent buffer overflow in realpath"
 msgstr "Förhindra buffertöverskridning i realpath"
@@ -1219,8 +1219,8 @@ msgid "No information available."
 msgstr "Ingen information tillgänglig."
 
 msgid ""
-"Please check the man pages zathura(1) and zathurarc(5) for more information."
-msgstr "Se manualsidorna zathura(1) och zathurarc(5) för mer information."
+"Please check the man pages zatura(1) and zaturarc(5) for more information."
+msgstr "Se manualsidorna zatura(1) och zaturarc(5) för mer information."
 
 msgid "No arguments given."
 msgstr "Inga argument angivna."
@@ -1650,8 +1650,8 @@ msgstr "Visa hjälp"
 msgid "Open document"
 msgstr "Öppna dokument"
 
-msgid "Close zathura"
-msgstr "Stäng zathura"
+msgid "Close zatura"
+msgstr "Stäng zatura"
 
 msgid "Print document"
 msgstr "Skriv ut dokument"

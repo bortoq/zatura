@@ -14,7 +14,8 @@
 #define UNUSED(x) GIRARA_UNUSED(x)
 
 /* Normalize keyboard modifiers and keypad keys for view and inputbar handlers. */
-bool girara_clean_key_mask(GtkEventControllerKey* controller, GdkModifierType state, guint* clean, guint* keyval);
+bool girara_clean_key_mask(GtkEventControllerKey* controller, guint keycode, GdkModifierType state, guint* clean,
+                           guint* keyval);
 
 #define LENGTH(x) (sizeof(x) / sizeof((x)[0]))
 

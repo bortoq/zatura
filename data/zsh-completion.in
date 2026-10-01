@@ -1,4 +1,4 @@
-#compdef zathura
+#compdef zatura
 
 local -a all_opts
 all_opts=(

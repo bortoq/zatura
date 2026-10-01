@@ -1,4 +1,4 @@
-project('zathura', 'c',
+project('zatura', 'c',
   version: '2026.07.18',
   meson_version: '>=1.5',
   default_options: ['c_std=c23', 'warning_level=3'],
@@ -8,9 +8,9 @@ version = meson.project_version()
 version_array = version.split('.')
 
 # Rules for plugin API and ABI (non-exhaustive):
-# * zathura_plugin_function_t: If functions are added or removed or their
+# * zatura_plugin_function_t: If functions are added or removed or their
 #   signature changes, bump both ABI and API.
-# * zathura_plugin_definition_t: If the struct changes in an ABI-incompatible
+# * zatura_plugin_definition_t: If the struct changes in an ABI-incompatible
 #   way, bump the ABI.
 plugin_api_version = '8'
 plugin_abi_version = '9'
@@ -31,7 +31,7 @@ datadir = get_option('datadir')
 metainfodir = join_paths(datadir, 'metainfo')
 desktopdir = join_paths(datadir, 'applications')
 dbusinterfacesdir = join_paths(datadir, 'dbus-1', 'interfaces')
-plugindir = join_paths(get_option('libdir'), 'zathura')
+plugindir = join_paths(get_option('libdir'), 'zatura')
 sysconfdir = get_option('sysconfdir')
 if not sysconfdir.startswith('/')
   sysconfdir = join_paths(prefix, sysconfdir)
@@ -45,6 +45,7 @@ cc.compiles('''#if !__has_attribute(cleanup)
 # required dependencies
 libm = cc.find_library('m', required: false)
 girara = dependency('girara', version: '>=2026.07.07')
+xkbcommon = dependency('xkbcommon')
 glib = dependency('glib-2.0', version: '>=2.84')
 gio = dependency('gio-unix-2.0', version: '>=2.84', required: host_machine.system() != 'windows')
 gthread = dependency('gthread-2.0', version: '>=2.84')
@@ -56,13 +57,13 @@ magic = dependency('libmagic')
 sqlite = dependency('sqlite3', version: '>=3.35.0')
 xxhash = dependency('libxxhash')
 
-build_dependencies = [libm, girara, glib, gio, gthread, gmodule, gtk4, cairo, magic, json_glib, xxhash]
+build_dependencies = [libm, girara, glib, gio, gthread, gmodule, gtk4, cairo, magic, json_glib, xxhash, xkbcommon]
 
 # defines
 defines = [
-  '-DGETTEXT_PACKAGE="org.pwmt.zathura"',
+  '-DGETTEXT_PACKAGE="io.github.bortoq.zatura"',
   '-DLOCALEDIR="@0@"'.format(join_paths(prefix, localedir)),
-  '-DZATHURA_PLUGINDIR="@0@"'.format(join_paths(prefix, plugindir)),
+  '-DZATURA_PLUGINDIR="@0@"'.format(join_paths(prefix, plugindir)),
   '-DSYSCONFDIR="@0@"'.format(sysconfdir),
   '-D_DEFAULT_SOURCE',
 ]
@@ -94,8 +95,8 @@ endif
 
 # generate version header file
 version_header = configure_file(
-  input: 'zathura/version.h.in',
-  output: 'zathura-version.h',
+  input: 'zatura/version.h.in',
+  output: 'zatura-version.h',
   configuration: conf_data
 )
 
@@ -114,67 +115,68 @@ sources = files(
   'girara-gtk/config.c',
   'girara-gtk/dialog.c',
   'girara-gtk/inputbar.c',
+  'girara-gtk/keycodes.c',
   'girara-gtk/notification-area.c',
   'girara-gtk/session.c',
   'girara-gtk/settings.c',
   'girara-gtk/shortcuts.c',
   'girara-gtk/statusbar.c',
   'girara-gtk/utils.c',
-  'zathura/adjustment.c',
-  'zathura/bookmarks.c',
-  'zathura/callbacks.c',
-  'zathura/commands.c',
-  'zathura/completion.c',
-  'zathura/config.c',
-  'zathura/content-type.c',
-  'zathura/database.c',
-  'zathura/database-null.c',
-  'zathura/dbus-interface.c',
-  'zathura/document.c',
-  'zathura/document-widget.c',
-  'zathura/file-monitor.c',
-  'zathura/file-monitor-glib.c',
-  'zathura/file-monitor-noop.c',
-  'zathura/file-monitor-signal.c',
-  'zathura/index-element-object.c',
-  'zathura/jumplist.c',
-  'zathura/links.c',
-  'zathura/marks.c',
-  'zathura/page.c',
-  'zathura/page-widget.c',
-  'zathura/plugin.c',
-  'zathura/print.c',
-  'zathura/render.c',
-  'zathura/shortcuts.c',
-  'zathura/synctex.c',
-  'zathura/types.c',
-  'zathura/utils.c',
-  'zathura/zathura.c',
+  'zatura/adjustment.c',
+  'zatura/bookmarks.c',
+  'zatura/callbacks.c',
+  'zatura/commands.c',
+  'zatura/completion.c',
+  'zatura/config.c',
+  'zatura/content-type.c',
+  'zatura/database.c',
+  'zatura/database-null.c',
+  'zatura/dbus-interface.c',
+  'zatura/document.c',
+  'zatura/document-widget.c',
+  'zatura/file-monitor.c',
+  'zatura/file-monitor-glib.c',
+  'zatura/file-monitor-noop.c',
+  'zatura/file-monitor-signal.c',
+  'zatura/index-element-object.c',
+  'zatura/jumplist.c',
+  'zatura/links.c',
+  'zatura/marks.c',
+  'zatura/page.c',
+  'zatura/page-widget.c',
+  'zatura/plugin.c',
+  'zatura/print.c',
+  'zatura/render.c',
+  'zatura/shortcuts.c',
+  'zatura/synctex.c',
+  'zatura/types.c',
+  'zatura/utils.c',
+  'zatura/zatura.c',
 )
-sources += zathura_resources
+sources += zatura_resources
 
 # header files to install
 headers = files(
-  'zathura/document.h',
-  'zathura/links.h',
-  'zathura/macros.h',
-  'zathura/page.h',
-  'zathura/plugin-api.h',
-  'zathura/types.h',
+  'zatura/document.h',
+  'zatura/links.h',
+  'zatura/macros.h',
+  'zatura/page.h',
+  'zatura/plugin-api.h',
+  'zatura/types.h',
 )
 headers += version_header
 
-# zathura helper library
-libzathura = static_library('zathura',
-  sources + ['zathura/database-sqlite.c'],
+# zatura helper library
+libzatura = static_library('zatura',
+  sources + ['zatura/database-sqlite.c'],
   dependencies: build_dependencies + [sqlite],
   include_directories: include_directories,
   c_args: defines + flags,
   gnu_symbol_visibility: 'hidden',
 )
-libzathura_dep = declare_dependency(link_with: libzathura)
+libzatura_dep = declare_dependency(link_with: libzatura)
 
-# zathura-sandbox executable
+# zatura-sandbox executable
 if seccomp.found() or landlock or target_machine.system() == 'openbsd'
   sandbox_sources = files()
   sandbox_defines = ['-DWITH_SANDBOX']
@@ -182,27 +184,27 @@ if seccomp.found() or landlock or target_machine.system() == 'openbsd'
   if seccomp.found()
     sandbox_defines += '-DWITH_SECCOMP'
     sandbox_dependencies += seccomp
-    sandbox_sources += files('zathura/seccomp-filters.c')
+    sandbox_sources += files('zatura/seccomp-filters.c')
   endif
   if landlock
     sandbox_defines += '-DWITH_LANDLOCK'
-    sandbox_sources += files('zathura/landlock.c')
+    sandbox_sources += files('zatura/landlock.c')
   endif
 
-  # zathura helper library
-  libzathura_sandbox = static_library('zathura-sandbox',
+  # zatura helper library
+  libzatura_sandbox = static_library('zatura-sandbox',
     sources + sandbox_sources,
     dependencies: build_dependencies + sandbox_dependencies,
     include_directories: include_directories,
     c_args: defines + flags + sandbox_defines,
     gnu_symbol_visibility: 'hidden',
   )
-  libzathura_sandbox_dep = declare_dependency(link_with: libzathura_sandbox)
+  libzatura_sandbox_dep = declare_dependency(link_with: libzatura_sandbox)
 
-  zathura_sandbox = executable(
-    'zathura-sandbox',
-    files('zathura/main.c'),
-    dependencies: build_dependencies + [libzathura_sandbox_dep] + sandbox_dependencies,
+  zatura_sandbox = executable(
+    'zatura-sandbox',
+    files('zatura/main.c'),
+    dependencies: build_dependencies + [libzatura_sandbox_dep] + sandbox_dependencies,
     install: true,
     include_directories: include_directories,
     c_args: defines + sandbox_defines + flags,
@@ -212,11 +214,11 @@ if seccomp.found() or landlock or target_machine.system() == 'openbsd'
   )
 endif
 
-# zathura executable
-zathura = executable(
-  'zathura',
-  files('zathura/main.c'),
-  dependencies: build_dependencies + [libzathura_dep],
+# zatura executable
+zatura = executable(
+  'zatura',
+  files('zatura/main.c'),
+  dependencies: build_dependencies + [libzatura_dep],
   install: true,
   include_directories: include_directories,
   c_args: defines + flags,
@@ -224,24 +226,24 @@ zathura = executable(
   export_dynamic: true,
   win_subsystem: 'windows'
 )
-install_headers(headers, subdir: 'zathura')
+install_headers(headers, subdir: 'zatura')
 
 # pkg-config file
 pkg = import('pkgconfig')
 pkg.generate(
-  name: 'zathura',
+  name: 'zatura',
   description: 'document viewer - plugin API',
-  url: 'https://pwmt.org/projects/zathura',
+  url: 'https://github.com/bortoq/zatura',
   version: version,
   requires: ['girara', 'cairo'],
   variables: [
     'apiversion=@0@'.format(plugin_api_version),
     'abiversion=@0@'.format(plugin_abi_version),
-    'plugindir=${libdir}/zathura'
+    'plugindir=${libdir}/zatura'
   ]
 )
 
-zathura_dependency = declare_dependency(link_with: zathura, include_directories: include_directories)
+zatura_dependency = declare_dependency(link_with: zatura, include_directories: include_directories)
 
 if get_option('manpages').allowed()
   subdir('doc')

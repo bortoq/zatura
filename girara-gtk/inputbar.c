@@ -123,13 +123,13 @@ static gboolean inputbar_activate(GtkEntry* entry, girara_session_t* session) {
   return girara_command_run(session, input);
 }
 
-static gboolean inputbar_key_press_event(GtkEventControllerKey* controller, guint keyval_in, guint UNUSED(keycode),
+static gboolean inputbar_key_press_event(GtkEventControllerKey* controller, guint keyval_in, guint keycode,
                                          GdkModifierType state, girara_session_t* session) {
   g_return_val_if_fail(session != NULL, false);
 
   guint keyval = keyval_in;
   guint clean  = 0;
-  if (!girara_clean_key_mask(controller, state, &clean, &keyval)) {
+  if (!girara_clean_key_mask(controller, keycode, state, &clean, &keyval)) {
     girara_debug("clean_mask returned false.");
     return false;
   }

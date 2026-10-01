@@ -4,6 +4,7 @@
 
 #include "commands.h"
 #include "internal.h"
+#include "keycodes.h"
 #include "session.h"
 #include "shortcuts.h"
 
@@ -17,7 +18,9 @@ static const guint ALL_ACCELS_MASK = GDK_CONTROL_MASK | GDK_SHIFT_MASK | GDK_ALT
 static const guint MOUSE_MASK = GDK_CONTROL_MASK | GDK_SHIFT_MASK | GDK_ALT_MASK | GDK_BUTTON1_MASK | GDK_BUTTON2_MASK |
                                 GDK_BUTTON3_MASK | GDK_BUTTON4_MASK | GDK_BUTTON5_MASK;
 
-bool girara_clean_key_mask(GtkEventControllerKey* controller, GdkModifierType state, guint* clean, guint* keyval) {
+bool girara_clean_key_mask(GtkEventControllerKey* controller, guint keycode, GdkModifierType state, guint* clean,
+                           guint* keyval) {
+  *keyval = girara_keycode_to_keyval(keycode, state, *keyval);
   GdkModifierType consumed = 0;
   GdkEvent* event          = gtk_event_controller_get_current_event(GTK_EVENT_CONTROLLER(controller));
   if (event != NULL && gdk_event_get_event_type(event) == GDK_KEY_PRESS) {
@@ -66,14 +69,14 @@ bool girara_clean_key_mask(GtkEventControllerKey* controller, GdkModifierType st
 }
 
 /* callback implementation */
-gboolean girara_callback_view_key_press_event(GtkEventControllerKey* controller, guint keyval_in, guint UNUSED(keycode),
+gboolean girara_callback_view_key_press_event(GtkEventControllerKey* controller, guint keyval_in, guint keycode,
                                               GdkModifierType state, girara_session_t* session) {
   g_return_val_if_fail(session != NULL, FALSE);
 
   guint clean  = 0;
   guint keyval = keyval_in;
 
-  if (girara_clean_key_mask(controller, state, &clean, &keyval) == false) {
+  if (girara_clean_key_mask(controller, keycode, state, &clean, &keyval) == false) {
     return false;
   }
 

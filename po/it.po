@@ -1,4 +1,4 @@
-# zathura - language file (Italian)
+# zatura - language file (Italian)
 # SPDX-License-Identifier: Zlib
 #
 # Translators:
@@ -9,12 +9,12 @@
 # TheLemonMan <segnalazionidalweb@gmail.com>, 2012,2015
 msgid ""
 msgstr ""
-"Project-Id-Version: zathura\n"
+"Project-Id-Version: zatura\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-09-15 09:40+0200\n"
 "PO-Revision-Date: 2026-09-15 09:50+0200\n"
 "Last-Translator: TheLemonMan <segnalazionidalweb@gmail.com>, 2012,2015\n"
-"Language-Team: Italian (http://app.transifex.com/pwmt/zathura/language/it/)\n"
+"Language-Team: Italian (http://app.transifex.com/pwmt/zatura/language/it/)\n"
 "Language: it\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -22,7 +22,7 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=n == 1 ? 0 : n != 0 && n % 1000000 == 0 ? "
 "1 : 2;\n"
 
-msgid "Zathura"
+msgid "Zatura"
 msgstr ""
 
 msgid "Minimalistic document viewer"
@@ -34,22 +34,22 @@ msgid "PDF;PS;PostScript;DjVU;document;presentation;viewer;"
 msgstr "PDF;PS;PostScript;DjVU;documenti;presentazioni;lettore;"
 
 msgid ""
-"Zathura is a highly customizable and functional document viewer. It provides "
+"Zatura is a highly customizable and functional document viewer. It provides "
 "a minimalistic and space saving interface as well as an easy usage that "
-"mainly focuses on keyboard interaction. Zathura makes it possible to "
+"mainly focuses on keyboard interaction. Zatura makes it possible to "
 "completely view and navigate through documents without using a mouse."
 msgstr ""
-"Zathura è un visualizzatore di documenti altamente personalizzabile e "
+"Zatura è un visualizzatore di documenti altamente personalizzabile e "
 "funzionale. Fornisce un'interfaccia minimalista e salvaspazio e un facile "
 "utilizzo che si concentra principalmente sull'interazione della tastiera. "
-"Zathura rende possibile visualizzare e navigare completamente tra i "
+"Zatura rende possibile visualizzare e navigare completamente tra i "
 "documenti senza usare il mouse."
 
 msgid ""
-"Zathura can be extended to support multiple document formats using plugins. "
+"Zatura can be extended to support multiple document formats using plugins. "
 "Other features include:"
 msgstr ""
-"Zathura può usare le estensioni per allargare il supporto a vari formati di "
+"Zatura può usare le estensioni per allargare il supporto a vari formati di "
 "file. Tra le altre funzionalità ci sono:"
 
 msgid "SyncTeX forward and backward synchronization support."
@@ -289,7 +289,7 @@ msgstr ""
 msgid "Bump plugin ABI"
 msgstr ""
 
-msgid "Split sandbox functionality into separate zathura-sandbox binary"
+msgid "Split sandbox functionality into separate zatura-sandbox binary"
 msgstr ""
 
 msgid "Split off new command bjump from blist"
@@ -782,7 +782,7 @@ msgstr ""
 msgid "Fixed several memory leaks"
 msgstr ""
 
-msgid "Complete rewrite of zathura"
+msgid "Complete rewrite of zatura"
 msgstr ""
 
 msgid "Uses the girara interface library"
@@ -929,7 +929,7 @@ msgstr ""
 msgid "Implemented map function"
 msgstr ""
 
-msgid "`zathurarc` file"
+msgid "`zaturarc` file"
 msgstr ""
 
 msgid "Prevent buffer overflow in realpath"
@@ -1206,9 +1206,9 @@ msgid "No information available."
 msgstr "Nessun' informazione disponibile."
 
 msgid ""
-"Please check the man pages zathura(1) and zathurarc(5) for more information."
+"Please check the man pages zatura(1) and zaturarc(5) for more information."
 msgstr ""
-"Consultare le pagine di manuale zathura(1) e zathurarc(5) per maggiori "
+"Consultare le pagine di manuale zatura(1) e zaturarc(5) per maggiori "
 "informazioni."
 
 msgid "No arguments given."
@@ -1644,8 +1644,8 @@ msgstr "Mostra l' aiuto"
 msgid "Open document"
 msgstr "Apri un documento"
 
-msgid "Close zathura"
-msgstr "Chiudi zathura"
+msgid "Close zatura"
+msgstr "Chiudi zatura"
 
 msgid "Print document"
 msgstr "Stampa il documento"

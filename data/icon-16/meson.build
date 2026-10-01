@@ -1,6 +1,6 @@
-custom_target('org.pwmt.zathura_16.png',
-  input: '../org.pwmt.zathura.svg',
-  output: 'org.pwmt.zathura.png',
+custom_target('io.github.bortoq.zatura_16.png',
+  input: '../io.github.bortoq.zatura.svg',
+  output: 'io.github.bortoq.zatura.png',
   command: [
     rsvg_convert,
     '-w', '16', '-h', '16',

@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Zlib
 
 # General information
-PROJECT_NAME          = zathura
+PROJECT_NAME          = zatura
 OUTPUT_DIRECTORY      = ./_build/doxygen/
 OUTPUT_LANGUAGE       = English
 TAB_SIZE              = 2

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gresources>
+  <gresource prefix="/io/github/bortoq/zatura/CSS">
+    <file compressed="true">zatura.css_t</file>
+  </gresource>
+  <gresource prefix="/io/github/bortoq/zatura/DBus">
+    <file compressed="true">io.github.bortoq.zatura.xml</file>
+  </gresource>
+  <gresource prefix="/org/pwmt/girara/CSS">
+    <file compressed="true">girara.css_t</file>
+  </gresource>
+</gresources>

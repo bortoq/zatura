@@ -1,0 +1,179 @@
+/* SPDX-License-Identifier: Zlib */
+
+#ifndef UTILS_H
+#define UTILS_H
+
+#include <stdbool.h>
+#include <gtk/gtk.h>
+#include <girara-gtk/types.h>
+#include <girara-gtk/internal.h>
+
+#include "document.h"
+
+typedef struct page_offset_s {
+  int x;
+  int y;
+} page_offset_t;
+
+/**
+ * This function checks if the file has a valid extension. A extension is
+ * evaluated as valid if it matches a supported filetype.
+ *
+ * @param zatura Zatura object
+ * @param path The path to the file
+ * @return true if the extension is valid, otherwise false
+ */
+bool file_valid_extension(zatura_t* zatura, const char* path);
+
+/**
+ * build a tree of index elements from the document outline
+ *
+ * @param session The session
+ * @param tree the document index tree
+ * @return root list model of ZaturaIndexElement objects
+ */
+GListModel* document_index_build_model(girara_session_t* session, girara_tree_node_t* tree);
+
+/**
+ * Scrolls the document index to the current page
+ *
+ * @param zatura The zatura instance
+ */
+void index_scroll_to_current_page(zatura_t* zatura);
+
+/**
+ * Calculates the new coordinates based on the rotation and scale level of the
+ * document for the given rectangle
+ *
+ * @param page Page where the rectangle should be
+ * @param rectangle The rectangle
+ * @return New rectangle
+ */
+zatura_rectangle_t recalc_rectangle(zatura_page_t* page, zatura_rectangle_t rectangle);
+
+/**
+ * Returns the page widget of the page
+ *
+ * @param zatura The zatura instance
+ * @param page The page object
+ * @return The page widget of the page
+ * @return NULL if an error occurred
+ */
+GtkWidget* zatura_page_get_widget(zatura_t* zatura, zatura_page_t* page);
+
+GtkWidget* zatura_page_get_widget_by_number(zatura_t* zatura, unsigned int page_number);
+
+/**
+ * Set if the search results should be drawn or not
+ *
+ * @param zatura Zatura instance
+ * @param value true if they should be drawn, otherwise false
+ */
+void document_draw_search_results(zatura_t* zatura, bool value);
+
+/**
+ * Create zatura version string
+ *
+ * @param plugin_manager The plugin manager
+ * @param markup Enable markup
+ * @return Version string
+ */
+char* zatura_get_version_string(const zatura_plugin_manager_t* plugin_manager, bool markup);
+
+/**
+ * Get a pointer to the GdkClipboard of the current clipboard.
+ *
+ * @param zatura The zatura instance
+ *
+ * @return the current GdkClipboard, or NULL
+ */
+GdkClipboard* get_selection(zatura_t* zatura);
+
+/**
+ * Returns the valid zoom value which needs to lie in the interval of zoom_min
+ * and zoom_max specified in the girara session
+ *
+ * @param[in] session The session
+ * @param[in] zoom The proposed zoom value
+ *
+ * @return The corrected zoom value
+ */
+double zatura_correct_zoom_value(girara_session_t* session, const double zoom);
+
+/**
+ * Write a list of 'pages per row to first column' values as a colon separated string.
+ *
+ * For valid settings list, this is the inverse of parse_first_page_column_list.
+ *
+ * @param[in] first_page_columns The settings vector
+ * @param[in] size The size of the settings vector
+ *
+ * @return The new settings string
+ */
+char* write_first_page_column(unsigned int* first_page_columns, unsigned int size);
+
+/**
+ * Parse a 'pages per row to first column' settings list.
+ *
+ * For valid settings list, this is the inverse of write_first_page_column_list.
+ *
+ * @param[in] first_page_column_list The settings list
+ * @param[in] size A cell to return the size of the result, mandatory
+ *
+ * @return The values from the settings list as a new vector
+ */
+unsigned int* parse_first_page_column(const char* first_page_column_list, unsigned int* size);
+
+/**
+ * Extracts the column the first page should be rendered in from the specified
+ * list of settings corresponding to the specified pages per row
+ *
+ * @param[in] first_page_column_list The settings list
+ * @param[in] pages_per_row The current pages per row
+ *
+ * @return The column the first page should be rendered in
+ */
+unsigned int find_first_page_column(const char* first_page_column_list, const unsigned int pages_per_row);
+
+/**
+ * Cycle the column the first page should be rendered in.
+ *
+ * @param[in] first_page_column_list The settings list
+ * @param[in] pages_per_row The current pages per row
+ * @param[in] incr The value added to the current first page column setting
+ *
+ * @return The new modified settings list
+ */
+char* increment_first_page_column(const char* first_page_column_list, const unsigned int pages_per_row, int incr);
+
+/**
+ * Parse color string and print warning if color cannot be parsed.
+ *
+ * @param[out] color The color
+ * @param[in] str Color string
+ *
+ * @return True if color string can be parsed, false otherwise.
+ */
+bool parse_color(GdkRGBA* color, const char* str);
+
+/**
+ * Flatten list of overlapping rectangles.
+ *
+ * @param[in] rectangles A list of rectangles
+ *
+ * @return List of rectangles
+ */
+girara_list_t* flatten_rectangles(girara_list_t* rectangles);
+
+/**
+ * Search through the document for the latest search item
+ *
+ * @param zatura The zatura instance
+ * @param argument The used argument
+ * @param disable_notify If true, don't notify no match found
+ *
+ * @return true if no error occurred otherwise false
+ */
+bool search_document(zatura_t* zatura, girara_argument_t* argument, bool disable_notify);
+
+#endif // UTILS_H

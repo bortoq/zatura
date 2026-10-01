@@ -1,15 +1,15 @@
-# zathura - language file (Hebrew)
+# zatura - language file (Hebrew)
 # SPDX-License-Identifier: Zlib
 #
 # Translators:
 msgid ""
 msgstr ""
-"Project-Id-Version: zathura\n"
+"Project-Id-Version: zatura\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-09-15 09:40+0200\n"
 "PO-Revision-Date: 2026-09-15 09:48+0200\n"
 "Last-Translator: Sebastian Ramacher <sebastian+dev@ramacher.at>\n"
-"Language-Team: Hebrew (http://app.transifex.com/pwmt/zathura/language/he/)\n"
+"Language-Team: Hebrew (http://app.transifex.com/pwmt/zatura/language/he/)\n"
 "Language: he\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n == 1 && n % 1 == 0) ? 0 : (n == 2 && n % "
 "1 == 0) ? 1: 2;\n"
 
-msgid "Zathura"
+msgid "Zatura"
 msgstr ""
 
 msgid "Minimalistic document viewer"
@@ -29,20 +29,20 @@ msgid "PDF;PS;PostScript;DjVU;document;presentation;viewer;"
 msgstr "PDF;PS;PostScript;DjVU;מסמך;presentation;viewer;"
 
 msgid ""
-"Zathura is a highly customizable and functional document viewer. It provides "
+"Zatura is a highly customizable and functional document viewer. It provides "
 "a minimalistic and space saving interface as well as an easy usage that "
-"mainly focuses on keyboard interaction. Zathura makes it possible to "
+"mainly focuses on keyboard interaction. Zatura makes it possible to "
 "completely view and navigate through documents without using a mouse."
 msgstr ""
-"Zathura הוא מציג מסמכים פונקציונלי ובעל יכולת התאמה גבוהה. הוא מספק ממשק "
+"Zatura הוא מציג מסמכים פונקציונלי ובעל יכולת התאמה גבוהה. הוא מספק ממשק "
 "מינימליסטי וחוסך מקום, וכן שימוש פשוט שמתמקד בעיקר באינטראקציה עם המקלדת. "
-"Zathura מאפשר לצפות ולנווט במסמכים באופן מלא גם ללא שימוש בעכבר."
+"Zatura מאפשר לצפות ולנווט במסמכים באופן מלא גם ללא שימוש בעכבר."
 
 msgid ""
-"Zathura can be extended to support multiple document formats using plugins. "
+"Zatura can be extended to support multiple document formats using plugins. "
 "Other features include:"
 msgstr ""
-"ניתן להרחיב את Zathura לתמיכה במספר פורמטי מסמכים באמצעות תוספים. תכונות "
+"ניתן להרחיב את Zatura לתמיכה במספר פורמטי מסמכים באמצעות תוספים. תכונות "
 "נוספות כוללות:"
 
 msgid "SyncTeX forward and backward synchronization support."
@@ -283,7 +283,7 @@ msgstr ""
 msgid "Bump plugin ABI"
 msgstr "Bump תוסף ABI"
 
-msgid "Split sandbox functionality into separate zathura-sandbox binary"
+msgid "Split sandbox functionality into separate zatura-sandbox binary"
 msgstr ""
 
 msgid "Split off new command bjump from blist"
@@ -778,7 +778,7 @@ msgstr ""
 msgid "Fixed several memory leaks"
 msgstr "תוקנו מספר דליפות זיכרון"
 
-msgid "Complete rewrite of zathura"
+msgid "Complete rewrite of zatura"
 msgstr ""
 
 msgid "Uses the girara interface library"
@@ -925,8 +925,8 @@ msgstr ""
 msgid "Implemented map function"
 msgstr "פונקציית map יושמה"
 
-msgid "`zathurarc` file"
-msgstr "`zathurarc` קובץ"
+msgid "`zaturarc` file"
+msgstr "`zaturarc` קובץ"
 
 msgid "Prevent buffer overflow in realpath"
 msgstr ""
@@ -1202,7 +1202,7 @@ msgid "No information available."
 msgstr "אין מידע זמין."
 
 msgid ""
-"Please check the man pages zathura(1) and zathurarc(5) for more information."
+"Please check the man pages zatura(1) and zaturarc(5) for more information."
 msgstr ""
 
 msgid "No arguments given."
@@ -1632,8 +1632,8 @@ msgstr "הצג עזרה"
 msgid "Open document"
 msgstr "פתח מסמך"
 
-msgid "Close zathura"
-msgstr "סגור את zathura"
+msgid "Close zatura"
+msgstr "סגור את zatura"
 
 msgid "Print document"
 msgstr ""

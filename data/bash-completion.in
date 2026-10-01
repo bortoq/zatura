@@ -1,4 +1,4 @@
-_zathura() {
+_zatura() {
   _init_completion 2>/dev/null || true
 
   local EXTS=""
@@ -24,4 +24,4 @@ _zathura() {
 
   _filedir "${EXTS#|}" 2>/dev/null || COMPREPLY=($(shopt -s extglob; compgen -f -X "!*.@($EXTS)"))
 }
-complete -F _zathura zathura
+complete -F _zatura zatura

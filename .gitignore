@@ -11,11 +11,11 @@ tags
 
 # generated files
 resources.*
-zathura.1
-zathurarc.5
+zatura.1
+zaturarc.5
 
 # dist files
-zathura-*.tar.gz
+zatura-*.tar.gz
 
 # patch files
 *.diff

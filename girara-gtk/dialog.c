@@ -24,10 +24,10 @@ static void dialog_activate(GtkEntry* entry, GiraraDialog* dialog) {
   gtk_widget_set_visible(GTK_WIDGET(dialog), FALSE);
 }
 
-static gboolean dialog_key_press(GtkEventControllerKey* controller, guint keyval, guint UNUSED(keycode),
+static gboolean dialog_key_press(GtkEventControllerKey* controller, guint keyval, guint keycode,
                                  GdkModifierType state, GiraraDialog* dialog) {
   guint clean = 0;
-  if (!girara_clean_key_mask(controller, state, &clean, &keyval)) {
+  if (!girara_clean_key_mask(controller, keycode, state, &clean, &keyval)) {
     return FALSE;
   }
   return girara_process_inputbar_key(dialog->session, keyval, clean);

@@ -4,11 +4,17 @@ env = [
   'G_TEST_BUILDDIR=@0@'.format(meson.current_build_dir()),
 ]
 
+keycodes = executable('test_keycodes', files('test_keycodes.c', '../girara-gtk/keycodes.c'),
+  dependencies: [gtk4, xkbcommon],
+  include_directories: include_directories,
+)
+test('keycodes', keycodes)
+
 test_dependencies = [
-  libzathura_dep,
+  libzatura_dep,
 ]
 
-include_directories += [ include_directories('../zathura') ]
+include_directories += [ include_directories('../zatura') ]
 
 document = executable('test_document', files('test_document.c'),
   dependencies: build_dependencies + test_dependencies,
@@ -126,7 +132,7 @@ if weston.found()
     env: env + [
       'NO_AT_BRIDGE=1',
       'GTK_A11Y=none',
-      'WAYLAND_DISPLAY=zathura-test-weston'
+      'WAYLAND_DISPLAY=zatura-test-weston'
     ]
   )
   test('weston_config', weston_session,
@@ -136,7 +142,7 @@ if weston.found()
     env: env + [
       'NO_AT_BRIDGE=1',
       'GTK_A11Y=none',
-      'WAYLAND_DISPLAY=zathura-test-weston'
+      'WAYLAND_DISPLAY=zatura-test-weston'
     ]
   )
   test('weston_setting', weston_session,
@@ -146,13 +152,13 @@ if weston.found()
     env: env + [
       'NO_AT_BRIDGE=1',
       'GTK_A11Y=none',
-      'WAYLAND_DISPLAY=zathura-test-weston'
+      'WAYLAND_DISPLAY=zatura-test-weston'
     ]
   )
 
   if seccomp.found() or landlock
     sandbox = executable('test_sandbox', files('test_sandbox.c'),
-      dependencies: build_dependencies + [libzathura_sandbox_dep] + sandbox_dependencies,
+      dependencies: build_dependencies + [libzatura_sandbox_dep] + sandbox_dependencies,
       include_directories: include_directories,
       c_args: defines + sandbox_defines + flags
     )
@@ -166,7 +172,7 @@ if weston.found()
         'G_TEST_BUILDDIR=@0@'.format(meson.current_build_dir()),
         'NO_AT_BRIDGE=1',
       'GTK_A11Y=none',
-        'WAYLAND_DISPLAY=zathura-test-weston'
+        'WAYLAND_DISPLAY=zatura-test-weston'
       ]
     )
   endif

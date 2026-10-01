@@ -6,12 +6,12 @@ mkdir -p "$XDG_RUNTIME_DIR"
 # headless GPU drivers can lose the Vulkan surface and abort, so render in software
 export GSK_RENDERER=cairo
 
-weston --backend=headless-backend.so --socket=zathura-test-weston --idle-time=0 &
+weston --backend=headless-backend.so --socket=zatura-test-weston --idle-time=0 &
 WESTON_PID=$!
 
 # Wait for the socket to exist
 for i in $(seq 10); do
-  [ -e "$XDG_RUNTIME_DIR/zathura-test-weston" ] && break
+  [ -e "$XDG_RUNTIME_DIR/zatura-test-weston" ] && break
   sleep 0.5
 done
 

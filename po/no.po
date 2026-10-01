@@ -1,16 +1,16 @@
-# zathura - language file (Norwegian)
+# zatura - language file (Norwegian)
 # SPDX-License-Identifier: Zlib
 #
 # Translators:
 # maccyber <jonas.enge@gmail.com>, 2014
 msgid ""
 msgstr ""
-"Project-Id-Version: zathura\n"
+"Project-Id-Version: zatura\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-09-15 09:40+0200\n"
 "PO-Revision-Date: 2026-09-15 09:52+0200\n"
 "Last-Translator: Jonas <jonas.enge@gmail.com>, 2014\n"
-"Language-Team: Norwegian (http://app.transifex.com/pwmt/zathura/language/"
+"Language-Team: Norwegian (http://app.transifex.com/pwmt/zatura/language/"
 "no/)\n"
 "Language: no\n"
 "MIME-Version: 1.0\n"
@@ -18,7 +18,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-msgid "Zathura"
+msgid "Zatura"
 msgstr ""
 
 msgid "Minimalistic document viewer"
@@ -30,21 +30,21 @@ msgid "PDF;PS;PostScript;DjVU;document;presentation;viewer;"
 msgstr "PDF;PS;PostScript;DjVU;dokument;presentasjon;viser;"
 
 msgid ""
-"Zathura is a highly customizable and functional document viewer. It provides "
+"Zatura is a highly customizable and functional document viewer. It provides "
 "a minimalistic and space saving interface as well as an easy usage that "
-"mainly focuses on keyboard interaction. Zathura makes it possible to "
+"mainly focuses on keyboard interaction. Zatura makes it possible to "
 "completely view and navigate through documents without using a mouse."
 msgstr ""
-"Zathura er en svært tilpassbar og funksjonell dokumentviser. Den har et "
+"Zatura er en svært tilpassbar og funksjonell dokumentviser. Den har et "
 "minimalistisk og plassbesparende grensesnitt, samt enkel bruk som "
-"hovedsakelig fokuserer på tastaturinteraksjon. Zathura gjør det mulig å vise "
+"hovedsakelig fokuserer på tastaturinteraksjon. Zatura gjør det mulig å vise "
 "og navigere gjennom dokumenter uten å bruke mus."
 
 msgid ""
-"Zathura can be extended to support multiple document formats using plugins. "
+"Zatura can be extended to support multiple document formats using plugins. "
 "Other features include:"
 msgstr ""
-"Zathura kan utvides til å støtte flere dokumentformater med programtillegg. "
+"Zatura kan utvides til å støtte flere dokumentformater med programtillegg. "
 "Andre funksjoner inkluderer:"
 
 msgid "SyncTeX forward and backward synchronization support."
@@ -284,7 +284,7 @@ msgstr ""
 msgid "Bump plugin ABI"
 msgstr ""
 
-msgid "Split sandbox functionality into separate zathura-sandbox binary"
+msgid "Split sandbox functionality into separate zatura-sandbox binary"
 msgstr ""
 
 msgid "Split off new command bjump from blist"
@@ -777,7 +777,7 @@ msgstr ""
 msgid "Fixed several memory leaks"
 msgstr ""
 
-msgid "Complete rewrite of zathura"
+msgid "Complete rewrite of zatura"
 msgstr ""
 
 msgid "Uses the girara interface library"
@@ -924,7 +924,7 @@ msgstr ""
 msgid "Implemented map function"
 msgstr ""
 
-msgid "`zathurarc` file"
+msgid "`zaturarc` file"
 msgstr ""
 
 msgid "Prevent buffer overflow in realpath"
@@ -1201,8 +1201,8 @@ msgid "No information available."
 msgstr "Ingen informasjon tilgjengelig."
 
 msgid ""
-"Please check the man pages zathura(1) and zathurarc(5) for more information."
-msgstr "Se manualsider zathura(1) og zathurarc(5) for mer informasjon."
+"Please check the man pages zatura(1) and zaturarc(5) for more information."
+msgstr "Se manualsider zatura(1) og zaturarc(5) for mer informasjon."
 
 msgid "No arguments given."
 msgstr "Ingen argumenter gitt."
@@ -1631,8 +1631,8 @@ msgstr "Vis hjelp"
 msgid "Open document"
 msgstr "Åpne dokument"
 
-msgid "Close zathura"
-msgstr "Lukk zathura"
+msgid "Close zatura"
+msgstr "Lukk zatura"
 
 msgid "Print document"
 msgstr "Skriv ut dokument"

@@ -6,5 +6,5 @@ DIR=$(mktemp -d)
 
 meson setup "$DIR"
 meson compile -C "$DIR"
-cp -v "$DIR"/doc/zathura* doc/
+cp -v "$DIR"/doc/zatura* doc/
 rm -rf "$DIR"

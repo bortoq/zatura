@@ -1,4 +1,4 @@
-# zathura - language file (Arabic)
+# zatura - language file (Arabic)
 # SPDX-License-Identifier: Zlib
 #
 # Translators:
@@ -7,12 +7,12 @@
 # linxu user, 2026
 msgid ""
 msgstr ""
-"Project-Id-Version: zathura\n"
+"Project-Id-Version: zatura\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-09-15 09:40+0200\n"
 "PO-Revision-Date: 2026-09-15 09:42+0200\n"
 "Last-Translator: HiTuX <hemza.dz@gmail.com>, 2026\n"
-"Language-Team: Arabic (http://app.transifex.com/pwmt/zathura/language/ar/)\n"
+"Language-Team: Arabic (http://app.transifex.com/pwmt/zatura/language/ar/)\n"
 "Language: ar\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -20,7 +20,7 @@ msgstr ""
 "Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 "
 "&& n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5;\n"
 
-msgid "Zathura"
+msgid "Zatura"
 msgstr ""
 
 msgid "Minimalistic document viewer"
@@ -32,18 +32,18 @@ msgid "PDF;PS;PostScript;DjVU;document;presentation;viewer;"
 msgstr ""
 
 msgid ""
-"Zathura is a highly customizable and functional document viewer. It provides "
+"Zatura is a highly customizable and functional document viewer. It provides "
 "a minimalistic and space saving interface as well as an easy usage that "
-"mainly focuses on keyboard interaction. Zathura makes it possible to "
+"mainly focuses on keyboard interaction. Zatura makes it possible to "
 "completely view and navigate through documents without using a mouse."
 msgstr ""
-"Zathura هو عارض وثائق قابل للتخصيص وعملي للغاية. فهو يوفر واجهة بسيطة وموفرة "
+"Zatura هو عارض وثائق قابل للتخصيص وعملي للغاية. فهو يوفر واجهة بسيطة وموفرة "
 "للمساحة بالإضافة إلى سهولة إستخدام ترتكز بشكل أساسي على التفاعل عن طريق لوحة "
-"المفاتيح. Zathura يتيح إمكانية عرض المستندات والتنقل خلالها دون استخدام "
+"المفاتيح. Zatura يتيح إمكانية عرض المستندات والتنقل خلالها دون استخدام "
 "الفأرة."
 
 msgid ""
-"Zathura can be extended to support multiple document formats using plugins. "
+"Zatura can be extended to support multiple document formats using plugins. "
 "Other features include:"
 msgstr ""
 
@@ -284,7 +284,7 @@ msgstr ""
 msgid "Bump plugin ABI"
 msgstr ""
 
-msgid "Split sandbox functionality into separate zathura-sandbox binary"
+msgid "Split sandbox functionality into separate zatura-sandbox binary"
 msgstr ""
 
 msgid "Split off new command bjump from blist"
@@ -777,7 +777,7 @@ msgstr ""
 msgid "Fixed several memory leaks"
 msgstr ""
 
-msgid "Complete rewrite of zathura"
+msgid "Complete rewrite of zatura"
 msgstr ""
 
 msgid "Uses the girara interface library"
@@ -924,7 +924,7 @@ msgstr ""
 msgid "Implemented map function"
 msgstr ""
 
-msgid "`zathurarc` file"
+msgid "`zaturarc` file"
 msgstr ""
 
 msgid "Prevent buffer overflow in realpath"
@@ -1201,7 +1201,7 @@ msgid "No information available."
 msgstr "لا توجد معلومات متاحة."
 
 msgid ""
-"Please check the man pages zathura(1) and zathurarc(5) for more information."
+"Please check the man pages zatura(1) and zaturarc(5) for more information."
 msgstr ""
 
 msgid "No arguments given."
@@ -1632,8 +1632,8 @@ msgstr "عرض المساعدة"
 msgid "Open document"
 msgstr "فتح وثيقة"
 
-msgid "Close zathura"
-msgstr "أغلق zathura"
+msgid "Close zatura"
+msgstr "أغلق zatura"
 
 msgid "Print document"
 msgstr "طباعة المستند"

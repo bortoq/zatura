@@ -1,0 +1,268 @@
+/* SPDX-License-Identifier: Zlib */
+
+#ifndef CALLBACKS_H
+#define CALLBACKS_H
+
+#include <gtk/gtk.h>
+#include <girara-gtk/inputbar.h>
+#include <girara/types.h>
+#include <girara/macros.h>
+
+#include "internal.h"
+#include "document.h"
+#include "zatura.h"
+#include "page-widget.h"
+
+/**
+ * Quits the current zatura session
+ *
+ * @param widget The gtk window of zatura
+ * @param zatura Correspondending zatura session
+ * @return true if no error occurred and the event has been handled
+ */
+gboolean cb_destroy(GtkWidget* widget, zatura_t* zatura);
+
+/**
+ * This function gets called when the buffer of girara changes
+ *
+ * @param session The girara session
+ */
+void cb_buffer_changed(girara_session_t* session);
+
+/**
+ * This function gets called when the value of the horizontal scrollbars
+ * changes (e.g.: by scrolling, moving to another page)
+ *
+ * @param adjustment The hadjustment of the page view
+ * @param data NULL
+ */
+void cb_view_hadjustment_value_changed(GtkAdjustment* adjustment, gpointer data);
+
+/**
+ * This function gets called when the value of the vertical scrollbars
+ * changes (e.g.: by scrolling, moving to another page)
+ *
+ * @param adjustment The vadjustment of the page view
+ * @param data NULL
+ */
+void cb_view_vadjustment_value_changed(GtkAdjustment* adjustment, gpointer data);
+
+/**
+ * This function gets called when the bounds or the page_size of the horizontal
+ * scrollbar change (e.g. when the zoom level is changed).
+ *
+ * It adjusts the value of the horizontal scrollbar
+ *
+ * @param adjustment The horizontal adjustment of a gtkScrolledWindow
+ * @param data The zatura instance
+ */
+void cb_view_hadjustment_changed(GtkAdjustment* adjustment, gpointer data);
+
+/**
+ * This function gets called when the bounds or the page_size of the vertical
+ * scrollbar change (e.g. when the zoom level is changed).
+ *
+ * It adjusts the value of the vertical scrollbar based on its previous
+ * adjustment, stored in the tracking adjustment zatura->ui.hadjustment.
+ *
+ * @param adjustment The vertical adjustment of a gtkScrolledWindow
+ * @param data The zatura instance
+ */
+void cb_view_vadjustment_changed(GtkAdjustment* adjustment, gpointer data);
+
+/**
+ * This function gets called when the program need to refresh the document view.
+ *
+ * It adjusts the value of the scrollbars, triggering a redraw in the new
+ * position.
+ *
+ * @param view The view GtkWidget
+ * @param data The zatura instance
+ */
+void cb_refresh_view(GtkWidget* view, gpointer data);
+
+/**
+ * This function gets called when the display scale changes.
+ *
+ * It records the new value and triggers a re-rendering of the document.
+ *
+ * @param object Unused
+ * @param pspec Unused
+ * @param data The zatura instance
+ */
+void cb_scale_factor(GObject* object, GParamSpec* pspec, gpointer data);
+
+/**
+ * Called when the view is set up on screen. Makes the scale handler run when
+ * the display scale changes.
+ *
+ * @param widget The view widget
+ * @param data The zatura instance
+ */
+void cb_view_realized(GtkWidget* widget, gpointer data);
+
+/**
+ * This function gets called when the monitor configuration changes (e.g.
+ * a monitor is plugged in or unplugged).
+ *
+ * It re-evaluates the view PPI to keep rendering accurate.
+ *
+ * @param model The GListModel of monitors
+ * @param position The position of the first changed monitor
+ * @param removed The number of removed monitors
+ * @param added The number of added monitors
+ * @param data The zatura instance
+ */
+void cb_monitors_changed(GListModel* model, guint position, guint removed, guint added, gpointer data);
+
+/**
+ * This function gets called when the value of the "pages-per-row"
+ * variable changes
+ *
+ * @param session The current girara session
+ * @param name The name of the row
+ * @param type The settings type
+ * @param value The value
+ * @param data Custom data
+ */
+void cb_page_layout_value_changed(girara_session_t* session, const char* name, girara_setting_type_t type,
+                                  const void* value, void* data);
+
+/**
+ * Called when an index element is activated (e.g.: double click)
+ *
+ * @param view The index list view
+ * @param position Row position within the selection model
+ * @param data Zatura session
+ */
+void cb_index_row_activated(GtkListView* view, guint position, void* data);
+
+/**
+ * Called when input has been passed to the sc_follow dialog
+ *
+ * @param entry The dialog inputbar
+ * @param session The girara session
+ * @return true if no error occurred and the event has been handled
+ */
+gboolean cb_sc_follow(GiraraDialog* inputbar, const char* input, void* session);
+
+/**
+ * Called when input has been passed to the sc_display_link dialog
+ *
+ * @param entry The dialog inputbar
+ * @param session The girara session
+ * @return true if no error occurred and the event has been handled
+ */
+gboolean cb_sc_display_link(GiraraDialog* inputbar, const char* input, void* session);
+
+/**
+ * Called when input has been passed to the sc_copy_link dialog
+ *
+ * @param entry The dialog inputbar
+ * @param session The girara session
+ * @return true if no error occurred and the event has been handled
+ */
+gboolean cb_sc_copy_link(GiraraDialog* inputbar, const char* input, void* session);
+
+/**
+ * Emitted when file has been changed
+ *
+ * @param monitor The file monitor
+ * @param session The girara session
+ */
+void cb_file_monitor(ZaturaFileMonitor* monitor, girara_session_t* session);
+
+/**
+ * Callback to read new password for file that should be opened
+ *
+ * @param entry The password entry
+ * @param dialog The dialog information
+ * @return true if input has been handled
+ */
+gboolean cb_password_dialog(GiraraDialog* inputbar, const char* input, void* dialog);
+
+gboolean document_open_password_dialog(gpointer data);
+
+/**
+ * Emitted when the 'recolor' setting is changed
+ *
+ * @param session Girara session
+ * @param name Name of the setting ("recolor")
+ * @param type Type of the setting (BOOLEAN)
+ * @param value New value
+ * @param data Custom data
+ */
+void cb_setting_recolor_change(girara_session_t* session, const char* name, girara_setting_type_t type,
+                               const void* value, void* data);
+
+/**
+ * Emitted when the 'recolor-keephue' setting is changed
+ *
+ * @param session Girara session
+ * @param name Name of the setting ("recolor")
+ * @param type Type of the setting (BOOLEAN)
+ * @param value New value
+ * @param data Custom data
+ */
+void cb_setting_recolor_keep_hue_change(girara_session_t* session, const char* name, girara_setting_type_t type,
+                                        const void* value, void* data);
+
+/**
+ * Emitted when the 'recolor-reverse-video' setting is changed
+ *
+ * @param session Girara session
+ * @param name Name of the setting ("recolor")
+ * @param type Type of the setting (BOOLEAN)
+ * @param value New value
+ * @param data Custom data
+ */
+void cb_setting_recolor_keep_reverse_video_change(girara_session_t* session, const char* name,
+                                                  girara_setting_type_t type, const void* value, void* data);
+
+/**
+ * Unknown command handler which is used to handle the strict numeric goto
+ * command
+ *
+ * @param session The girara session
+ * @param input The command input
+ * @return true if the input has been handled
+ */
+bool cb_unknown_command(girara_session_t* session, const char* input);
+
+/**
+ * Emitted when text has been selected in the page widget
+ *
+ * @param page page view widget
+ * @param text selected text
+ * @param data user data
+ */
+void cb_page_widget_text_selected(ZaturaPageWidget* page, const char* text, void* data);
+
+void cb_page_widget_image_selected(ZaturaPageWidget* page, GdkTexture* texture, void* data);
+
+void cb_page_widget_scaled_button_release(ZaturaPageWidget* page, scaled_button_release_event_t* event, void* data);
+
+void cb_page_widget_link(ZaturaPageWidget* page, void* data);
+
+void cb_gesture_zoom_begin(GtkGesture* self, GdkEventSequence* sequence, void* data);
+
+void cb_gesture_zoom_scale_changed(GtkGestureZoom* self, gdouble scale, void* data);
+
+/**
+ * Open the file dropped onto the view
+ *
+ * @param self The GtkDropTarget that received the drop
+ * @param value The dropped data
+ * @param data The zatura instance
+ */
+gboolean cb_drop_file(GtkDropTarget* self, const GValue* value, double x, double y, void* data);
+
+/**
+ * Clears all highlighted links when the inputbar gets closed
+ *
+ * @param GtkWidget* Inputbar widget
+ * @param data The zatura instance
+ */
+void cb_hide_links(GtkWidget* widget, gpointer data);
+
+#endif // CALLBACKS_H

@@ -1,15 +1,15 @@
-# zathura - language file (Chinese (China))
+# zatura - language file (Chinese (China))
 # SPDX-License-Identifier: Zlib
 #
 # Translators:
 msgid ""
 msgstr ""
-"Project-Id-Version: zathura\n"
+"Project-Id-Version: zatura\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-09-15 09:40+0200\n"
 "PO-Revision-Date: 2026-09-15 09:42+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: Chinese (China) (http://app.transifex.com/pwmt/zathura/"
+"Language-Team: Chinese (China) (http://app.transifex.com/pwmt/zatura/"
 "language/zh_CN/)\n"
 "Language: zh_CN\n"
 "MIME-Version: 1.0\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
-msgid "Zathura"
+msgid "Zatura"
 msgstr ""
 
 msgid "Minimalistic document viewer"
@@ -29,19 +29,19 @@ msgid "PDF;PS;PostScript;DjVU;document;presentation;viewer;"
 msgstr "PDF;PS;PostScript;DjVU;文档;演示;查看器;"
 
 msgid ""
-"Zathura is a highly customizable and functional document viewer. It provides "
+"Zatura is a highly customizable and functional document viewer. It provides "
 "a minimalistic and space saving interface as well as an easy usage that "
-"mainly focuses on keyboard interaction. Zathura makes it possible to "
+"mainly focuses on keyboard interaction. Zatura makes it possible to "
 "completely view and navigate through documents without using a mouse."
 msgstr ""
-"Zathura 是一款高度可定制且功能丰富的文档查看器。它提供极简且节省空间的界面，"
-"并且易于使用，主要专注于键盘交互。Zathura 让用户无需使用鼠标也能完整查看和浏"
+"Zatura 是一款高度可定制且功能丰富的文档查看器。它提供极简且节省空间的界面，"
+"并且易于使用，主要专注于键盘交互。Zatura 让用户无需使用鼠标也能完整查看和浏"
 "览文档。"
 
 msgid ""
-"Zathura can be extended to support multiple document formats using plugins. "
+"Zatura can be extended to support multiple document formats using plugins. "
 "Other features include:"
-msgstr "Zathura 可以通过插件扩展以支持多种文档格式。其他功能包括："
+msgstr "Zatura 可以通过插件扩展以支持多种文档格式。其他功能包括："
 
 msgid "SyncTeX forward and backward synchronization support."
 msgstr "支持 SyncTeX 正向和反向同步。"
@@ -280,7 +280,7 @@ msgstr ""
 msgid "Bump plugin ABI"
 msgstr ""
 
-msgid "Split sandbox functionality into separate zathura-sandbox binary"
+msgid "Split sandbox functionality into separate zatura-sandbox binary"
 msgstr ""
 
 msgid "Split off new command bjump from blist"
@@ -773,7 +773,7 @@ msgstr ""
 msgid "Fixed several memory leaks"
 msgstr ""
 
-msgid "Complete rewrite of zathura"
+msgid "Complete rewrite of zatura"
 msgstr ""
 
 msgid "Uses the girara interface library"
@@ -920,7 +920,7 @@ msgstr ""
 msgid "Implemented map function"
 msgstr ""
 
-msgid "`zathurarc` file"
+msgid "`zaturarc` file"
 msgstr ""
 
 msgid "Prevent buffer overflow in realpath"
@@ -1197,8 +1197,8 @@ msgid "No information available."
 msgstr "没有可用信息。"
 
 msgid ""
-"Please check the man pages zathura(1) and zathurarc(5) for more information."
-msgstr "请查看手册页 zathura(1) 和 zathurarc(5) 获取更多信息。"
+"Please check the man pages zatura(1) and zaturarc(5) for more information."
+msgstr "请查看手册页 zatura(1) 和 zaturarc(5) 获取更多信息。"
 
 msgid "No arguments given."
 msgstr "未给定参数。"
@@ -1627,8 +1627,8 @@ msgstr "显示帮助"
 msgid "Open document"
 msgstr "打开文档"
 
-msgid "Close zathura"
-msgstr "关闭 zathura"
+msgid "Close zatura"
+msgstr "关闭 zatura"
 
 msgid "Print document"
 msgstr "打印文档"
