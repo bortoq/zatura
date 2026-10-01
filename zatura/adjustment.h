@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: Zlib */
 
-#ifndef ZATURA_ADJUSTMENT_H
-#define ZATURA_ADJUSTMENT_H
+#ifndef ZATHURA_ADJUSTMENT_H
+#define ZATHURA_ADJUSTMENT_H
 
 #include <gtk/gtk.h>
 #include <stdbool.h>
@@ -19,7 +19,7 @@
  * @param rotate honor page's rotation
  * @return real scale after rounding
  */
-double page_calc_height_width(zatura_document_t* document, zatura_page_t* page, unsigned int* page_height,
+double page_calc_height_width(zathura_document_t* document, zathura_page_t* page, unsigned int* page_height,
                               unsigned int* page_width, bool rotate);
 
 /**
@@ -33,7 +33,7 @@ double page_calc_height_width(zatura_document_t* document, zatura_page_t* page, 
  * @param xn the x coordinates after rotation
  * @param yn the y coordinates after rotation
  */
-void page_calc_position(zatura_document_t* document, double x, double y, double* xn, double* yn);
+void page_calc_position(zathura_document_t* document, double x, double y, double* xn, double* yn);
 
 /**
  * Converts a relative position within the document to a page number.
@@ -43,7 +43,7 @@ void page_calc_position(zatura_document_t* document, double x, double y, double*
  * @param pos_y the y position relative to the document
  * @return page sitting in that position
  */
-unsigned int position_to_page_number(zatura_t* zatura, double pos_x, double pos_y);
+unsigned int position_to_page_number(zathura_t* zathura, double pos_x, double pos_y);
 
 /**
  * Converts a page number to a position in units relative to the document
@@ -62,12 +62,12 @@ unsigned int position_to_page_number(zatura_t* zatura, double pos_x, double pos_
  * @param pos_x position that will lie at the center of the viewport.
  * @param pos_y position that will lie at the center of the viewport.
  */
-void page_number_to_position(zatura_t* zatura, unsigned int page_number, double xalign, double yalign, double* pos_x,
+void page_number_to_position(zathura_t* zathura, unsigned int page_number, double xalign, double yalign, double* pos_x,
                              double* pos_y);
 
-gdouble zatura_adjustment_get_ratio(GtkAdjustment* adjustment);
-void zatura_adjustment_set_value(GtkAdjustment* adjustment, gdouble value);
-void zatura_adjustment_set_value_from_ratio(GtkAdjustment* adjustment, gdouble ratio);
+gdouble zathura_adjustment_get_ratio(GtkAdjustment* adjustment);
+void zathura_adjustment_set_value(GtkAdjustment* adjustment, gdouble value);
+void zathura_adjustment_set_value_from_ratio(GtkAdjustment* adjustment, gdouble ratio);
 
 /**
  * Check whether the value belongs to the given ratio. A value that does not was
@@ -77,6 +77,6 @@ void zatura_adjustment_set_value_from_ratio(GtkAdjustment* adjustment, gdouble r
  * @param ratio the ratio
  * @return true if the value belongs to the ratio
  */
-bool zatura_adjustment_value_matches_ratio(GtkAdjustment* adjustment, gdouble ratio);
+bool zathura_adjustment_value_matches_ratio(GtkAdjustment* adjustment, gdouble ratio);
 
-#endif /* ZATURA_ADJUSTMENT_H */
+#endif /* ZATHURA_ADJUSTMENT_H */

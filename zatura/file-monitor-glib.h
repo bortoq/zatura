@@ -5,23 +5,23 @@
 
 #include "file-monitor.h"
 
-#define ZATURA_TYPE_GLIBFILEMONITOR (zatura_glibfilemonitor_get_type())
-#define ZATURA_GLIBFILEMONITOR(obj)                                                                                   \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj), ZATURA_TYPE_GLIBFILEMONITOR, ZaturaGLibFileMonitor))
-#define ZATURA_GLIBFILEMONITOR_CLASS(obj)                                                                             \
-  (G_TYPE_CHECK_CLASS_CAST((obj), ZATURA_TYPE_GLIBFILEMONITOR, ZaturaGLibFileMonitorClass))
-#define ZATURA_IS_GLIBFILEMONITOR(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj), ZATURA_TYPE_GLIBFILEMONITOR))
-#define ZATURA_IS_GLIBFILEMONITOR_CLASS(obj) (G_TYPE_CHECK_CLASS_TYPE((obj), ZATURA_TYPE_GLIBFILEMONITOR))
-#define ZATURA_GLIBFILEMONITOR_GET_CLASS(obj)                                                                         \
-  (G_TYPE_INSTANCE_GET_CLASS((obj), ZATURA_TYPE_GLIBFILEMONITOR, ZaturaGLibFileMonitorClass))
+#define ZATHURA_TYPE_GLIBFILEMONITOR (zathura_glibfilemonitor_get_type())
+#define ZATHURA_GLIBFILEMONITOR(obj)                                                                                   \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj), ZATHURA_TYPE_GLIBFILEMONITOR, ZathuraGLibFileMonitor))
+#define ZATHURA_GLIBFILEMONITOR_CLASS(obj)                                                                             \
+  (G_TYPE_CHECK_CLASS_CAST((obj), ZATHURA_TYPE_GLIBFILEMONITOR, ZathuraGLibFileMonitorClass))
+#define ZATHURA_IS_GLIBFILEMONITOR(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj), ZATHURA_TYPE_GLIBFILEMONITOR))
+#define ZATHURA_IS_GLIBFILEMONITOR_CLASS(obj) (G_TYPE_CHECK_CLASS_TYPE((obj), ZATHURA_TYPE_GLIBFILEMONITOR))
+#define ZATHURA_GLIBFILEMONITOR_GET_CLASS(obj)                                                                         \
+  (G_TYPE_INSTANCE_GET_CLASS((obj), ZATHURA_TYPE_GLIBFILEMONITOR, ZathuraGLibFileMonitorClass))
 
-typedef struct zatura_glibfilemonitor_s ZaturaGLibFileMonitor;
-typedef struct zatura_glibfilemonitor_class_s ZaturaGLibFileMonitorClass;
+typedef struct zathura_glibfilemonitor_s ZathuraGLibFileMonitor;
+typedef struct zathura_glibfilemonitor_class_s ZathuraGLibFileMonitorClass;
 
-struct zatura_glibfilemonitor_class_s {
-  ZaturaFileMonitorClass parent_class;
+struct zathura_glibfilemonitor_class_s {
+  ZathuraFileMonitorClass parent_class;
 };
 
-GType zatura_glibfilemonitor_get_type(void);
+GType zathura_glibfilemonitor_get_type(void);
 
 #endif

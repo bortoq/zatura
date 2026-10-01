@@ -8,17 +8,17 @@
 #include "page.h"
 #include "zatura.h"
 
-double page_calc_height_width(zatura_document_t* document, zatura_page_t* page, unsigned int* page_height,
+double page_calc_height_width(zathura_document_t* document, zathura_page_t* page, unsigned int* page_height,
                               unsigned int* page_width, bool rotate) {
   g_return_val_if_fail(document != NULL && page_height != NULL && page_width != NULL, 0.0);
 
-  const double zoom   = zatura_page_get_zoom(page);
-  const double height = zatura_page_get_height(page);
-  const double width  = zatura_page_get_width(page);
+  const double zoom   = zathura_page_get_zoom(page);
+  const double height = zathura_page_get_height(page);
+  const double width  = zathura_page_get_width(page);
 
-  double scale = zoom * zatura_document_get_scale(document);
+  double scale = zoom * zathura_document_get_scale(document);
 
-  if (rotate == true && zatura_document_get_rotation(document) % 180 != 0) {
+  if (rotate == true && zathura_document_get_rotation(document) % 180 != 0) {
     *page_width  = round(height * scale);
     *page_height = round(width * scale);
     scale        = MAX(*page_width / height, *page_height / width);
@@ -31,10 +31,10 @@ double page_calc_height_width(zatura_document_t* document, zatura_page_t* page, 
   return scale;
 }
 
-void page_calc_position(zatura_document_t* document, double x, double y, double* xn, double* yn) {
+void page_calc_position(zathura_document_t* document, double x, double y, double* xn, double* yn) {
   g_return_if_fail(document != NULL && xn != NULL && yn != NULL);
 
-  const unsigned int rot = zatura_document_get_rotation(document);
+  const unsigned int rot = zathura_document_get_rotation(document);
   if (rot == 90) {
     *xn = 1 - y;
     *yn = x;
@@ -50,27 +50,27 @@ void page_calc_position(zatura_document_t* document, double x, double y, double*
   }
 }
 
-unsigned int position_to_page_number(zatura_t* zatura, double pos_x, double pos_y) {
-  g_return_val_if_fail(zatura != NULL, 0);
+unsigned int position_to_page_number(zathura_t* zathura, double pos_x, double pos_y) {
+  g_return_val_if_fail(zathura != NULL, 0);
 
-  zatura_document_t* document = zatura_get_document(zatura);
+  zathura_document_t* document = zathura_get_document(zathura);
   g_return_val_if_fail(document != NULL, 0);
 
-  ZaturaDocumentWidget* doc_widget = ZATURA_DOCUMENT_WIDGET(zatura->ui.document_widget);
+  ZathuraDocumentWidget* doc_widget = ZATHURA_DOCUMENT_WIDGET(zathura->ui.document_widget);
 
   unsigned int doc_width, doc_height;
-  zatura_document_widget_get_document_size(doc_widget, &doc_height, &doc_width);
+  zathura_document_widget_get_document_size(doc_widget, &doc_height, &doc_width);
 
-  unsigned int c0   = zatura_document_widget_get_first_page_column(doc_widget);
-  unsigned int npag = zatura_document_get_number_of_pages(document);
-  unsigned int ncol = zatura_document_widget_get_pages_per_row(doc_widget);
+  unsigned int c0   = zathura_document_widget_get_first_page_column(doc_widget);
+  unsigned int npag = zathura_document_get_number_of_pages(document);
+  unsigned int ncol = zathura_document_widget_get_pages_per_row(doc_widget);
   unsigned int nrow = (npag + c0 - 1 + ncol - 1) / ncol;
 
   // This could be done using binary search if linear is too slow
   unsigned int row = 0;
   for (unsigned int i = 0; i < nrow; i++) {
     unsigned int row_pos, row_height;
-    zatura_document_widget_get_row(doc_widget, i, &row_pos, &row_height);
+    zathura_document_widget_get_row(doc_widget, i, &row_pos, &row_height);
 
     if (pos_y * doc_height <= row_pos + row_height) {
       row = i;
@@ -81,7 +81,7 @@ unsigned int position_to_page_number(zatura_t* zatura, double pos_x, double pos_
   unsigned int col = 0;
   for (unsigned int i = 0; i < ncol; i++) {
     unsigned int col_pos, col_width;
-    zatura_document_widget_get_col(doc_widget, i, &col_pos, &col_width);
+    zathura_document_widget_get_col(doc_widget, i, &col_pos, &col_width);
 
     if (pos_x * doc_width <= col_pos + col_width) {
       col = i;
@@ -97,27 +97,27 @@ unsigned int position_to_page_number(zatura_t* zatura, double pos_x, double pos_
   }
 }
 
-void page_number_to_position(zatura_t* zatura, unsigned int page_number, double xalign, double yalign, double* pos_x,
+void page_number_to_position(zathura_t* zathura, unsigned int page_number, double xalign, double yalign, double* pos_x,
                              double* pos_y) {
-  g_return_if_fail(zatura != NULL);
+  g_return_if_fail(zathura != NULL);
 
-  zatura_document_t* document = zatura_get_document(zatura);
+  zathura_document_t* document = zathura_get_document(zathura);
   g_return_if_fail(document != NULL);
 
   /* sizes of page cell, viewport and document */
   unsigned int cell_height = 0, cell_width = 0;
-  zatura_document_widget_get_cell_size(ZATURA_DOCUMENT_WIDGET(zatura->ui.document_widget), page_number, &cell_height,
+  zathura_document_widget_get_cell_size(ZATHURA_DOCUMENT_WIDGET(zathura->ui.document_widget), page_number, &cell_height,
                                         &cell_width);
 
   unsigned int cell_pos_x = 0, cell_pos_y = 0;
-  zatura_document_widget_get_cell_pos(ZATURA_DOCUMENT_WIDGET(zatura->ui.document_widget), page_number, &cell_pos_x,
+  zathura_document_widget_get_cell_pos(ZATHURA_DOCUMENT_WIDGET(zathura->ui.document_widget), page_number, &cell_pos_x,
                                        &cell_pos_y);
 
   unsigned int view_height = 0, view_width = 0;
-  zatura_document_get_viewport_size(document, &view_height, &view_width);
+  zathura_document_get_viewport_size(document, &view_height, &view_width);
 
   unsigned int doc_height = 0, doc_width = 0;
-  zatura_document_widget_get_document_size(ZATURA_DOCUMENT_WIDGET(zatura->ui.document_widget), &doc_height,
+  zathura_document_widget_get_document_size(ZATHURA_DOCUMENT_WIDGET(zathura->ui.document_widget), &doc_height,
                                             &doc_width);
 
   /* compute the shift to align to the viewport. If the page fits to viewport, just center it. */
@@ -135,7 +135,7 @@ void page_number_to_position(zatura_t* zatura, unsigned int page_number, double 
   *pos_y = ((double)cell_pos_y + shift_y * cell_height) / (double)doc_height;
 }
 
-gdouble zatura_adjustment_get_ratio(GtkAdjustment* adjustment) {
+gdouble zathura_adjustment_get_ratio(GtkAdjustment* adjustment) {
   gdouble lower     = gtk_adjustment_get_lower(adjustment);
   gdouble upper     = gtk_adjustment_get_upper(adjustment);
   gdouble page_size = gtk_adjustment_get_page_size(adjustment);
@@ -163,15 +163,15 @@ static gdouble value_for_ratio(GtkAdjustment* adjustment, gdouble ratio) {
   return (upper - lower) * ratio + lower - page_size / 2.0;
 }
 
-void zatura_adjustment_set_value(GtkAdjustment* adjustment, gdouble value) {
+void zathura_adjustment_set_value(GtkAdjustment* adjustment, gdouble value) {
   gtk_adjustment_set_value(adjustment, clamp_to_range(adjustment, value));
 }
 
-void zatura_adjustment_set_value_from_ratio(GtkAdjustment* adjustment, gdouble ratio) {
-  zatura_adjustment_set_value(adjustment, value_for_ratio(adjustment, ratio));
+void zathura_adjustment_set_value_from_ratio(GtkAdjustment* adjustment, gdouble ratio) {
+  zathura_adjustment_set_value(adjustment, value_for_ratio(adjustment, ratio));
 }
 
-bool zatura_adjustment_value_matches_ratio(GtkAdjustment* adjustment, gdouble ratio) {
+bool zathura_adjustment_value_matches_ratio(GtkAdjustment* adjustment, gdouble ratio) {
   const gdouble expected = clamp_to_range(adjustment, value_for_ratio(adjustment, ratio));
 
   /* the value is rounded, so compare within a pixel */

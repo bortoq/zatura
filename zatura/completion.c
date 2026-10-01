@@ -32,9 +32,9 @@ static int compare_case_insensitive(const void* data1, const void* data2) {
   return g_utf8_collate(ustr1, ustr2);
 }
 
-static girara_list_t* list_files(zatura_t* zatura, const char* current_path, const char* current_file,
+static girara_list_t* list_files(zathura_t* zathura, const char* current_path, const char* current_file,
                                  size_t current_file_length, bool is_dir, bool check_file_ext) {
-  if (zatura == NULL || zatura->ui.session == NULL || current_path == NULL) {
+  if (zathura == NULL || zathura->ui.session == NULL || current_path == NULL) {
     return NULL;
   }
 
@@ -49,9 +49,9 @@ static girara_list_t* list_files(zatura_t* zatura, const char* current_path, con
   g_autoptr(girara_list_t) res = girara_sorted_list_new_with_free(compare_case_insensitive, g_free);
 
   bool show_hidden = false;
-  girara_setting_get(zatura->ui.session, "show-hidden", &show_hidden);
+  girara_setting_get(zathura->ui.session, "show-hidden", &show_hidden);
   bool show_directories = true;
-  girara_setting_get(zatura->ui.session, "show-directories", &show_directories);
+  girara_setting_get(zathura->ui.session, "show-directories", &show_directories);
 
   /* read files */
   const char* name = NULL;
@@ -85,7 +85,7 @@ static girara_list_t* list_files(zatura_t* zatura, const char* current_path, con
       girara_debug("adding %s (directory)", full_path);
       girara_list_append(res, full_path);
       full_path = NULL;
-    } else if (check_file_ext == false || file_valid_extension(zatura, full_path) == true) {
+    } else if (check_file_ext == false || file_valid_extension(zathura, full_path) == true) {
       girara_debug("adding %s (file)", full_path);
       girara_list_append(res, full_path);
       full_path = NULL;
@@ -114,7 +114,7 @@ static void group_add_element(void* data, void* userdata) {
   girara_completion_group_add_element(group, element, NULL);
 }
 
-static girara_completion_t* list_files_for_cc(zatura_t* zatura, const char* input, bool check_file_ext,
+static girara_completion_t* list_files_for_cc(zathura_t* zathura, const char* input, bool check_file_ext,
                                               int show_recent) {
   g_autoptr(girara_completion_t) completion  = girara_completion_init();
   g_autoptr(girara_completion_group_t) group = girara_completion_group_create(_("Files"));
@@ -164,7 +164,7 @@ static girara_completion_t* list_files_for_cc(zatura_t* zatura, const char* inpu
   /* read directory */
   if (g_file_test(current_path, G_FILE_TEST_IS_DIR)) {
     g_autoptr(girara_list_t) names =
-        list_files(zatura, current_path, current_file, current_file_length, is_dir, check_file_ext);
+        list_files(zathura, current_path, current_file, current_file_length, is_dir, check_file_ext);
     if (names == NULL) {
       return NULL;
     }
@@ -173,7 +173,7 @@ static girara_completion_t* list_files_for_cc(zatura_t* zatura, const char* inpu
   }
 
   if (show_recent > 0) {
-    g_autoptr(girara_list_t) recent_files = zatura_db_get_recent_files(zatura->database, show_recent, path);
+    g_autoptr(girara_list_t) recent_files = zathura_db_get_recent_files(zathura->database, show_recent, path);
     if (recent_files == NULL) {
       return NULL;
     }
@@ -197,20 +197,20 @@ static girara_completion_t* list_files_for_cc(zatura_t* zatura, const char* inpu
 girara_completion_t* cc_open(girara_session_t* session, const char* input) {
   g_return_val_if_fail(session != NULL, NULL);
   g_return_val_if_fail(session->global.data != NULL, NULL);
-  zatura_t* zatura = session->global.data;
+  zathura_t* zathura = session->global.data;
 
   int show_recent = 0;
-  girara_setting_get(zatura->ui.session, "show-recent", &show_recent);
+  girara_setting_get(zathura->ui.session, "show-recent", &show_recent);
 
-  return list_files_for_cc(zatura, input, true, show_recent);
+  return list_files_for_cc(zathura, input, true, show_recent);
 }
 
 girara_completion_t* cc_write(girara_session_t* session, const char* input) {
   g_return_val_if_fail(session != NULL, NULL);
   g_return_val_if_fail(session->global.data != NULL, NULL);
-  zatura_t* zatura = session->global.data;
+  zathura_t* zathura = session->global.data;
 
-  return list_files_for_cc(zatura, input, false, false);
+  return list_files_for_cc(zathura, input, false, false);
 }
 
 girara_completion_t* cc_bookmarks(girara_session_t* session, const char* input) {
@@ -220,7 +220,7 @@ girara_completion_t* cc_bookmarks(girara_session_t* session, const char* input) 
 
   g_return_val_if_fail(session != NULL, NULL);
   g_return_val_if_fail(session->global.data != NULL, NULL);
-  zatura_t* zatura = session->global.data;
+  zathura_t* zathura = session->global.data;
 
   g_autoptr(girara_completion_t) completion  = girara_completion_init();
   g_autoptr(girara_completion_group_t) group = girara_completion_group_create(_("Bookmarks"));
@@ -230,8 +230,8 @@ girara_completion_t* cc_bookmarks(girara_session_t* session, const char* input) 
   }
 
   const size_t input_length = strlen(input);
-  for (size_t idx = 0; idx != girara_list_size(zatura->bookmarks.bookmarks); ++idx) {
-    zatura_bookmark_t* bookmark = girara_list_nth(zatura->bookmarks.bookmarks, idx);
+  for (size_t idx = 0; idx != girara_list_size(zathura->bookmarks.bookmarks); ++idx) {
+    zathura_bookmark_t* bookmark = girara_list_nth(zathura->bookmarks.bookmarks, idx);
     if (input_length <= strlen(bookmark->id) && !strncmp(input, bookmark->id, input_length)) {
       g_autofree gchar* paged = g_strdup_printf(_("Page %u"), bookmark->page);
       girara_completion_group_add_element(group, bookmark->id, paged);
@@ -245,8 +245,8 @@ girara_completion_t* cc_bookmarks(girara_session_t* session, const char* input) 
 girara_completion_t* cc_export(girara_session_t* session, const char* input) {
   g_return_val_if_fail(session != NULL, NULL);
   g_return_val_if_fail(session->global.data != NULL, NULL);
-  zatura_t* zatura           = session->global.data;
-  zatura_document_t* document = zatura_get_document(zatura);
+  zathura_t* zathura           = session->global.data;
+  zathura_document_t* document = zathura_get_document(zathura);
 
   if (input == NULL || document == NULL) {
     return NULL;
@@ -259,9 +259,9 @@ girara_completion_t* cc_export(girara_session_t* session, const char* input) {
 
   /* add attachments */
   const size_t input_length            = strlen(input);
-  zatura_error_t attachment_error     = ZATURA_ERROR_OK;
+  zathura_error_t attachment_error     = ZATHURA_ERROR_OK;
   bool added_attachment                = false;
-  g_autoptr(girara_list_t) attachments = zatura_document_attachments_get(document, &attachment_error);
+  g_autoptr(girara_list_t) attachments = zathura_document_attachments_get(document, &attachment_error);
   if (attachments != NULL) {
     g_autoptr(girara_completion_group_t) attachment_group = girara_completion_group_create(_("Attachments"));
     if (attachment_group == NULL) {
@@ -287,15 +287,15 @@ girara_completion_t* cc_export(girara_session_t* session, const char* input) {
   }
 
   bool added_image                   = false;
-  const unsigned int number_of_pages = zatura_document_get_number_of_pages(document);
-  zatura_error_t image_error        = ZATURA_ERROR_OK;
+  const unsigned int number_of_pages = zathura_document_get_number_of_pages(document);
+  zathura_error_t image_error        = ZATHURA_ERROR_OK;
   for (unsigned int page_id = 0; page_id < number_of_pages; page_id++) {
-    zatura_page_t* page = zatura_document_get_page(document, page_id);
+    zathura_page_t* page = zathura_document_get_page(document, page_id);
     if (page == NULL) {
       continue;
     }
 
-    g_autoptr(girara_list_t) images = zatura_page_images_get(page, &image_error);
+    g_autoptr(girara_list_t) images = zathura_page_images_get(page, &image_error);
     if (images != NULL) {
       for (size_t idx = 0; idx != girara_list_size(images); ++idx) {
         g_autofree char* image_string = g_strdup_printf("image-p%u-%zu", page_id + 1, idx + 1);
@@ -303,12 +303,12 @@ girara_completion_t* cc_export(girara_session_t* session, const char* input) {
 
         added_image = true;
       }
-    } else if (image_error == ZATURA_ERROR_NOT_IMPLEMENTED) {
+    } else if (image_error == ZATHURA_ERROR_NOT_IMPLEMENTED) {
       break;
     }
   }
 
-  if (attachment_error == ZATURA_ERROR_NOT_IMPLEMENTED && image_error == ZATURA_ERROR_NOT_IMPLEMENTED) {
+  if (attachment_error == ZATHURA_ERROR_NOT_IMPLEMENTED && image_error == ZATHURA_ERROR_NOT_IMPLEMENTED) {
     girara_notify(session, GIRARA_WARNING, _("Plugin does not support exporting attachments and images."));
     return NULL;
   }

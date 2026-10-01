@@ -15,34 +15,34 @@
  * Before the properties contain the correct values, 'draw-links' has to be set
  * to TRUE at least one time.
  * */
-struct zatura_page_widget_s {
+struct zathura_page_widget_s {
   GtkWidget parent;
 };
 
-struct zatura_page_widget_class_s {
+struct zathura_page_widget_class_s {
   GtkWidgetClass parent_class;
 };
 
-#define ZATURA_TYPE_PAGE_WIDGET (zatura_page_widget_get_type())
-#define ZATURA_PAGE_WIDGET(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj), ZATURA_TYPE_PAGE_WIDGET, ZaturaPageWidget))
-#define ZATURA_PAGE_WIDGET_CLASS(obj) (G_TYPE_CHECK_CLASS_CAST((obj), ZATURA_TYPE_PAGE_WIDGET, ZaturaPageClass))
-#define ZATURA_IS_PAGE_WIDGET(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj), ZATURA_TYPE_PAGE_WIDGET))
-#define ZATURA_IS_PAGE_WIDGET_CLASS(obj) (G_TYPE_CHECK_CLASS_TYPE((obj), ZATURA_TYPE_PAGE_WIDGET))
-#define ZATURA_PAGE_WIDGET_GET_CLASS(obj)                                                                             \
-  (G_TYPE_INSTANCE_GET_CLASS((obj), ZATURA_TYPE_PAGE_WIDGET, ZaturaPageClass))
+#define ZATHURA_TYPE_PAGE_WIDGET (zathura_page_widget_get_type())
+#define ZATHURA_PAGE_WIDGET(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj), ZATHURA_TYPE_PAGE_WIDGET, ZathuraPageWidget))
+#define ZATHURA_PAGE_WIDGET_CLASS(obj) (G_TYPE_CHECK_CLASS_CAST((obj), ZATHURA_TYPE_PAGE_WIDGET, ZathuraPageClass))
+#define ZATHURA_IS_PAGE_WIDGET(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj), ZATHURA_TYPE_PAGE_WIDGET))
+#define ZATHURA_IS_PAGE_WIDGET_CLASS(obj) (G_TYPE_CHECK_CLASS_TYPE((obj), ZATHURA_TYPE_PAGE_WIDGET))
+#define ZATHURA_PAGE_WIDGET_GET_CLASS(obj)                                                                             \
+  (G_TYPE_INSTANCE_GET_CLASS((obj), ZATHURA_TYPE_PAGE_WIDGET, ZathuraPageClass))
 
 /**
  * Returns the type of the page view widget.
  * @return the type
  */
-GType zatura_page_widget_get_type(void);
+GType zathura_page_widget_get_type(void);
 /**
  * Create a page view widget.
  * @param zatura the zatura instance
  * @param page the page to be displayed
  * @return a page view widget
  */
-GtkWidget* zatura_page_widget_new(zatura_t* zatura, zatura_page_t* page);
+GtkWidget* zathura_page_widget_new(zathura_t* zathura, zathura_page_t* page);
 /**
  * Update the widget's surface. This should only be called from the render
  * thread.
@@ -50,45 +50,45 @@ GtkWidget* zatura_page_widget_new(zatura_t* zatura, zatura_page_t* page);
  * @param surface the new surface
  * @param keep_thumbnail don't destroy when surface is NULL
  */
-void zatura_page_widget_update_surface(ZaturaPageWidget* widget, cairo_surface_t* surface, bool keep_thumbnail);
+void zathura_page_widget_update_surface(ZathuraPageWidget* widget, cairo_surface_t* surface, bool keep_thumbnail);
 /**
  * Clear highlight of the selection/highlighter.
  * @param widget the widget
  */
-void zatura_page_widget_clear_selection(ZaturaPageWidget* widget);
+void zathura_page_widget_clear_selection(ZathuraPageWidget* widget);
 /**
  * Draw a rectangle to mark links or search results
  * @param widget the widget
  * @param rectangle the rectangle
  * @param linkid the link id if it's a link, -1 otherwise
  */
-zatura_link_t* zatura_page_widget_link_get(ZaturaPageWidget* widget, unsigned int index);
+zathura_link_t* zathura_page_widget_link_get(ZathuraPageWidget* widget, unsigned int index);
 /**
  * Update the last view time of the page.
  *
  * @param widget the widget
  */
-void zatura_page_widget_update_view_time(ZaturaPageWidget* widget);
+void zathura_page_widget_update_view_time(ZathuraPageWidget* widget);
 /**
  * Check if we have a surface.
  *
  * @param widget the widget
  * @returns true if the widget has a surface, false otherwise
  */
-bool zatura_page_widget_have_surface(ZaturaPageWidget* widget);
+bool zathura_page_widget_have_surface(ZathuraPageWidget* widget);
 /**
  * Abort outstanding render requests
  *
  * @param widget the widget
  */
-void zatura_page_widget_abort_render_request(ZaturaPageWidget* widget);
+void zathura_page_widget_abort_render_request(ZathuraPageWidget* widget);
 /**
  * Get underlying page
  *
  * @param widget the widget
  * @return underlying zatura_page_t instance
  */
-zatura_page_t* zatura_page_widget_get_page(ZaturaPageWidget* widget);
+zathura_page_t* zathura_page_widget_get_page(ZathuraPageWidget* widget);
 
 /**
  * Set size request for the page widget
@@ -97,14 +97,14 @@ zatura_page_t* zatura_page_widget_get_page(ZaturaPageWidget* widget);
  * @param width  page width
  * @param height page height
  */
-void zatura_page_widget_set_size_request(ZaturaPageWidget* widget, int width, int height);
+void zathura_page_widget_set_size_request(ZathuraPageWidget* widget, int width, int height);
 
 /**
  * Clear stored thumbnails
  *
  * @param widget the widget
  */
-void zatura_page_widget_clear_thumbnail(ZaturaPageWidget* widget);
+void zathura_page_widget_clear_thumbnail(ZathuraPageWidget* widget);
 
 /* scaled-button-release signal payload */
 typedef struct scaled_button_release_event_s {

@@ -2,7 +2,7 @@ gnome = import('gnome')
 zatura_resources = gnome.compile_resources(
   'resources',
   'zatura.gresource.xml',
-  c_name: 'zatura_resources',
+  c_name: 'zathura_resources',
   dependencies: files('girara.css_t', 'zatura.css_t', 'io.github.bortoq.zatura.xml')
 )
 

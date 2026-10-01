@@ -54,6 +54,6 @@ bool cmd_marks_delete(girara_session_t* session, girara_list_t* argument_list);
  * @param file Open file
  * @return true if no error occurred otherwise false
  */
-bool zatura_quickmarks_load(zatura_t* zatura, const gchar* file);
+bool zathura_quickmarks_load(zathura_t* zathura, const gchar* file);
 
 #endif // MARKS_H

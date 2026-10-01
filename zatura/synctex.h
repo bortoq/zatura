@@ -5,19 +5,19 @@
 
 #include "types.h"
 
-bool synctex_get_input_line_column(zatura_t* zatura, const char* filename, unsigned int page, int x, int y,
+bool synctex_get_input_line_column(zathura_t* zathura, const char* filename, unsigned int page, int x, int y,
                                    char** input_file, unsigned int* line, unsigned int* column);
 
-void synctex_edit(zatura_t* zatura, const char* editor, zatura_page_t* page, int x, int y);
+void synctex_edit(zathura_t* zathura, const char* editor, zathura_page_t* page, int x, int y);
 
 bool synctex_parse_input(const char* synctex, char** input_file, int* line, int* column);
 
-girara_list_t* synctex_rectangles_from_position(zatura_t* zatura, const char* filename, const char* input_file,
+girara_list_t* synctex_rectangles_from_position(zathura_t* zathura, const char* filename, const char* input_file,
                                                 int line, int column, unsigned int* page,
                                                 girara_list_t** secondary_rects);
 
-void synctex_highlight_rects(zatura_t* zatura, unsigned int page, girara_list_t** rectangles);
+void synctex_highlight_rects(zathura_t* zathura, unsigned int page, girara_list_t** rectangles);
 
-bool synctex_view(zatura_t* zatura, const char* input_file, unsigned int line, unsigned int column);
+bool synctex_view(zathura_t* zathura, const char* input_file, unsigned int line, unsigned int column);
 
 #endif

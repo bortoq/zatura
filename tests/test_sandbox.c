@@ -28,25 +28,25 @@ static void test_create(void) {
   }
 #endif
 
-  zatura_t* zatura = zatura_create();
-  g_assert_nonnull(zatura);
+  zathura_t* zathura = zathura_create();
+  g_assert_nonnull(zathura);
   g_assert_nonnull(g_getenv("G_TEST_SRCDIR"));
-  zatura_set_config_dir(zatura, g_getenv("G_TEST_SRCDIR"));
-  g_assert_true(zatura_init(zatura));
+  zathura_set_config_dir(zathura, g_getenv("G_TEST_SRCDIR"));
+  g_assert_true(zathura_init(zathura));
 
 #ifdef WITH_LANDLOCK
   landlock_drop_write();
 #endif
 #ifdef WITH_SECCOMP
-  g_assert_cmpint(seccomp_enable_strict_filter(zatura), ==, 0);
+  g_assert_cmpint(seccomp_enable_strict_filter(zathura), ==, 0);
 #endif
 
-  g_assert_null(zatura_document_open(zatura, NULL, NULL, NULL, NULL));
-  g_assert_null(zatura_document_open(zatura, "fl", NULL, NULL, NULL));
-  g_assert_null(zatura_document_open(zatura, "fl", "ur", NULL, NULL));
-  g_assert_null(zatura_document_open(zatura, "fl", NULL, "pw", NULL));
+  g_assert_null(zathura_document_open(zathura, NULL, NULL, NULL, NULL));
+  g_assert_null(zathura_document_open(zathura, "fl", NULL, NULL, NULL));
+  g_assert_null(zathura_document_open(zathura, "fl", "ur", NULL, NULL));
+  g_assert_null(zathura_document_open(zathura, "fl", NULL, "pw", NULL));
 
-  zatura_free(zatura);
+  zathura_free(zathura);
 }
 
 int main(int argc, char* argv[]) {

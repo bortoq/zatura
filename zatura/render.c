@@ -45,23 +45,23 @@ typedef struct private_s {
   } recolor;
 
   atomic_bool about_to_close; /**< Render thread is to be freed */
-} ZaturaRendererPrivate;
+} ZathuraRendererPrivate;
 
 /* private data for ZaturaRenderRequest */
 typedef struct request_private_s {
-  ZaturaRenderer* renderer;
-  zatura_page_t* page;
+  ZathuraRenderer* renderer;
+  zathura_page_t* page;
   gint64 last_view_time;
   girara_list_t* active_jobs;
   GMutex jobs_mutex;
   atomic_uint generation;
   bool render_plain;
-} ZaturaRenderRequestPrivate;
+} ZathuraRenderRequestPrivate;
 
 /* define the two types */
-G_DEFINE_TYPE_WITH_CODE(ZaturaRenderer, zatura_renderer, G_TYPE_OBJECT, G_ADD_PRIVATE(ZaturaRenderer))
-G_DEFINE_TYPE_WITH_CODE(ZaturaRenderRequest, zatura_render_request, G_TYPE_OBJECT,
-                        G_ADD_PRIVATE(ZaturaRenderRequest))
+G_DEFINE_TYPE_WITH_CODE(ZathuraRenderer, zathura_renderer, G_TYPE_OBJECT, G_ADD_PRIVATE(ZathuraRenderer))
+G_DEFINE_TYPE_WITH_CODE(ZathuraRenderRequest, zathura_render_request, G_TYPE_OBJECT,
+                        G_ADD_PRIVATE(ZathuraRenderRequest))
 
 /* private methods for ZaturaRenderer  */
 static void renderer_finalize(GObject* object);
@@ -71,26 +71,26 @@ static void render_request_finalize(GObject* object);
 
 static void render_job(void* data, void* user_data);
 static gint render_thread_sort(gconstpointer a, gconstpointer b, gpointer data);
-static ssize_t page_cache_lru_invalidate(ZaturaRenderer* renderer);
-static void page_cache_invalidate_all(ZaturaRenderer* renderer);
-static bool page_cache_is_full(ZaturaRenderer* renderer, bool* result);
+static ssize_t page_cache_lru_invalidate(ZathuraRenderer* renderer);
+static void page_cache_invalidate_all(ZathuraRenderer* renderer);
+static bool page_cache_is_full(ZathuraRenderer* renderer, bool* result);
 
 /* job description for render thread */
 typedef struct render_job_s {
-  ZaturaRenderRequest* request;
+  ZathuraRenderRequest* request;
   atomic_uint generation;
 } render_job_t;
 
 /* init, new and free for ZaturaRenderer */
 
-static void zatura_renderer_class_init(ZaturaRendererClass* class) {
+static void zathura_renderer_class_init(ZathuraRendererClass* class) {
   /* overwrite methods */
   GObjectClass* object_class = G_OBJECT_CLASS(class);
   object_class->finalize     = renderer_finalize;
 }
 
-static void zatura_renderer_init(ZaturaRenderer* renderer) {
-  ZaturaRendererPrivate* priv = zatura_renderer_get_instance_private(renderer);
+static void zathura_renderer_init(ZathuraRenderer* renderer) {
+  ZathuraRendererPrivate* priv = zathura_renderer_get_instance_private(renderer);
   priv->pool                   = g_thread_pool_new(render_job, renderer, 1, TRUE, NULL);
   priv->about_to_close         = false;
   g_thread_pool_set_sort_function(priv->pool, render_thread_sort, NULL);
@@ -107,13 +107,13 @@ static void zatura_renderer_init(ZaturaRenderer* renderer) {
   priv->page_cache.cache            = NULL;
   priv->page_cache.num_cached_pages = 0;
 
-  zatura_renderer_set_recolor_colors_str(renderer, "#000000", "#FFFFFF");
+  zathura_renderer_set_recolor_colors_str(renderer, "#000000", "#FFFFFF");
 
   priv->requests = girara_list_new();
 }
 
-static bool page_cache_init(ZaturaRenderer* renderer, size_t cache_size) {
-  ZaturaRendererPrivate* priv = zatura_renderer_get_instance_private(renderer);
+static bool page_cache_init(ZathuraRenderer* renderer, size_t cache_size) {
+  ZathuraRendererPrivate* priv = zathura_renderer_get_instance_private(renderer);
 
   priv->page_cache.size  = cache_size;
   priv->page_cache.cache = g_try_malloc0(cache_size * sizeof(int));
@@ -125,11 +125,11 @@ static bool page_cache_init(ZaturaRenderer* renderer, size_t cache_size) {
   return true;
 }
 
-ZaturaRenderer* zatura_renderer_new(size_t cache_size) {
+ZathuraRenderer* zathura_renderer_new(size_t cache_size) {
   g_return_val_if_fail(cache_size > 0, NULL);
 
-  GObject* obj         = g_object_new(ZATURA_TYPE_RENDERER, NULL);
-  ZaturaRenderer* ret = ZATURA_RENDERER(obj);
+  GObject* obj         = g_object_new(ZATHURA_TYPE_RENDERER, NULL);
+  ZathuraRenderer* ret = ZATHURA_RENDERER(obj);
 
   if (page_cache_init(ret, cache_size) == false) {
     g_object_unref(obj);
@@ -140,10 +140,10 @@ ZaturaRenderer* zatura_renderer_new(size_t cache_size) {
 }
 
 static void renderer_finalize(GObject* object) {
-  ZaturaRenderer* renderer    = ZATURA_RENDERER(object);
-  ZaturaRendererPrivate* priv = zatura_renderer_get_instance_private(renderer);
+  ZathuraRenderer* renderer    = ZATHURA_RENDERER(object);
+  ZathuraRendererPrivate* priv = zathura_renderer_get_instance_private(renderer);
 
-  zatura_renderer_stop(renderer);
+  zathura_renderer_stop(renderer);
   g_mutex_clear(&(priv->mutex));
 
   g_free(priv->page_cache.cache);
@@ -152,13 +152,13 @@ static void renderer_finalize(GObject* object) {
 
 /* (un)register requests at the renderer */
 
-static void renderer_unregister_request(ZaturaRenderer* renderer, ZaturaRenderRequest* request) {
-  ZaturaRendererPrivate* priv = zatura_renderer_get_instance_private(renderer);
+static void renderer_unregister_request(ZathuraRenderer* renderer, ZathuraRenderRequest* request) {
+  ZathuraRendererPrivate* priv = zathura_renderer_get_instance_private(renderer);
   girara_list_remove(priv->requests, request);
 }
 
-static void renderer_register_request(ZaturaRenderer* renderer, ZaturaRenderRequest* request) {
-  ZaturaRendererPrivate* priv = zatura_renderer_get_instance_private(renderer);
+static void renderer_register_request(ZathuraRenderer* renderer, ZathuraRenderRequest* request) {
+  ZathuraRendererPrivate* priv = zathura_renderer_get_instance_private(renderer);
   if (girara_list_contains(priv->requests, request) == false) {
     girara_list_append(priv->requests, request);
   }
@@ -175,40 +175,40 @@ enum {
 
 static guint request_signals[REQUEST_LAST_SIGNAL] = {0};
 
-static void zatura_render_request_class_init(ZaturaRenderRequestClass* class) {
+static void zathura_render_request_class_init(ZathuraRenderRequestClass* class) {
   /* overwrite methods */
   GObjectClass* object_class = G_OBJECT_CLASS(class);
   object_class->dispose      = render_request_dispose;
   object_class->finalize     = render_request_finalize;
 
   request_signals[REQUEST_COMPLETED] =
-      g_signal_new("completed", ZATURA_TYPE_RENDER_REQUEST, G_SIGNAL_RUN_LAST, 0, NULL, NULL,
+      g_signal_new("completed", ZATHURA_TYPE_RENDER_REQUEST, G_SIGNAL_RUN_LAST, 0, NULL, NULL,
                    g_cclosure_marshal_generic, G_TYPE_NONE, 1, G_TYPE_POINTER);
 
-  request_signals[REQUEST_CACHE_ADDED] = g_signal_new("cache-added", ZATURA_TYPE_RENDER_REQUEST, G_SIGNAL_RUN_LAST, 0,
+  request_signals[REQUEST_CACHE_ADDED] = g_signal_new("cache-added", ZATHURA_TYPE_RENDER_REQUEST, G_SIGNAL_RUN_LAST, 0,
                                                       NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 0);
 
   request_signals[REQUEST_CACHE_INVALIDATED] =
-      g_signal_new("cache-invalidated", ZATURA_TYPE_RENDER_REQUEST, G_SIGNAL_RUN_LAST, 0, NULL, NULL,
+      g_signal_new("cache-invalidated", ZATHURA_TYPE_RENDER_REQUEST, G_SIGNAL_RUN_LAST, 0, NULL, NULL,
                    g_cclosure_marshal_generic, G_TYPE_NONE, 0);
 }
 
-static void zatura_render_request_init(ZaturaRenderRequest* request) {
-  ZaturaRenderRequestPrivate* priv = zatura_render_request_get_instance_private(request);
+static void zathura_render_request_init(ZathuraRenderRequest* request) {
+  ZathuraRenderRequestPrivate* priv = zathura_render_request_get_instance_private(request);
   priv->renderer                    = NULL;
   priv->page                        = NULL;
 }
 
-ZaturaRenderRequest* zatura_render_request_new(ZaturaRenderer* renderer, zatura_page_t* page) {
+ZathuraRenderRequest* zathura_render_request_new(ZathuraRenderer* renderer, zathura_page_t* page) {
   g_return_val_if_fail(renderer != NULL && page != NULL, NULL);
 
-  GObject* obj = g_object_new(ZATURA_TYPE_RENDER_REQUEST, NULL);
+  GObject* obj = g_object_new(ZATHURA_TYPE_RENDER_REQUEST, NULL);
   if (obj == NULL) {
     return NULL;
   }
 
-  ZaturaRenderRequest* request     = ZATURA_RENDER_REQUEST(obj);
-  ZaturaRenderRequestPrivate* priv = zatura_render_request_get_instance_private(request);
+  ZathuraRenderRequest* request     = ZATHURA_RENDER_REQUEST(obj);
+  ZathuraRenderRequestPrivate* priv = zathura_render_request_get_instance_private(request);
   /* we want to make sure that renderer lives long enough */
   priv->renderer    = g_object_ref(renderer);
   priv->page        = page;
@@ -224,8 +224,8 @@ ZaturaRenderRequest* zatura_render_request_new(ZaturaRenderer* renderer, zatura_
 }
 
 static void render_request_dispose(GObject* object) {
-  ZaturaRenderRequest* request     = ZATURA_RENDER_REQUEST(object);
-  ZaturaRenderRequestPrivate* priv = zatura_render_request_get_instance_private(request);
+  ZathuraRenderRequest* request     = ZATHURA_RENDER_REQUEST(object);
+  ZathuraRenderRequestPrivate* priv = zathura_render_request_get_instance_private(request);
 
   if (priv->renderer != NULL) {
     /* unregister the request */
@@ -234,12 +234,12 @@ static void render_request_dispose(GObject* object) {
     g_clear_object(&priv->renderer);
   }
 
-  G_OBJECT_CLASS(zatura_render_request_parent_class)->dispose(object);
+  G_OBJECT_CLASS(zathura_render_request_parent_class)->dispose(object);
 }
 
 static void render_request_finalize(GObject* object) {
-  ZaturaRenderRequest* request     = ZATURA_RENDER_REQUEST(object);
-  ZaturaRenderRequestPrivate* priv = zatura_render_request_get_instance_private(request);
+  ZathuraRenderRequest* request     = ZATHURA_RENDER_REQUEST(object);
+  ZathuraRenderRequestPrivate* priv = zathura_render_request_get_instance_private(request);
 
   if (girara_list_size(priv->active_jobs) != 0) {
     girara_error("This should not happen!");
@@ -247,71 +247,71 @@ static void render_request_finalize(GObject* object) {
   girara_list_free(priv->active_jobs);
   g_mutex_clear(&priv->jobs_mutex);
 
-  G_OBJECT_CLASS(zatura_render_request_parent_class)->finalize(object);
+  G_OBJECT_CLASS(zathura_render_request_parent_class)->finalize(object);
 }
 
 /* renderer methods */
 
-bool zatura_renderer_recolor_enabled(ZaturaRenderer* renderer) {
-  g_return_val_if_fail(ZATURA_IS_RENDERER(renderer), false);
+bool zathura_renderer_recolor_enabled(ZathuraRenderer* renderer) {
+  g_return_val_if_fail(ZATHURA_IS_RENDERER(renderer), false);
 
-  ZaturaRendererPrivate* priv = zatura_renderer_get_instance_private(renderer);
+  ZathuraRendererPrivate* priv = zathura_renderer_get_instance_private(renderer);
   return priv->recolor.enabled;
 }
 
-void zatura_renderer_enable_recolor(ZaturaRenderer* renderer, bool enable) {
-  g_return_if_fail(ZATURA_IS_RENDERER(renderer));
+void zathura_renderer_enable_recolor(ZathuraRenderer* renderer, bool enable) {
+  g_return_if_fail(ZATHURA_IS_RENDERER(renderer));
 
-  ZaturaRendererPrivate* priv = zatura_renderer_get_instance_private(renderer);
+  ZathuraRendererPrivate* priv = zathura_renderer_get_instance_private(renderer);
   priv->recolor.enabled        = enable;
 }
 
-bool zatura_renderer_recolor_hue_enabled(ZaturaRenderer* renderer) {
-  g_return_val_if_fail(ZATURA_IS_RENDERER(renderer), false);
+bool zathura_renderer_recolor_hue_enabled(ZathuraRenderer* renderer) {
+  g_return_val_if_fail(ZATHURA_IS_RENDERER(renderer), false);
 
-  ZaturaRendererPrivate* priv = zatura_renderer_get_instance_private(renderer);
+  ZathuraRendererPrivate* priv = zathura_renderer_get_instance_private(renderer);
   return priv->recolor.hue;
 }
 
-void zatura_renderer_enable_recolor_hue(ZaturaRenderer* renderer, bool enable) {
-  g_return_if_fail(ZATURA_IS_RENDERER(renderer));
+void zathura_renderer_enable_recolor_hue(ZathuraRenderer* renderer, bool enable) {
+  g_return_if_fail(ZATHURA_IS_RENDERER(renderer));
 
-  ZaturaRendererPrivate* priv = zatura_renderer_get_instance_private(renderer);
+  ZathuraRendererPrivate* priv = zathura_renderer_get_instance_private(renderer);
   priv->recolor.hue            = enable;
 }
 
-bool zatura_renderer_recolor_reverse_video_enabled(ZaturaRenderer* renderer) {
-  g_return_val_if_fail(ZATURA_IS_RENDERER(renderer), false);
+bool zathura_renderer_recolor_reverse_video_enabled(ZathuraRenderer* renderer) {
+  g_return_val_if_fail(ZATHURA_IS_RENDERER(renderer), false);
 
-  ZaturaRendererPrivate* priv = zatura_renderer_get_instance_private(renderer);
+  ZathuraRendererPrivate* priv = zathura_renderer_get_instance_private(renderer);
   return priv->recolor.reverse_video;
 }
 
-void zatura_renderer_enable_recolor_reverse_video(ZaturaRenderer* renderer, bool enable) {
-  g_return_if_fail(ZATURA_IS_RENDERER(renderer));
+void zathura_renderer_enable_recolor_reverse_video(ZathuraRenderer* renderer, bool enable) {
+  g_return_if_fail(ZATHURA_IS_RENDERER(renderer));
 
-  ZaturaRendererPrivate* priv = zatura_renderer_get_instance_private(renderer);
+  ZathuraRendererPrivate* priv = zathura_renderer_get_instance_private(renderer);
   priv->recolor.reverse_video  = enable;
 }
 
-bool zatura_renderer_recolor_adjust_lightness_enabled(ZaturaRenderer* renderer) {
-  g_return_val_if_fail(ZATURA_IS_RENDERER(renderer), false);
+bool zathura_renderer_recolor_adjust_lightness_enabled(ZathuraRenderer* renderer) {
+  g_return_val_if_fail(ZATHURA_IS_RENDERER(renderer), false);
 
-  ZaturaRendererPrivate* priv = zatura_renderer_get_instance_private(renderer);
+  ZathuraRendererPrivate* priv = zathura_renderer_get_instance_private(renderer);
   return priv->recolor.adjust_lightness;
 }
 
-void zatura_renderer_enable_recolor_adjust_lightness(ZaturaRenderer* renderer, bool enable) {
-  g_return_if_fail(ZATURA_IS_RENDERER(renderer));
+void zathura_renderer_enable_recolor_adjust_lightness(ZathuraRenderer* renderer, bool enable) {
+  g_return_if_fail(ZATHURA_IS_RENDERER(renderer));
 
-  ZaturaRendererPrivate* priv   = zatura_renderer_get_instance_private(renderer);
+  ZathuraRendererPrivate* priv   = zathura_renderer_get_instance_private(renderer);
   priv->recolor.adjust_lightness = enable;
 }
 
-void zatura_renderer_set_recolor_colors(ZaturaRenderer* renderer, const GdkRGBA* light, const GdkRGBA* dark) {
-  g_return_if_fail(ZATURA_IS_RENDERER(renderer));
+void zathura_renderer_set_recolor_colors(ZathuraRenderer* renderer, const GdkRGBA* light, const GdkRGBA* dark) {
+  g_return_if_fail(ZATHURA_IS_RENDERER(renderer));
 
-  ZaturaRendererPrivate* priv = zatura_renderer_get_instance_private(renderer);
+  ZathuraRendererPrivate* priv = zathura_renderer_get_instance_private(renderer);
   if (light != NULL) {
     priv->recolor.light = *light;
   }
@@ -320,27 +320,27 @@ void zatura_renderer_set_recolor_colors(ZaturaRenderer* renderer, const GdkRGBA*
   }
 }
 
-void zatura_renderer_set_recolor_colors_str(ZaturaRenderer* renderer, const char* light, const char* dark) {
-  g_return_if_fail(ZATURA_IS_RENDERER(renderer));
+void zathura_renderer_set_recolor_colors_str(ZathuraRenderer* renderer, const char* light, const char* dark) {
+  g_return_if_fail(ZATHURA_IS_RENDERER(renderer));
 
   if (dark != NULL) {
     GdkRGBA color;
     if (parse_color(&color, dark) == true) {
-      zatura_renderer_set_recolor_colors(renderer, NULL, &color);
+      zathura_renderer_set_recolor_colors(renderer, NULL, &color);
     }
   }
   if (light != NULL) {
     GdkRGBA color;
     if (parse_color(&color, light) == true) {
-      zatura_renderer_set_recolor_colors(renderer, &color, NULL);
+      zathura_renderer_set_recolor_colors(renderer, &color, NULL);
     }
   }
 }
 
-void zatura_renderer_get_recolor_colors(ZaturaRenderer* renderer, GdkRGBA* light, GdkRGBA* dark) {
-  g_return_if_fail(ZATURA_IS_RENDERER(renderer));
+void zathura_renderer_get_recolor_colors(ZathuraRenderer* renderer, GdkRGBA* light, GdkRGBA* dark) {
+  g_return_if_fail(ZATHURA_IS_RENDERER(renderer));
 
-  ZaturaRendererPrivate* priv = zatura_renderer_get_instance_private(renderer);
+  ZathuraRendererPrivate* priv = zathura_renderer_get_instance_private(renderer);
   if (light != NULL) {
     *light = priv->recolor.light;
   }
@@ -349,23 +349,23 @@ void zatura_renderer_get_recolor_colors(ZaturaRenderer* renderer, GdkRGBA* light
   }
 }
 
-void zatura_renderer_lock(ZaturaRenderer* renderer) {
-  g_return_if_fail(ZATURA_IS_RENDERER(renderer));
+void zathura_renderer_lock(ZathuraRenderer* renderer) {
+  g_return_if_fail(ZATHURA_IS_RENDERER(renderer));
 
-  ZaturaRendererPrivate* priv = zatura_renderer_get_instance_private(renderer);
+  ZathuraRendererPrivate* priv = zathura_renderer_get_instance_private(renderer);
   g_mutex_lock(&priv->mutex);
 }
 
-void zatura_renderer_unlock(ZaturaRenderer* renderer) {
-  g_return_if_fail(ZATURA_IS_RENDERER(renderer));
+void zathura_renderer_unlock(ZathuraRenderer* renderer) {
+  g_return_if_fail(ZATHURA_IS_RENDERER(renderer));
 
-  ZaturaRendererPrivate* priv = zatura_renderer_get_instance_private(renderer);
+  ZathuraRendererPrivate* priv = zathura_renderer_get_instance_private(renderer);
   g_mutex_unlock(&priv->mutex);
 }
 
-void zatura_renderer_stop(ZaturaRenderer* renderer) {
-  g_return_if_fail(ZATURA_IS_RENDERER(renderer));
-  ZaturaRendererPrivate* priv = zatura_renderer_get_instance_private(renderer);
+void zathura_renderer_stop(ZathuraRenderer* renderer) {
+  g_return_if_fail(ZATHURA_IS_RENDERER(renderer));
+  ZathuraRendererPrivate* priv = zathura_renderer_get_instance_private(renderer);
   if (priv->about_to_close == false) {
     girara_debug("Setting about-to-close flag for renderer");
   }
@@ -380,10 +380,10 @@ void zatura_renderer_stop(ZaturaRenderer* renderer) {
 
 /* ZaturaRenderRequest methods */
 
-void zatura_render_request(ZaturaRenderRequest* request, gint64 last_view_time) {
-  g_return_if_fail(ZATURA_IS_RENDER_REQUEST(request));
+void zathura_render_request(ZathuraRenderRequest* request, gint64 last_view_time) {
+  g_return_if_fail(ZATHURA_IS_RENDER_REQUEST(request));
 
-  ZaturaRenderRequestPrivate* request_priv = zatura_render_request_get_instance_private(request);
+  ZathuraRenderRequestPrivate* request_priv = zathura_render_request_get_instance_private(request);
   g_mutex_lock(&request_priv->jobs_mutex);
 
   bool unfinished_jobs = false;
@@ -403,7 +403,7 @@ void zatura_render_request(ZaturaRenderRequest* request, gint64 last_view_time) 
       return;
     }
 
-    ZaturaRendererPrivate* priv = zatura_renderer_get_instance_private(request_priv->renderer);
+    ZathuraRendererPrivate* priv = zathura_renderer_get_instance_private(request_priv->renderer);
     if (priv->about_to_close || !priv->pool) {
       g_mutex_unlock(&request_priv->jobs_mutex);
       return;
@@ -427,30 +427,30 @@ void zatura_render_request(ZaturaRenderRequest* request, gint64 last_view_time) 
   g_mutex_unlock(&request_priv->jobs_mutex);
 }
 
-void zatura_render_request_abort(ZaturaRenderRequest* request) {
-  g_return_if_fail(ZATURA_IS_RENDER_REQUEST(request));
+void zathura_render_request_abort(ZathuraRenderRequest* request) {
+  g_return_if_fail(ZATHURA_IS_RENDER_REQUEST(request));
 
-  ZaturaRenderRequestPrivate* request_priv = zatura_render_request_get_instance_private(request);
+  ZathuraRenderRequestPrivate* request_priv = zathura_render_request_get_instance_private(request);
   ++request_priv->generation;
 }
 
-void zatura_render_request_update_view_time(ZaturaRenderRequest* request) {
-  g_return_if_fail(ZATURA_IS_RENDER_REQUEST(request));
+void zathura_render_request_update_view_time(ZathuraRenderRequest* request) {
+  g_return_if_fail(ZATHURA_IS_RENDER_REQUEST(request));
 
-  ZaturaRenderRequestPrivate* request_priv = zatura_render_request_get_instance_private(request);
+  ZathuraRenderRequestPrivate* request_priv = zathura_render_request_get_instance_private(request);
   request_priv->last_view_time              = g_get_real_time();
 }
 
 /* render job */
 
 static bool render_job_is_stale(const render_job_t* job) {
-  ZaturaRenderRequestPrivate* request_priv = zatura_render_request_get_instance_private(job->request);
+  ZathuraRenderRequestPrivate* request_priv = zathura_render_request_get_instance_private(job->request);
 
   return job->generation != request_priv->generation;
 }
 
 static void remove_job_and_free(render_job_t* job) {
-  ZaturaRenderRequestPrivate* request_priv = zatura_render_request_get_instance_private(job->request);
+  ZathuraRenderRequestPrivate* request_priv = zathura_render_request_get_instance_private(job->request);
 
   g_mutex_lock(&request_priv->jobs_mutex);
   girara_list_remove(request_priv->active_jobs, job);
@@ -468,15 +468,15 @@ typedef struct emit_completed_signal_s {
 static gboolean emit_completed_signal(void* data) {
   emit_completed_signal_t* ecs              = data;
   render_job_t* job                         = ecs->job;
-  ZaturaRenderRequestPrivate* request_priv = zatura_render_request_get_instance_private(job->request);
-  ZaturaRendererPrivate* priv              = zatura_renderer_get_instance_private(request_priv->renderer);
+  ZathuraRenderRequestPrivate* request_priv = zathura_render_request_get_instance_private(job->request);
+  ZathuraRendererPrivate* priv              = zathura_renderer_get_instance_private(request_priv->renderer);
 
   if (!priv->about_to_close && !render_job_is_stale(job)) {
     /* emit the signal */
-    girara_debug("Emitting signal for page %u", zatura_page_get_index(request_priv->page) + 1);
+    girara_debug("Emitting signal for page %u", zathura_page_get_index(request_priv->page) + 1);
     g_signal_emit(job->request, request_signals[REQUEST_COMPLETED], 0, ecs->surface);
   } else {
-    girara_debug("Rendering of page %u aborted", zatura_page_get_index(request_priv->page) + 1);
+    girara_debug("Rendering of page %u aborted", zathura_page_get_index(request_priv->page) + 1);
   }
   /* mark the request as done */
   remove_job_and_free(job);
@@ -490,7 +490,7 @@ static gboolean emit_completed_signal(void* data) {
 
 static bool pixel_inside_rectangles(girara_list_t* rectangles, unsigned int x, unsigned int y) {
   for (size_t idx = 0; idx != girara_list_size(rectangles); ++idx) {
-    zatura_rectangle_t* rect_it = girara_list_nth(rectangles, idx);
+    zathura_rectangle_t* rect_it = girara_list_nth(rectangles, idx);
     if (rect_it->x1 <= x && rect_it->x2 >= x && rect_it->y1 <= y && rect_it->y2 >= y) {
       return true;
     }
@@ -530,7 +530,7 @@ static double colorumax(const double h[3], double l, double l1, double l2) {
 /* RGB weights for computing lightness. Must sum to one */
 static const double weights[] = {0.30, 0.59, 0.11};
 
-static void recolor_slow(ZaturaRendererPrivate* priv, unsigned int page_width, unsigned int page_height,
+static void recolor_slow(ZathuraRendererPrivate* priv, unsigned int page_width, unsigned int page_height,
                          cairo_surface_t* surface, girara_list_t* rectangles, bool found_images) {
   const GdkRGBA rgb1 = priv->recolor.dark;
   const GdkRGBA rgb2 = priv->recolor.light;
@@ -630,7 +630,7 @@ static void recolor_slow(ZaturaRendererPrivate* priv, unsigned int page_width, u
   }
 }
 
-static void recolor_fast(ZaturaRendererPrivate* priv, unsigned int page_width, unsigned int page_height,
+static void recolor_fast(ZathuraRendererPrivate* priv, unsigned int page_width, unsigned int page_height,
                          cairo_surface_t* surface, girara_list_t* rectangles, bool found_images) {
   const GdkRGBA rgb1 = priv->recolor.dark;
   const GdkRGBA rgb2 = priv->recolor.light;
@@ -712,8 +712,8 @@ static void recolor_fast(ZaturaRendererPrivate* priv, unsigned int page_width, u
   }
 }
 
-static void recolor(ZaturaRendererPrivate* priv, zatura_page_t* page, unsigned int page_width,
-                    unsigned int page_height, cairo_surface_t* surface, zatura_device_factors_t device_factors) {
+static void recolor(ZathuraRendererPrivate* priv, zathura_page_t* page, unsigned int page_width,
+                    unsigned int page_height, cairo_surface_t* surface, zathura_device_factors_t device_factors) {
   /* uses a representation of a rgb color as follows:
      - a lightness scalar (between 0,1), which is a weighted average of r, g, b,
      - a hue vector, which indicates a radian direction from the grey axis,
@@ -744,7 +744,7 @@ static void recolor(ZaturaRendererPrivate* priv, zatura_page_t* page, unsigned i
 
   /* If in reverse video mode retrieve images */
   if (priv->recolor.reverse_video == true) {
-    g_autoptr(girara_list_t) images = zatura_page_images_get(page, NULL);
+    g_autoptr(girara_list_t) images = zathura_page_images_get(page, NULL);
     found_images                    = (images != NULL);
 
     rectangles = girara_list_new_with_free(g_free);
@@ -756,8 +756,8 @@ static void recolor(ZaturaRendererPrivate* priv, zatura_page_t* page, unsigned i
     if (found_images == true) {
       /* Get images bounding boxes */
       for (size_t idx = 0; idx != girara_list_size(images); ++idx) {
-        zatura_image_t* image_it = girara_list_nth(images, idx);
-        zatura_rectangle_t* rect = g_try_malloc(sizeof(zatura_rectangle_t));
+        zathura_image_t* image_it = girara_list_nth(images, idx);
+        zathura_rectangle_t* rect = g_try_malloc(sizeof(zathura_rectangle_t));
         if (rect == NULL) {
           break;
         }
@@ -795,7 +795,7 @@ static bool invoke_completed_signal(render_job_t* job, cairo_surface_t* surface)
   return true;
 }
 
-static bool render_to_cairo_surface(cairo_surface_t* surface, zatura_page_t* page, ZaturaRenderer* renderer,
+static bool render_to_cairo_surface(cairo_surface_t* surface, zathura_page_t* page, ZathuraRenderer* renderer,
                                     double real_scale) {
   cairo_t* cairo = cairo_create(surface);
   if (cairo_status(cairo) != CAIRO_STATUS_SUCCESS) {
@@ -812,21 +812,21 @@ static bool render_to_cairo_surface(cairo_surface_t* surface, zatura_page_t* pag
     cairo_scale(cairo, real_scale, real_scale);
   }
 
-  zatura_renderer_lock(renderer);
-  const int err = zatura_page_render(page, cairo, false);
-  zatura_renderer_unlock(renderer);
+  zathura_renderer_lock(renderer);
+  const int err = zathura_page_render(page, cairo, false);
+  zathura_renderer_unlock(renderer);
   cairo_destroy(cairo);
 
-  return err == ZATURA_ERROR_OK;
+  return err == ZATHURA_ERROR_OK;
 }
 
-static bool render(render_job_t* job, ZaturaRenderRequest* request, ZaturaRenderer* renderer) {
-  ZaturaRendererPrivate* priv              = zatura_renderer_get_instance_private(renderer);
-  ZaturaRenderRequestPrivate* request_priv = zatura_render_request_get_instance_private(request);
-  zatura_page_t* page                      = request_priv->page;
+static bool render(render_job_t* job, ZathuraRenderRequest* request, ZathuraRenderer* renderer) {
+  ZathuraRendererPrivate* priv              = zathura_renderer_get_instance_private(renderer);
+  ZathuraRenderRequestPrivate* request_priv = zathura_render_request_get_instance_private(request);
+  zathura_page_t* page                      = request_priv->page;
 
   /* parse the page on first render */
-  if (zatura_renderer_load_page(renderer, page) == false) {
+  if (zathura_renderer_load_page(renderer, page) == false) {
     return false;
   }
 
@@ -835,11 +835,11 @@ static bool render(render_job_t* job, ZaturaRenderRequest* request, ZaturaRender
   unsigned int page_height = 0;
 
   /* page size in points */
-  zatura_document_t* document = zatura_page_get_document(page);
-  const double height          = zatura_page_get_height(page);
-  const double width           = zatura_page_get_width(page);
+  zathura_document_t* document = zathura_page_get_document(page);
+  const double height          = zathura_page_get_height(page);
+  const double width           = zathura_page_get_width(page);
 
-  zatura_device_factors_t device_factors = {0};
+  zathura_device_factors_t device_factors = {0};
   double real_scale                       = 1;
   if (request_priv->render_plain == false) {
     /* page size in user pixels based on document zoom: if PPI information is
@@ -847,7 +847,7 @@ static bool render(render_job_t* job, ZaturaRenderRequest* request, ZaturaRender
      * (i.e. document size on screen matching the physical paper size). */
     real_scale = page_calc_height_width(document, page, &page_height, &page_width, false);
 
-    device_factors = zatura_document_get_device_factors(document);
+    device_factors = zathura_document_get_device_factors(document);
     page_width *= device_factors.x;
     page_height *= device_factors.y;
   } else {
@@ -879,7 +879,7 @@ static bool render(render_job_t* job, ZaturaRenderRequest* request, ZaturaRender
 
   /* before recoloring, check if we've been aborted */
   if (priv->about_to_close || render_job_is_stale(job)) {
-    girara_debug("Rendering of page %u aborted", zatura_page_get_index(request_priv->page) + 1);
+    girara_debug("Rendering of page %u aborted", zathura_page_get_index(request_priv->page) + 1);
     remove_job_and_free(job);
     cairo_surface_destroy(surface);
     return true;
@@ -900,30 +900,30 @@ static bool render(render_job_t* job, ZaturaRenderRequest* request, ZaturaRender
   return true;
 }
 
-bool zatura_renderer_load_page(ZaturaRenderer* renderer, zatura_page_t* page) {
-  g_return_val_if_fail(ZATURA_IS_RENDERER(renderer) == TRUE, false);
+bool zathura_renderer_load_page(ZathuraRenderer* renderer, zathura_page_t* page) {
+  g_return_val_if_fail(ZATHURA_IS_RENDERER(renderer) == TRUE, false);
 
   /* zatura_page_load takes the document lock internally */
-  return zatura_page_load(page, NULL);
+  return zathura_page_load(page, NULL);
 }
 
 /* render a page synchronously and return its surface */
-cairo_surface_t* zatura_renderer_render_page(ZaturaRenderer* renderer, zatura_page_t* page) {
-  g_return_val_if_fail(ZATURA_IS_RENDERER(renderer), NULL);
+cairo_surface_t* zathura_renderer_render_page(ZathuraRenderer* renderer, zathura_page_t* page) {
+  g_return_val_if_fail(ZATHURA_IS_RENDERER(renderer), NULL);
   g_return_val_if_fail(page != NULL, NULL);
 
-  ZaturaRendererPrivate* priv = zatura_renderer_get_instance_private(renderer);
-  zatura_document_t* document = zatura_page_get_document(page);
+  ZathuraRendererPrivate* priv = zathura_renderer_get_instance_private(renderer);
+  zathura_document_t* document = zathura_page_get_document(page);
 
   /* parse the page on first render */
-  if (zatura_renderer_load_page(renderer, page) == false) {
+  if (zathura_renderer_load_page(renderer, page) == false) {
     return NULL;
   }
 
   unsigned int page_width = 0, page_height = 0;
   const double real_scale = page_calc_height_width(document, page, &page_height, &page_width, false);
 
-  const zatura_device_factors_t device_factors = zatura_document_get_device_factors(document);
+  const zathura_device_factors_t device_factors = zathura_document_get_device_factors(document);
   page_width *= device_factors.x;
   page_height *= device_factors.y;
 
@@ -949,18 +949,18 @@ cairo_surface_t* zatura_renderer_render_page(ZaturaRenderer* renderer, zatura_pa
 
 static void render_job(void* data, void* user_data) {
   render_job_t* job             = data;
-  ZaturaRenderRequest* request = job->request;
-  ZaturaRenderer* renderer     = user_data;
+  ZathuraRenderRequest* request = job->request;
+  ZathuraRenderer* renderer     = user_data;
 
-  ZaturaRendererPrivate* priv = zatura_renderer_get_instance_private(renderer);
+  ZathuraRendererPrivate* priv = zathura_renderer_get_instance_private(renderer);
   if (priv->about_to_close || render_job_is_stale(job)) {
     /* back out early */
     remove_job_and_free(job);
     return;
   }
 
-  ZaturaRenderRequestPrivate* request_private = zatura_render_request_get_instance_private(request);
-  const unsigned int page_index                = zatura_page_get_index(request_private->page);
+  ZathuraRenderRequestPrivate* request_private = zathura_render_request_get_instance_private(request);
+  const unsigned int page_index                = zathura_page_get_index(request_private->page);
   girara_debug("Rendering page %u ...", page_index + 1);
   if (render(job, request, renderer) != true) {
     girara_error("Rendering failed (page %u)\n", page_index + 1);
@@ -968,26 +968,26 @@ static void render_job(void* data, void* user_data) {
   }
 }
 
-void render_all(zatura_t* zatura) {
-  zatura_document_t* document = zatura_get_document(zatura);
+void render_all(zathura_t* zathura) {
+  zathura_document_t* document = zathura_get_document(zathura);
   if (document == NULL) {
     return;
   }
 
-  zatura_document_widget_compute_layout(ZATURA_DOCUMENT_WIDGET(zatura->ui.document_widget));
+  zathura_document_widget_compute_layout(ZATHURA_DOCUMENT_WIDGET(zathura->ui.document_widget));
 
   /* unmark all pages */
-  const unsigned int number_of_pages = zatura_document_get_number_of_pages(document);
+  const unsigned int number_of_pages = zathura_document_get_number_of_pages(document);
   for (unsigned int page_id = 0; page_id < number_of_pages; ++page_id) {
-    zatura_page_t* page     = zatura_document_get_page(document, page_id);
+    zathura_page_t* page     = zathura_document_get_page(document, page_id);
     unsigned int page_height = 0, page_width = 0;
 
     page_calc_height_width(document, page, &page_height, &page_width, true);
 
     girara_debug("Queuing resize for page %u to %u x %u.", page_id, page_width, page_height);
-    GtkWidget* widget = zatura_page_get_widget(zatura, page);
+    GtkWidget* widget = zathura_page_get_widget(zathura, page);
     if (widget != NULL) {
-      zatura_page_widget_set_size_request(ZATURA_PAGE_WIDGET(widget), page_width, page_height);
+      zathura_page_widget_set_size_request(ZATHURA_PAGE_WIDGET(widget), page_width, page_height);
       gtk_widget_queue_resize(widget);
     }
   }
@@ -1013,8 +1013,8 @@ static gint render_thread_sort(gconstpointer a, gconstpointer b, gpointer UNUSED
     return 1;
   }
 
-  ZaturaRenderRequestPrivate* priv_a = zatura_render_request_get_instance_private(job_a->request);
-  ZaturaRenderRequestPrivate* priv_b = zatura_render_request_get_instance_private(job_b->request);
+  ZathuraRenderRequestPrivate* priv_a = zathura_render_request_get_instance_private(job_a->request);
+  ZathuraRenderRequestPrivate* priv_b = zathura_render_request_get_instance_private(job_b->request);
 
   // handle jobs with more recent view time first
   return priv_a->last_view_time < priv_b->last_view_time ? 1
@@ -1023,9 +1023,9 @@ static gint render_thread_sort(gconstpointer a, gconstpointer b, gpointer UNUSED
 
 /* cache functions */
 
-static bool page_cache_is_cached(ZaturaRenderer* renderer, unsigned int page_index) {
+static bool page_cache_is_cached(ZathuraRenderer* renderer, unsigned int page_index) {
   g_return_val_if_fail(renderer != NULL, false);
-  ZaturaRendererPrivate* priv = zatura_renderer_get_instance_private(renderer);
+  ZathuraRendererPrivate* priv = zathura_renderer_get_instance_private(renderer);
 
   if (priv->page_cache.num_cached_pages != 0) {
     for (size_t i = 0; i < priv->page_cache.size; ++i) {
@@ -1041,29 +1041,29 @@ static bool page_cache_is_cached(ZaturaRenderer* renderer, unsigned int page_ind
 }
 
 static int find_request_by_page_index(const void* req, const void* data) {
-  ZaturaRenderRequest* request = (void*)req;
+  ZathuraRenderRequest* request = (void*)req;
   const unsigned int page_index = *((const int*)data);
 
-  ZaturaRenderRequestPrivate* priv = zatura_render_request_get_instance_private(request);
-  if (zatura_page_get_index(priv->page) == page_index) {
+  ZathuraRenderRequestPrivate* priv = zathura_render_request_get_instance_private(request);
+  if (zathura_page_get_index(priv->page) == page_index) {
     return 0;
   }
   return 1;
 }
 
-static ssize_t page_cache_lru_invalidate(ZaturaRenderer* renderer) {
+static ssize_t page_cache_lru_invalidate(ZathuraRenderer* renderer) {
   g_return_val_if_fail(renderer != NULL, -1);
-  ZaturaRendererPrivate* priv = zatura_renderer_get_instance_private(renderer);
+  ZathuraRendererPrivate* priv = zathura_renderer_get_instance_private(renderer);
   g_return_val_if_fail(priv->page_cache.size != 0, -1);
 
   ssize_t lru_index             = 0;
   gint64 lru_view_time          = G_MAXINT64;
-  ZaturaRenderRequest* request = NULL;
+  ZathuraRenderRequest* request = NULL;
   for (size_t i = 0; i < priv->page_cache.size; ++i) {
-    ZaturaRenderRequest* tmp_request =
+    ZathuraRenderRequest* tmp_request =
         girara_list_find(priv->requests, find_request_by_page_index, &priv->page_cache.cache[i]);
     g_return_val_if_fail(tmp_request != NULL, -1);
-    ZaturaRenderRequestPrivate* request_priv = zatura_render_request_get_instance_private(tmp_request);
+    ZathuraRenderRequestPrivate* request_priv = zathura_render_request_get_instance_private(tmp_request);
 
     if (request_priv->last_view_time < lru_view_time) {
       lru_view_time = request_priv->last_view_time;
@@ -1072,43 +1072,43 @@ static ssize_t page_cache_lru_invalidate(ZaturaRenderer* renderer) {
     }
   }
 
-  ZaturaRenderRequestPrivate* request_priv = zatura_render_request_get_instance_private(request);
+  ZathuraRenderRequestPrivate* request_priv = zathura_render_request_get_instance_private(request);
 
   /* emit the signal */
   g_signal_emit(request, request_signals[REQUEST_CACHE_INVALIDATED], 0);
-  girara_debug("Invalidated page %u at cache index %zd", zatura_page_get_index(request_priv->page) + 1, lru_index);
+  girara_debug("Invalidated page %u at cache index %zd", zathura_page_get_index(request_priv->page) + 1, lru_index);
   priv->page_cache.cache[lru_index] = -1;
   --priv->page_cache.num_cached_pages;
 
   return lru_index;
 }
 
-static bool page_cache_is_full(ZaturaRenderer* renderer, bool* result) {
-  g_return_val_if_fail(ZATURA_IS_RENDERER(renderer) && result != NULL, false);
+static bool page_cache_is_full(ZathuraRenderer* renderer, bool* result) {
+  g_return_val_if_fail(ZATHURA_IS_RENDERER(renderer) && result != NULL, false);
 
-  ZaturaRendererPrivate* priv = zatura_renderer_get_instance_private(renderer);
+  ZathuraRendererPrivate* priv = zathura_renderer_get_instance_private(renderer);
   *result                      = priv->page_cache.num_cached_pages == priv->page_cache.size;
 
   return true;
 }
 
-static void page_cache_invalidate_all(ZaturaRenderer* renderer) {
-  g_return_if_fail(ZATURA_IS_RENDERER(renderer));
+static void page_cache_invalidate_all(ZathuraRenderer* renderer) {
+  g_return_if_fail(ZATHURA_IS_RENDERER(renderer));
 
-  ZaturaRendererPrivate* priv = zatura_renderer_get_instance_private(renderer);
+  ZathuraRendererPrivate* priv = zathura_renderer_get_instance_private(renderer);
   for (size_t i = 0; i < priv->page_cache.size; ++i) {
     priv->page_cache.cache[i] = -1;
   }
   priv->page_cache.num_cached_pages = 0;
 }
 
-void zatura_renderer_page_cache_add(ZaturaRenderer* renderer, unsigned int page_index) {
-  g_return_if_fail(ZATURA_IS_RENDERER(renderer));
+void zathura_renderer_page_cache_add(ZathuraRenderer* renderer, unsigned int page_index) {
+  g_return_if_fail(ZATHURA_IS_RENDERER(renderer));
   if (page_cache_is_cached(renderer, page_index) == true) {
     return;
   }
 
-  ZaturaRendererPrivate* priv = zatura_renderer_get_instance_private(renderer);
+  ZathuraRendererPrivate* priv = zathura_renderer_get_instance_private(renderer);
   bool full                    = false;
   if (page_cache_is_full(renderer, &full) == false) {
     return;
@@ -1126,21 +1126,21 @@ void zatura_renderer_page_cache_add(ZaturaRenderer* renderer, unsigned int page_
     girara_debug("Page %d is cached at cache index %zu", page_index + 1, priv->page_cache.num_cached_pages - 1);
   }
 
-  ZaturaRenderRequest* request = girara_list_find(priv->requests, find_request_by_page_index, &page_index);
+  ZathuraRenderRequest* request = girara_list_find(priv->requests, find_request_by_page_index, &page_index);
   g_return_if_fail(request != NULL);
   g_signal_emit(request, request_signals[REQUEST_CACHE_ADDED], 0);
 }
 
-void zatura_render_request_set_render_plain(ZaturaRenderRequest* request, bool render_plain) {
-  g_return_if_fail(ZATURA_IS_RENDER_REQUEST(request));
+void zathura_render_request_set_render_plain(ZathuraRenderRequest* request, bool render_plain) {
+  g_return_if_fail(ZATHURA_IS_RENDER_REQUEST(request));
 
-  ZaturaRenderRequestPrivate* priv = zatura_render_request_get_instance_private(request);
+  ZathuraRenderRequestPrivate* priv = zathura_render_request_get_instance_private(request);
   priv->render_plain                = render_plain;
 }
 
-bool zatura_render_request_get_render_plain(ZaturaRenderRequest* request) {
-  g_return_val_if_fail(ZATURA_IS_RENDER_REQUEST(request), false);
+bool zathura_render_request_get_render_plain(ZathuraRenderRequest* request) {
+  g_return_val_if_fail(ZATHURA_IS_RENDER_REQUEST(request), false);
 
-  ZaturaRenderRequestPrivate* priv = zatura_render_request_get_instance_private(request);
+  ZathuraRenderRequestPrivate* priv = zathura_render_request_get_instance_private(request);
   return priv->render_plain;
 }

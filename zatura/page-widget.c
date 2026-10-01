@@ -20,12 +20,12 @@
 #include "zatura.h"
 #include "document-widget.h"
 
-typedef struct zatura_page_widget_private_s {
-  zatura_page_t* page;                 /**< Page object */
-  zatura_t* zatura;                   /**< Zatura object */
+typedef struct zathura_page_widget_private_s {
+  zathura_page_t* page;                 /**< Page object */
+  zathura_t* zathura;                   /**< Zatura object */
   cairo_surface_t* surface;             /**< Cairo surface */
   cairo_surface_t* thumbnail;           /**< Cairo surface */
-  ZaturaRenderRequest* render_request; /* Request object */
+  ZathuraRenderRequest* render_request; /* Request object */
   bool cached;                          /**< Cached state */
 
   struct {
@@ -50,16 +50,16 @@ typedef struct zatura_page_widget_private_s {
   struct {
     girara_list_t* list;      /**< List of images on the page */
     gboolean retrieved;       /**< True if we already tried to retrieve the list of images */
-    zatura_image_t* current; /**< Image data of selected image */
+    zathura_image_t* current; /**< Image data of selected image */
   } images;
 
   struct {
-    zatura_rectangle_t selection; /**< x1 y1: click point, x2 y2: current position */
+    zathura_rectangle_t selection; /**< x1 y1: click point, x2 y2: current position */
     gboolean over_link;
   } mouse;
 
   struct {
-    zatura_rectangle_t bounds; /**< Highlight bounds */
+    zathura_rectangle_t bounds; /**< Highlight bounds */
     gboolean draw;              /**< Draw highlighted region */
   } highlighter;
 
@@ -72,36 +72,36 @@ typedef struct zatura_page_widget_private_s {
   GtkWidget* drawing_area;           /**< child layer that draws the page */
   GtkWidget* image_popover;          /**< lazily created image context menu */
   GSimpleActionGroup* image_actions; /**< action group for the image popup */
-} ZaturaPageWidgetPrivate;
+} ZathuraPageWidgetPrivate;
 
-G_DEFINE_TYPE_WITH_CODE(ZaturaPageWidget, zatura_page_widget, GTK_TYPE_WIDGET, G_ADD_PRIVATE(ZaturaPageWidget))
+G_DEFINE_TYPE_WITH_CODE(ZathuraPageWidget, zathura_page_widget, GTK_TYPE_WIDGET, G_ADD_PRIVATE(ZathuraPageWidget))
 
 static void cb_page_draw(GtkDrawingArea* area, cairo_t* cairo, int width, int height, gpointer data);
-static void zatura_page_widget_finalize(GObject* object);
-static void zatura_page_widget_dispose(GObject* object);
-static void zatura_page_widget_set_property(GObject* object, guint prop_id, const GValue* value, GParamSpec* pspec);
-static void zatura_page_widget_get_property(GObject* object, guint prop_id, GValue* value, GParamSpec* pspec);
-static void evaluate_link_at_mouse_position(ZaturaPageWidget* widget, int oldx, int oldy);
-static void zatura_page_widget_popup_menu(GtkWidget* widget, double x, double y);
+static void zathura_page_widget_finalize(GObject* object);
+static void zathura_page_widget_dispose(GObject* object);
+static void zathura_page_widget_set_property(GObject* object, guint prop_id, const GValue* value, GParamSpec* pspec);
+static void zathura_page_widget_get_property(GObject* object, guint prop_id, GValue* value, GParamSpec* pspec);
+static void evaluate_link_at_mouse_position(ZathuraPageWidget* widget, int oldx, int oldy);
+static void zathura_page_widget_popup_menu(GtkWidget* widget, double x, double y);
 static void cb_menu_image_copy(GSimpleAction* action, GVariant* parameter, gpointer data);
 static void cb_menu_image_save(GSimpleAction* action, GVariant* parameter, gpointer data);
-static void cb_zatura_page_widget_button_press_event(GtkGestureClick* gesture, gint n_press, gdouble x, gdouble y,
+static void cb_zathura_page_widget_button_press_event(GtkGestureClick* gesture, gint n_press, gdouble x, gdouble y,
                                                       gpointer data);
-static void cb_zatura_page_widget_button_release_event(GtkGestureClick* gesture, gint n_press, gdouble x, gdouble y,
+static void cb_zathura_page_widget_button_release_event(GtkGestureClick* gesture, gint n_press, gdouble x, gdouble y,
                                                         gpointer data);
-static void cb_zatura_page_widget_motion_notify(GtkEventControllerMotion* controller, gdouble x, gdouble y,
+static void cb_zathura_page_widget_motion_notify(GtkEventControllerMotion* controller, gdouble x, gdouble y,
                                                  gpointer data);
-static void cb_zatura_page_widget_leave_notify(GtkEventControllerMotion* controller, gpointer data);
-static void cb_update_surface(ZaturaRenderRequest* request, cairo_surface_t* surface, void* data);
-static void cb_cache_added(ZaturaRenderRequest* request, void* data);
-static void cb_cache_invalidated(ZaturaRenderRequest* request, void* data);
+static void cb_zathura_page_widget_leave_notify(GtkEventControllerMotion* controller, gpointer data);
+static void cb_update_surface(ZathuraRenderRequest* request, cairo_surface_t* surface, void* data);
+static void cb_cache_added(ZathuraRenderRequest* request, void* data);
+static void cb_cache_invalidated(ZathuraRenderRequest* request, void* data);
 static bool surface_small_enough(cairo_surface_t* surface, size_t max_size, cairo_surface_t* old);
 static cairo_surface_t* draw_thumbnail_image(cairo_surface_t* surface, size_t max_size);
 
 enum properties_e {
   PROP_0,
   PROP_PAGE,
-  PROP_ZATURA,
+  PROP_ZATHURA,
   PROP_DRAW_LINKS,
   PROP_LINKS_OFFSET,
   PROP_LINKS_NUMBER,
@@ -124,16 +124,16 @@ enum {
 
 static guint signals[LAST_SIGNAL] = {0};
 
-static void zatura_page_widget_class_init(ZaturaPageWidgetClass* class) {
+static void zathura_page_widget_class_init(ZathuraPageWidgetClass* class) {
   /* overwrite methods */
   GtkWidgetClass* widget_class = GTK_WIDGET_CLASS(class);
   gtk_widget_class_set_layout_manager_type(widget_class, GTK_TYPE_BIN_LAYOUT);
 
   GObjectClass* object_class = G_OBJECT_CLASS(class);
-  object_class->dispose      = zatura_page_widget_dispose;
-  object_class->finalize     = zatura_page_widget_finalize;
-  object_class->set_property = zatura_page_widget_set_property;
-  object_class->get_property = zatura_page_widget_get_property;
+  object_class->dispose      = zathura_page_widget_dispose;
+  object_class->finalize     = zathura_page_widget_finalize;
+  object_class->set_property = zathura_page_widget_set_property;
+  object_class->get_property = zathura_page_widget_get_property;
 
   /* add properties */
   g_object_class_install_property(
@@ -141,7 +141,7 @@ static void zatura_page_widget_class_init(ZaturaPageWidgetClass* class) {
       g_param_spec_pointer("page", "page", "the page to draw",
                            G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property(
-      object_class, PROP_ZATURA,
+      object_class, PROP_ZATHURA,
       g_param_spec_pointer("zatura", "zatura", "the zatura instance",
                            G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property(object_class, PROP_DRAW_LINKS,
@@ -175,26 +175,26 @@ static void zatura_page_widget_class_init(ZaturaPageWidgetClass* class) {
                                                        G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
 
   /* add signals */
-  signals[TEXT_SELECTED] = g_signal_new("text-selected", ZATURA_TYPE_PAGE_WIDGET, G_SIGNAL_RUN_LAST, 0, NULL, NULL,
+  signals[TEXT_SELECTED] = g_signal_new("text-selected", ZATHURA_TYPE_PAGE_WIDGET, G_SIGNAL_RUN_LAST, 0, NULL, NULL,
                                         g_cclosure_marshal_generic, G_TYPE_NONE, 1, G_TYPE_STRING);
 
-  signals[IMAGE_SELECTED] = g_signal_new("image-selected", ZATURA_TYPE_PAGE_WIDGET, G_SIGNAL_RUN_LAST, 0, NULL, NULL,
+  signals[IMAGE_SELECTED] = g_signal_new("image-selected", ZATHURA_TYPE_PAGE_WIDGET, G_SIGNAL_RUN_LAST, 0, NULL, NULL,
                                          g_cclosure_marshal_generic, G_TYPE_NONE, 1, G_TYPE_OBJECT);
 
-  signals[ENTER_LINK] = g_signal_new("enter-link", ZATURA_TYPE_PAGE_WIDGET, G_SIGNAL_RUN_LAST, 0, NULL, NULL,
+  signals[ENTER_LINK] = g_signal_new("enter-link", ZATHURA_TYPE_PAGE_WIDGET, G_SIGNAL_RUN_LAST, 0, NULL, NULL,
                                      g_cclosure_marshal_generic, G_TYPE_NONE, 0);
 
-  signals[LEAVE_LINK] = g_signal_new("leave-link", ZATURA_TYPE_PAGE_WIDGET, G_SIGNAL_RUN_LAST, 0, NULL, NULL,
+  signals[LEAVE_LINK] = g_signal_new("leave-link", ZATHURA_TYPE_PAGE_WIDGET, G_SIGNAL_RUN_LAST, 0, NULL, NULL,
                                      g_cclosure_marshal_generic, G_TYPE_NONE, 0);
 
-  signals[BUTTON_RELEASE] = g_signal_new("scaled-button-release", ZATURA_TYPE_PAGE_WIDGET, G_SIGNAL_RUN_LAST, 0, NULL,
+  signals[BUTTON_RELEASE] = g_signal_new("scaled-button-release", ZATHURA_TYPE_PAGE_WIDGET, G_SIGNAL_RUN_LAST, 0, NULL,
                                          NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1, G_TYPE_POINTER);
 }
 
-static void zatura_page_widget_init(ZaturaPageWidget* widget) {
-  ZaturaPageWidgetPrivate* priv = zatura_page_widget_get_instance_private(widget);
+static void zathura_page_widget_init(ZathuraPageWidget* widget) {
+  ZathuraPageWidgetPrivate* priv = zathura_page_widget_get_instance_private(widget);
   priv->page                     = NULL;
-  priv->zatura                  = NULL;
+  priv->zathura                  = NULL;
   priv->surface                  = NULL;
   priv->thumbnail                = NULL;
   priv->render_request           = NULL;
@@ -240,13 +240,13 @@ static void zatura_page_widget_init(ZaturaPageWidget* widget) {
 
   GtkGesture* click = gtk_gesture_click_new();
   gtk_gesture_single_set_button(GTK_GESTURE_SINGLE(click), 0);
-  g_signal_connect(click, "pressed", G_CALLBACK(cb_zatura_page_widget_button_press_event), widget);
-  g_signal_connect(click, "released", G_CALLBACK(cb_zatura_page_widget_button_release_event), widget);
+  g_signal_connect(click, "pressed", G_CALLBACK(cb_zathura_page_widget_button_press_event), widget);
+  g_signal_connect(click, "released", G_CALLBACK(cb_zathura_page_widget_button_release_event), widget);
   gtk_widget_add_controller(GTK_WIDGET(widget), GTK_EVENT_CONTROLLER(click));
 
   GtkEventController* motion = gtk_event_controller_motion_new();
-  g_signal_connect(motion, "motion", G_CALLBACK(cb_zatura_page_widget_motion_notify), widget);
-  g_signal_connect(motion, "leave", G_CALLBACK(cb_zatura_page_widget_leave_notify), widget);
+  g_signal_connect(motion, "motion", G_CALLBACK(cb_zathura_page_widget_motion_notify), widget);
+  g_signal_connect(motion, "leave", G_CALLBACK(cb_zathura_page_widget_leave_notify), widget);
   gtk_widget_add_controller(GTK_WIDGET(widget), motion);
 
   /* image popup actions are looked up by the popover via the image prefix */
@@ -260,17 +260,17 @@ static void zatura_page_widget_init(ZaturaPageWidget* widget) {
   gtk_widget_insert_action_group(GTK_WIDGET(widget), "image", G_ACTION_GROUP(priv->image_actions));
 }
 
-GtkWidget* zatura_page_widget_new(zatura_t* zatura, zatura_page_t* page) {
+GtkWidget* zathura_page_widget_new(zathura_t* zathura, zathura_page_t* page) {
   g_return_val_if_fail(page != NULL, NULL);
 
-  GObject* ret = g_object_new(ZATURA_TYPE_PAGE_WIDGET, "page", page, "zatura", zatura, NULL);
+  GObject* ret = g_object_new(ZATHURA_TYPE_PAGE_WIDGET, "page", page, "zatura", zathura, NULL);
   if (ret == NULL) {
     return NULL;
   }
 
-  ZaturaPageWidget* widget      = ZATURA_PAGE_WIDGET(ret);
-  ZaturaPageWidgetPrivate* priv = zatura_page_widget_get_instance_private(widget);
-  priv->render_request           = zatura_render_request_new(zatura->sync.render_thread, page);
+  ZathuraPageWidget* widget      = ZATHURA_PAGE_WIDGET(ret);
+  ZathuraPageWidgetPrivate* priv = zathura_page_widget_get_instance_private(widget);
+  priv->render_request           = zathura_render_request_new(zathura->sync.render_thread, page);
   g_signal_connect_object(priv->render_request, "completed", G_CALLBACK(cb_update_surface), widget, 0);
   g_signal_connect_object(priv->render_request, "cache-added", G_CALLBACK(cb_cache_added), widget, 0);
   g_signal_connect_object(priv->render_request, "cache-invalidated", G_CALLBACK(cb_cache_invalidated), widget, 0);
@@ -278,21 +278,21 @@ GtkWidget* zatura_page_widget_new(zatura_t* zatura, zatura_page_t* page) {
   return GTK_WIDGET(ret);
 }
 
-static void zatura_page_widget_dispose(GObject* object) {
-  ZaturaPageWidget* widget      = ZATURA_PAGE_WIDGET(object);
-  ZaturaPageWidgetPrivate* priv = zatura_page_widget_get_instance_private(widget);
+static void zathura_page_widget_dispose(GObject* object) {
+  ZathuraPageWidget* widget      = ZATHURA_PAGE_WIDGET(object);
+  ZathuraPageWidgetPrivate* priv = zathura_page_widget_get_instance_private(widget);
 
   g_clear_object(&priv->render_request);
   g_clear_pointer(&priv->image_popover, gtk_widget_unparent);
   g_clear_object(&priv->image_actions);
   g_clear_pointer(&priv->drawing_area, gtk_widget_unparent);
 
-  G_OBJECT_CLASS(zatura_page_widget_parent_class)->dispose(object);
+  G_OBJECT_CLASS(zathura_page_widget_parent_class)->dispose(object);
 }
 
-static void zatura_page_widget_finalize(GObject* object) {
-  ZaturaPageWidget* widget      = ZATURA_PAGE_WIDGET(object);
-  ZaturaPageWidgetPrivate* priv = zatura_page_widget_get_instance_private(widget);
+static void zathura_page_widget_finalize(GObject* object) {
+  ZathuraPageWidget* widget      = ZATHURA_PAGE_WIDGET(object);
+  ZathuraPageWidgetPrivate* priv = zathura_page_widget_get_instance_private(widget);
 
   cairo_surface_destroy(priv->surface);
   cairo_surface_destroy(priv->thumbnail);
@@ -300,17 +300,17 @@ static void zatura_page_widget_finalize(GObject* object) {
   girara_list_free(priv->links.list);
   girara_list_free(priv->signatures.list);
 
-  G_OBJECT_CLASS(zatura_page_widget_parent_class)->finalize(object);
+  G_OBJECT_CLASS(zathura_page_widget_parent_class)->finalize(object);
 }
 
-static void set_font_from_property(cairo_t* cairo, zatura_t* zatura, cairo_font_weight_t weight) {
-  if (zatura == NULL) {
+static void set_font_from_property(cairo_t* cairo, zathura_t* zathura, cairo_font_weight_t weight) {
+  if (zathura == NULL) {
     return;
   }
 
   /* get user font description */
   g_autofree char* font = NULL;
-  girara_setting_get(zatura->ui.session, "font", &font);
+  girara_setting_get(zathura->ui.session, "font", &font);
   if (font == NULL) {
     return;
   }
@@ -329,9 +329,9 @@ static void set_font_from_property(cairo_t* cairo, zatura_t* zatura, cairo_font_
   if (!pango_font_description_get_size_is_absolute(descr)) {
     /* gtk-xft-dpi units are 1024ths of a point */
     double font_dpi = 96.0;
-    if (zatura->ui.session != NULL) {
+    if (zathura->ui.session != NULL) {
       int xft_dpi = -1;
-      g_object_get(gtk_widget_get_settings(zatura->ui.session->gtk.view), "gtk-xft-dpi", &xft_dpi, NULL);
+      g_object_get(gtk_widget_get_settings(zathura->ui.session->gtk.view), "gtk-xft-dpi", &xft_dpi, NULL);
       if (xft_dpi > 0) {
         font_dpi = xft_dpi / 1024.0;
       }
@@ -345,22 +345,22 @@ static void set_font_from_property(cairo_t* cairo, zatura_t* zatura, cairo_font_
   pango_font_description_free(descr);
 }
 
-static void zatura_page_widget_set_property(GObject* object, guint prop_id, const GValue* value, GParamSpec* pspec) {
-  ZaturaPageWidget* pageview    = ZATURA_PAGE_WIDGET(object);
-  ZaturaPageWidgetPrivate* priv = zatura_page_widget_get_instance_private(pageview);
+static void zathura_page_widget_set_property(GObject* object, guint prop_id, const GValue* value, GParamSpec* pspec) {
+  ZathuraPageWidget* pageview    = ZATHURA_PAGE_WIDGET(object);
+  ZathuraPageWidgetPrivate* priv = zathura_page_widget_get_instance_private(pageview);
 
   switch (prop_id) {
   case PROP_PAGE:
     priv->page = g_value_get_pointer(value);
     break;
-  case PROP_ZATURA:
-    priv->zatura = g_value_get_pointer(value);
+  case PROP_ZATHURA:
+    priv->zathura = g_value_get_pointer(value);
     break;
   case PROP_DRAW_LINKS:
     priv->links.draw = g_value_get_boolean(value);
     /* get links */
     if (priv->links.draw && !priv->links.retrieved) {
-      priv->links.list      = zatura_page_links_get(priv->page, NULL);
+      priv->links.list      = zathura_page_links_get(priv->page, NULL);
       priv->links.retrieved = TRUE;
       priv->links.n         = (priv->links.list == NULL) ? 0 : girara_list_size(priv->links.list);
     }
@@ -420,7 +420,7 @@ static void zatura_page_widget_set_property(GObject* object, guint prop_id, cons
      * redrawn without highlighting.
      */
 
-    if (priv->search.list != NULL && zatura_page_get_visibility(priv->page)) {
+    if (priv->search.list != NULL && zathura_page_get_visibility(priv->page)) {
       if (priv->drawing_area != NULL) {
         gtk_widget_queue_draw(priv->drawing_area);
       }
@@ -430,7 +430,7 @@ static void zatura_page_widget_set_property(GObject* object, guint prop_id, cons
     priv->signatures.draw = g_value_get_boolean(value);
     /* get links */
     if (priv->signatures.draw && !priv->signatures.retrieved) {
-      priv->signatures.list      = zatura_page_get_signatures(priv->page, NULL);
+      priv->signatures.list      = zathura_page_get_signatures(priv->page, NULL);
       priv->signatures.retrieved = TRUE;
     }
 
@@ -445,9 +445,9 @@ static void zatura_page_widget_set_property(GObject* object, guint prop_id, cons
   }
 }
 
-static void zatura_page_widget_get_property(GObject* object, guint prop_id, GValue* value, GParamSpec* pspec) {
-  ZaturaPageWidget* pageview    = ZATURA_PAGE_WIDGET(object);
-  ZaturaPageWidgetPrivate* priv = zatura_page_widget_get_instance_private(pageview);
+static void zathura_page_widget_get_property(GObject* object, guint prop_id, GValue* value, GParamSpec* pspec) {
+  ZathuraPageWidget* pageview    = ZATHURA_PAGE_WIDGET(object);
+  ZathuraPageWidgetPrivate* priv = zathura_page_widget_get_instance_private(pageview);
 
   switch (prop_id) {
   case PROP_LINKS_NUMBER:
@@ -472,7 +472,7 @@ static void zatura_page_widget_get_property(GObject* object, guint prop_id, GVal
 
 /* test against current geometry because the cached visibility flag can lag behind layout */
 static bool page_widget_on_screen(GtkWidget* widget) {
-  GtkWidget* document_widget = gtk_widget_get_ancestor(widget, ZATURA_TYPE_DOCUMENT_WIDGET);
+  GtkWidget* document_widget = gtk_widget_get_ancestor(widget, ZATHURA_TYPE_DOCUMENT_WIDGET);
   if (document_widget == NULL) {
     return gtk_widget_get_mapped(widget);
   }
@@ -487,8 +487,8 @@ static bool page_widget_on_screen(GtkWidget* widget) {
   return graphene_rect_intersection(&view, &bounds, NULL);
 }
 
-static zatura_device_factors_t get_safe_device_factors(cairo_surface_t* surface) {
-  zatura_device_factors_t factors;
+static zathura_device_factors_t get_safe_device_factors(cairo_surface_t* surface) {
+  zathura_device_factors_t factors;
   cairo_surface_get_device_scale(surface, &factors.x, &factors.y);
 
   if (fabs(factors.x) < DBL_EPSILON) {
@@ -503,31 +503,31 @@ static zatura_device_factors_t get_safe_device_factors(cairo_surface_t* surface)
 
 static void cb_page_draw(GtkDrawingArea* GIRARA_UNUSED(area), cairo_t* cairo, int width, int height, gpointer data) {
   GtkWidget* widget              = GTK_WIDGET(data);
-  ZaturaPageWidget* page        = ZATURA_PAGE_WIDGET(widget);
-  ZaturaPageWidgetPrivate* priv = zatura_page_widget_get_instance_private(page);
-  zatura_t* zatura             = priv->zatura;
+  ZathuraPageWidget* page        = ZATHURA_PAGE_WIDGET(widget);
+  ZathuraPageWidgetPrivate* priv = zathura_page_widget_get_instance_private(page);
+  zathura_t* zathura             = priv->zathura;
 
-  zatura_document_t* document   = zatura_page_get_document(priv->page);
+  zathura_document_t* document   = zathura_page_get_document(priv->page);
   const unsigned int page_height = (unsigned int)height;
   const unsigned int page_width  = (unsigned int)width;
 
   bool surface_exists = priv->surface != NULL || priv->thumbnail != NULL;
 
-  if (zatura->predecessor_document != NULL && zatura->predecessor_document_widget != NULL && !surface_exists) {
-    unsigned int page_index     = zatura_page_get_index(priv->page);
-    GtkWidget* predecessor_page = zatura_document_widget_get_page(zatura->predecessor_document_widget, page_index);
+  if (zathura->predecessor_document != NULL && zathura->predecessor_document_widget != NULL && !surface_exists) {
+    unsigned int page_index     = zathura_page_get_index(priv->page);
+    GtkWidget* predecessor_page = zathura_document_widget_get_page(zathura->predecessor_document_widget, page_index);
 
-    if (page_index < zatura_document_get_number_of_pages(priv->zatura->predecessor_document) &&
+    if (page_index < zathura_document_get_number_of_pages(priv->zathura->predecessor_document) &&
         predecessor_page != NULL) {
       /* render real page */
       if (page_widget_on_screen(widget) == true) {
-        zatura_render_request(priv->render_request, g_get_real_time());
+        zathura_render_request(priv->render_request, g_get_real_time());
       }
 
       girara_debug("using predecessor page for idx %d", page_index);
-      document = priv->zatura->predecessor_document;
-      page     = ZATURA_PAGE_WIDGET(predecessor_page);
-      priv     = zatura_page_widget_get_instance_private(page);
+      document = priv->zathura->predecessor_document;
+      page     = ZATHURA_PAGE_WIDGET(predecessor_page);
+      priv     = zathura_page_widget_get_instance_private(page);
     }
     surface_exists = priv->surface != NULL || priv->thumbnail != NULL;
   }
@@ -535,7 +535,7 @@ static void cb_page_draw(GtkDrawingArea* GIRARA_UNUSED(area), cairo_t* cairo, in
   if (surface_exists) {
     cairo_save(cairo);
 
-    const unsigned int rotation = zatura_document_get_rotation(document);
+    const unsigned int rotation = zathura_document_get_rotation(document);
     switch (rotation) {
     case 90:
       cairo_translate(cairo, page_width, 0);
@@ -557,7 +557,7 @@ static void cb_page_draw(GtkDrawingArea* GIRARA_UNUSED(area), cairo_t* cairo, in
       cairo_paint(cairo);
       cairo_restore(cairo);
     } else {
-      girara_debug("drawing thumbnail for page %u", zatura_page_get_index(priv->page));
+      girara_debug("drawing thumbnail for page %u", zathura_page_get_index(priv->page));
 
       const unsigned int height = cairo_image_surface_get_height(priv->thumbnail);
       const unsigned int width  = cairo_image_surface_get_width(priv->thumbnail);
@@ -565,7 +565,7 @@ static void cb_page_draw(GtkDrawingArea* GIRARA_UNUSED(area), cairo_t* cairo, in
       unsigned int pwidth       = (rotation % 180 ? page_height : page_width);
 
       /* note: this always returns 1 and 1 if Cairo too old for device scale API */
-      zatura_device_factors_t device = get_safe_device_factors(priv->thumbnail);
+      zathura_device_factors_t device = get_safe_device_factors(priv->thumbnail);
       pwidth *= device.x;
       pheight *= device.y;
 
@@ -582,31 +582,31 @@ static void cb_page_draw(GtkDrawingArea* GIRARA_UNUSED(area), cairo_t* cairo, in
       /* All but the last jobs requested here are aborted during zooming.
        * Processing and aborting smaller jobs first improves responsiveness. */
       const gint64 penalty = (gint64)pwidth * (gint64)pheight;
-      if (page_widget_on_screen(widget) == true && priv->zatura->sync.initial_render_held == false) {
-        zatura_render_request(priv->render_request, g_get_real_time() + penalty);
+      if (page_widget_on_screen(widget) == true && priv->zathura->sync.initial_render_held == false) {
+        zathura_render_request(priv->render_request, g_get_real_time() + penalty);
       }
       return;
     }
 
     /* draw links */
-    set_font_from_property(cairo, zatura, CAIRO_FONT_WEIGHT_BOLD);
+    set_font_from_property(cairo, zathura, CAIRO_FONT_WEIGHT_BOLD);
 
     if (priv->links.draw == true && priv->links.n != 0) {
       unsigned int link_counter = 0;
       for (size_t idx = 0; idx != girara_list_size(priv->links.list); ++idx) {
-        zatura_link_t* link = girara_list_nth(priv->links.list, idx);
+        zathura_link_t* link = girara_list_nth(priv->links.list, idx);
         if (link != NULL) {
-          zatura_rectangle_t rectangle = recalc_rectangle(priv->page, zatura_link_get_position(link));
+          zathura_rectangle_t rectangle = recalc_rectangle(priv->page, zathura_link_get_position(link));
 
           /* draw position */
-          const GdkRGBA color = zatura->ui.colors.highlight_color;
+          const GdkRGBA color = zathura->ui.colors.highlight_color;
           cairo_set_source_rgba(cairo, color.red, color.green, color.blue, color.alpha);
           cairo_rectangle(cairo, rectangle.x1, rectangle.y1, (rectangle.x2 - rectangle.x1),
                           (rectangle.y2 - rectangle.y1));
           cairo_fill(cairo);
 
           /* draw text */
-          const GdkRGBA color_fg = zatura->ui.colors.highlight_color_fg;
+          const GdkRGBA color_fg = zathura->ui.colors.highlight_color_fg;
           cairo_set_source_rgba(cairo, color_fg.red, color_fg.green, color_fg.blue, color_fg.alpha);
           cairo_move_to(cairo, rectangle.x1 + 1, rectangle.y2 - 1);
           g_autofree char* link_number = g_strdup_printf("%i", priv->links.offset + ++link_counter);
@@ -620,7 +620,7 @@ static void cb_page_draw(GtkDrawingArea* GIRARA_UNUSED(area), cairo_t* cairo, in
       PangoLayout* layout = pango_cairo_create_layout(cairo);
 
       for (size_t idx = 0; idx != girara_list_size(priv->signatures.list); ++idx) {
-        zatura_signature_info_t* signature = girara_list_nth(priv->signatures.list, idx);
+        zathura_signature_info_t* signature = girara_list_nth(priv->signatures.list, idx);
         if (signature == NULL) {
           continue;
         }
@@ -629,8 +629,8 @@ static void cb_page_draw(GtkDrawingArea* GIRARA_UNUSED(area), cairo_t* cairo, in
         char* text     = NULL;
         bool free_text = false;
         switch (signature->state) {
-        case ZATURA_SIGNATURE_VALID: {
-          color = zatura->ui.colors.signature_success;
+        case ZATHURA_SIGNATURE_VALID: {
+          color = zathura->ui.colors.signature_success;
 
           g_autofree char* sig_time = g_date_time_format(signature->time, "%F %T");
           text = g_strdup_printf(_("Signature is valid.\nThis document is signed by\n  %s\non %s."), signature->signer,
@@ -638,36 +638,36 @@ static void cb_page_draw(GtkDrawingArea* GIRARA_UNUSED(area), cairo_t* cairo, in
           free_text = true;
           break;
         }
-        case ZATURA_SIGNATURE_CERTIFICATE_EXPIRED:
-          color = zatura->ui.colors.signature_warning;
+        case ZATHURA_SIGNATURE_CERTIFICATE_EXPIRED:
+          color = zathura->ui.colors.signature_warning;
           text  = _("Signature certificate is expired.");
           break;
-        case ZATURA_SIGNATURE_CERTIFICATE_REVOKED:
-          color = zatura->ui.colors.signature_error;
+        case ZATHURA_SIGNATURE_CERTIFICATE_REVOKED:
+          color = zathura->ui.colors.signature_error;
           text  = _("Signature certificate is revoked.");
           break;
-        case ZATURA_SIGNATURE_CERTIFICATE_UNTRUSTED:
-          color = zatura->ui.colors.signature_error;
+        case ZATHURA_SIGNATURE_CERTIFICATE_UNTRUSTED:
+          color = zathura->ui.colors.signature_error;
           text  = _("Signature certificate is not trusted.");
           break;
-        case ZATURA_SIGNATURE_CERTIFICATE_INVALID:
-          color = zatura->ui.colors.signature_error;
+        case ZATHURA_SIGNATURE_CERTIFICATE_INVALID:
+          color = zathura->ui.colors.signature_error;
           text  = _("Signature certificate is invalid.");
           break;
         default:
-          color = zatura->ui.colors.signature_error;
+          color = zathura->ui.colors.signature_error;
           text  = _("Signature is invalid.");
         }
 
         /* draw position */
-        zatura_rectangle_t rectangle = recalc_rectangle(priv->page, signature->position);
+        zathura_rectangle_t rectangle = recalc_rectangle(priv->page, signature->position);
         cairo_set_source_rgba(cairo, color.red, color.green, color.blue, color.alpha);
         cairo_rectangle(cairo, rectangle.x1, rectangle.y1, (rectangle.x2 - rectangle.x1),
                         (rectangle.y2 - rectangle.y1));
         cairo_fill(cairo);
 
         /* draw text */
-        const GdkRGBA color_fg = zatura->ui.colors.highlight_color_fg;
+        const GdkRGBA color_fg = zathura->ui.colors.highlight_color_fg;
         cairo_set_source_rgba(cairo, color_fg.red, color_fg.green, color_fg.blue, color_fg.alpha);
         pango_layout_set_text(layout, text, strlen(text));
         cairo_move_to(cairo, rectangle.x1 + 1, rectangle.y1 + 1);
@@ -683,15 +683,15 @@ static void cb_page_draw(GtkDrawingArea* GIRARA_UNUSED(area), cairo_t* cairo, in
     /* draw search results */
     if (priv->search.list != NULL && priv->search.draw == true) {
       for (size_t idx = 0; idx != girara_list_size(priv->search.list); ++idx) {
-        zatura_rectangle_t* rect     = girara_list_nth(priv->search.list, idx);
-        zatura_rectangle_t rectangle = recalc_rectangle(priv->page, *rect);
+        zathura_rectangle_t* rect     = girara_list_nth(priv->search.list, idx);
+        zathura_rectangle_t rectangle = recalc_rectangle(priv->page, *rect);
 
         /* draw position */
         if ((int)idx == priv->search.current) {
-          const GdkRGBA color = zatura->ui.colors.highlight_color_active;
+          const GdkRGBA color = zathura->ui.colors.highlight_color_active;
           cairo_set_source_rgba(cairo, color.red, color.green, color.blue, color.alpha);
         } else {
-          const GdkRGBA color = zatura->ui.colors.highlight_color;
+          const GdkRGBA color = zathura->ui.colors.highlight_color;
           cairo_set_source_rgba(cairo, color.red, color.green, color.blue, color.alpha);
         }
         cairo_rectangle(cairo, rectangle.x1, rectangle.y1, (rectangle.x2 - rectangle.x1),
@@ -700,29 +700,29 @@ static void cb_page_draw(GtkDrawingArea* GIRARA_UNUSED(area), cairo_t* cairo, in
       }
     }
     if (priv->selection.list != NULL && priv->selection.draw == true) {
-      const GdkRGBA color = priv->zatura->ui.colors.highlight_color;
+      const GdkRGBA color = priv->zathura->ui.colors.highlight_color;
       cairo_set_source_rgba(cairo, color.red, color.green, color.blue, color.alpha);
       for (size_t idx = 0; idx != girara_list_size(priv->selection.list); ++idx) {
-        zatura_rectangle_t* rect     = girara_list_nth(priv->selection.list, idx);
-        zatura_rectangle_t rectangle = recalc_rectangle(priv->page, *rect);
+        zathura_rectangle_t* rect     = girara_list_nth(priv->selection.list, idx);
+        zathura_rectangle_t rectangle = recalc_rectangle(priv->page, *rect);
         cairo_rectangle(cairo, rectangle.x1, rectangle.y1, rectangle.x2 - rectangle.x1, rectangle.y2 - rectangle.y1);
         cairo_fill(cairo);
       }
     }
     if (priv->highlighter.bounds.x1 != -1 && priv->highlighter.bounds.y1 != -1 && priv->highlighter.draw == true) {
-      const GdkRGBA color = priv->zatura->ui.colors.highlight_color;
+      const GdkRGBA color = priv->zathura->ui.colors.highlight_color;
       cairo_set_source_rgba(cairo, color.red, color.green, color.blue, color.alpha);
-      zatura_rectangle_t rectangle = recalc_rectangle(priv->page, priv->highlighter.bounds);
+      zathura_rectangle_t rectangle = recalc_rectangle(priv->page, priv->highlighter.bounds);
       cairo_rectangle(cairo, rectangle.x1, rectangle.y1, rectangle.x2 - rectangle.x1, rectangle.y2 - rectangle.y1);
       cairo_fill(cairo);
     }
   } else {
     /* No cached surface yet, render the on-screen page synchronously. All other rendering is asynchronous
      * This makes the rendering of the first page much faster and avoids the "Loading..." message as well */
-    if (page_widget_on_screen(widget) == true && priv->zatura->sync.initial_render_held == false) {
-      cairo_surface_t* rendered = zatura_renderer_render_page(zatura->sync.render_thread, priv->page);
+    if (page_widget_on_screen(widget) == true && priv->zathura->sync.initial_render_held == false) {
+      cairo_surface_t* rendered = zathura_renderer_render_page(zathura->sync.render_thread, priv->page);
       if (rendered != NULL) {
-        zatura_page_widget_update_surface(page, rendered, false);
+        zathura_page_widget_update_surface(page, rendered, false);
         cairo_set_source_surface(cairo, rendered, 0, 0);
         cairo_paint(cairo);
         cairo_surface_destroy(rendered);
@@ -732,10 +732,10 @@ static void cb_page_draw(GtkDrawingArea* GIRARA_UNUSED(area), cairo_t* cairo, in
 
     girara_debug("rendering loading screen, flicker might be happening");
 
-    GdkRGBA color_fg = priv->zatura->ui.colors.render_loading_fg;
-    GdkRGBA color_bg = priv->zatura->ui.colors.render_loading_bg;
-    if (zatura_renderer_recolor_enabled(priv->zatura->sync.render_thread) == true) {
-      zatura_renderer_get_recolor_colors(priv->zatura->sync.render_thread, &color_bg, &color_fg);
+    GdkRGBA color_fg = priv->zathura->ui.colors.render_loading_fg;
+    GdkRGBA color_bg = priv->zathura->ui.colors.render_loading_bg;
+    if (zathura_renderer_recolor_enabled(priv->zathura->sync.render_thread) == true) {
+      zathura_renderer_get_recolor_colors(priv->zathura->sync.render_thread, &color_bg, &color_fg);
     }
 
     /* set background color and draw */
@@ -744,7 +744,7 @@ static void cb_page_draw(GtkDrawingArea* GIRARA_UNUSED(area), cairo_t* cairo, in
     cairo_fill(cairo);
 
     bool render_loading = true;
-    girara_setting_get(priv->zatura->ui.session, "render-loading", &render_loading);
+    girara_setting_get(priv->zathura->ui.session, "render-loading", &render_loading);
 
     /* write text */
     if (render_loading == true) {
@@ -762,14 +762,14 @@ static void cb_page_draw(GtkDrawingArea* GIRARA_UNUSED(area), cairo_t* cairo, in
     }
 
     /* request a render for every page that intersects the view */
-    if (page_widget_on_screen(widget) == true && priv->zatura->sync.initial_render_held == false) {
-      zatura_render_request(priv->render_request, g_get_real_time());
+    if (page_widget_on_screen(widget) == true && priv->zathura->sync.initial_render_held == false) {
+      zathura_render_request(priv->render_request, g_get_real_time());
     }
   }
 }
 
-static void zatura_page_widget_redraw_canvas(ZaturaPageWidget* pageview) {
-  ZaturaPageWidgetPrivate* priv = zatura_page_widget_get_instance_private(pageview);
+static void zathura_page_widget_redraw_canvas(ZathuraPageWidget* pageview) {
+  ZathuraPageWidgetPrivate* priv = zathura_page_widget_get_instance_private(pageview);
   if (priv->drawing_area != NULL) {
     gtk_widget_queue_draw(priv->drawing_area);
   }
@@ -815,7 +815,7 @@ static cairo_surface_t* draw_thumbnail_image(cairo_surface_t* surface, size_t ma
   height *= scale;
 
   /* note: this always returns 1 and 1 if Cairo too old for device scale API */
-  zatura_device_factors_t device    = get_safe_device_factors(surface);
+  zathura_device_factors_t device    = get_safe_device_factors(surface);
   const unsigned int unscaled_width  = width / device.x;
   const unsigned int unscaled_height = height / device.y;
 
@@ -842,12 +842,12 @@ static cairo_surface_t* draw_thumbnail_image(cairo_surface_t* surface, size_t ma
   return thumbnail;
 }
 
-void zatura_page_widget_update_surface(ZaturaPageWidget* widget, cairo_surface_t* surface, bool keep_thumbnail) {
-  ZaturaPageWidgetPrivate* priv = zatura_page_widget_get_instance_private(widget);
+void zathura_page_widget_update_surface(ZathuraPageWidget* widget, cairo_surface_t* surface, bool keep_thumbnail) {
+  ZathuraPageWidgetPrivate* priv = zathura_page_widget_get_instance_private(widget);
   unsigned int thumbnail_size    = 0;
-  girara_setting_get(priv->zatura->ui.session, "page-thumbnail-size", &thumbnail_size);
+  girara_setting_get(priv->zathura->ui.session, "page-thumbnail-size", &thumbnail_size);
   if (thumbnail_size == 0) {
-    thumbnail_size = ZATURA_PAGE_THUMBNAIL_DEFAULT_SIZE;
+    thumbnail_size = ZATHURA_PAGE_THUMBNAIL_DEFAULT_SIZE;
   }
   bool new_render = (priv->surface == NULL && priv->thumbnail == NULL);
 
@@ -872,22 +872,22 @@ void zatura_page_widget_update_surface(ZaturaPageWidget* widget, cairo_surface_t
   }
   /* force a redraw here */
   if (priv->surface != NULL) {
-    zatura_page_widget_redraw_canvas(widget);
+    zathura_page_widget_redraw_canvas(widget);
   }
 }
 
-static void cb_update_surface(ZaturaRenderRequest* UNUSED(request), cairo_surface_t* surface, void* data) {
-  ZaturaPageWidget* widget = data;
-  g_return_if_fail(ZATURA_IS_PAGE_WIDGET(widget));
-  zatura_page_widget_update_surface(widget, surface, false);
+static void cb_update_surface(ZathuraRenderRequest* UNUSED(request), cairo_surface_t* surface, void* data) {
+  ZathuraPageWidget* widget = data;
+  g_return_if_fail(ZATHURA_IS_PAGE_WIDGET(widget));
+  zathura_page_widget_update_surface(widget, surface, false);
 
   if (surface == NULL) {
     return;
   }
 
   /* the page is now parsed, correct its size if it differs from the placeholder */
-  ZaturaPageWidgetPrivate* priv = zatura_page_widget_get_instance_private(widget);
-  zatura_document_t* document   = zatura_page_get_document(priv->page);
+  ZathuraPageWidgetPrivate* priv = zathura_page_widget_get_instance_private(widget);
+  zathura_document_t* document   = zathura_page_get_document(priv->page);
   unsigned int page_width = 0, page_height = 0;
   page_calc_height_width(document, priv->page, &page_height, &page_width, true);
 
@@ -903,59 +903,59 @@ static void cb_update_surface(ZaturaRenderRequest* UNUSED(request), cairo_surfac
   }
 
   /* refresh the statusbar so the label of a freshly parsed current page shows up */
-  if (zatura_page_label_is_number(priv->page) == false && zatura_page_get_label(priv->page, NULL) != NULL &&
-      zatura_page_get_index(priv->page) == zatura_document_get_current_page_number(document)) {
-    statusbar_page_number_update(priv->zatura);
+  if (zathura_page_label_is_number(priv->page) == false && zathura_page_get_label(priv->page, NULL) != NULL &&
+      zathura_page_get_index(priv->page) == zathura_document_get_current_page_number(document)) {
+    statusbar_page_number_update(priv->zathura);
   }
 }
 
-static void cb_cache_added(ZaturaRenderRequest* UNUSED(request), void* data) {
-  ZaturaPageWidget* widget = data;
-  g_return_if_fail(ZATURA_IS_PAGE_WIDGET(widget));
+static void cb_cache_added(ZathuraRenderRequest* UNUSED(request), void* data) {
+  ZathuraPageWidget* widget = data;
+  g_return_if_fail(ZATHURA_IS_PAGE_WIDGET(widget));
 
-  ZaturaPageWidgetPrivate* priv = zatura_page_widget_get_instance_private(widget);
+  ZathuraPageWidgetPrivate* priv = zathura_page_widget_get_instance_private(widget);
   priv->cached                   = true;
 }
 
-static void cb_cache_invalidated(ZaturaRenderRequest* UNUSED(request), void* data) {
-  ZaturaPageWidget* widget = data;
-  g_return_if_fail(ZATURA_IS_PAGE_WIDGET(widget));
+static void cb_cache_invalidated(ZathuraRenderRequest* UNUSED(request), void* data) {
+  ZathuraPageWidget* widget = data;
+  g_return_if_fail(ZATHURA_IS_PAGE_WIDGET(widget));
 
-  ZaturaPageWidgetPrivate* priv = zatura_page_widget_get_instance_private(widget);
-  if (zatura_page_widget_have_surface(widget) == true && priv->cached == true &&
-      zatura_page_get_visibility(priv->page) == false) {
+  ZathuraPageWidgetPrivate* priv = zathura_page_widget_get_instance_private(widget);
+  if (zathura_page_widget_have_surface(widget) == true && priv->cached == true &&
+      zathura_page_get_visibility(priv->page) == false) {
     /* The page was in the cache but got removed and is invisible, so get rid of
      * the surface. */
-    zatura_page_widget_update_surface(widget, NULL, false);
+    zathura_page_widget_update_surface(widget, NULL, false);
   }
   priv->cached = false;
 }
 
-static void evaluate_link_at_mouse_position(ZaturaPageWidget* page, int oldx, int oldy) {
-  ZaturaPageWidgetPrivate* priv = zatura_page_widget_get_instance_private(page);
+static void evaluate_link_at_mouse_position(ZathuraPageWidget* page, int oldx, int oldy) {
+  ZathuraPageWidgetPrivate* priv = zathura_page_widget_get_instance_private(page);
   /* simple single click */
   /* get links */
   if (priv->links.retrieved == false) {
-    priv->links.list      = zatura_page_links_get(priv->page, NULL);
+    priv->links.list      = zathura_page_links_get(priv->page, NULL);
     priv->links.retrieved = true;
     priv->links.n         = (priv->links.list == NULL) ? 0 : girara_list_size(priv->links.list);
   }
 
   if (priv->links.list != NULL && priv->links.n > 0) {
     for (size_t idx = 0; idx != girara_list_size(priv->links.list); ++idx) {
-      zatura_link_t* link           = girara_list_nth(priv->links.list, idx);
-      const zatura_rectangle_t rect = recalc_rectangle(priv->page, zatura_link_get_position(link));
+      zathura_link_t* link           = girara_list_nth(priv->links.list, idx);
+      const zathura_rectangle_t rect = recalc_rectangle(priv->page, zathura_link_get_position(link));
       if (rect.x1 <= oldx && rect.x2 >= oldx && rect.y1 <= oldy && rect.y2 >= oldy) {
-        zatura_link_evaluate(priv->zatura, link);
+        zathura_link_evaluate(priv->zathura, link);
         break;
       }
     }
   }
 }
 
-zatura_link_t* zatura_page_widget_link_get(ZaturaPageWidget* widget, unsigned int index) {
+zathura_link_t* zathura_page_widget_link_get(ZathuraPageWidget* widget, unsigned int index) {
   g_return_val_if_fail(widget != NULL, NULL);
-  ZaturaPageWidgetPrivate* priv = zatura_page_widget_get_instance_private(widget);
+  ZathuraPageWidgetPrivate* priv = zathura_page_widget_get_instance_private(widget);
   g_return_val_if_fail(priv != NULL, NULL);
 
   if (priv->links.list != NULL && index >= priv->links.offset &&
@@ -966,9 +966,9 @@ zatura_link_t* zatura_page_widget_link_get(ZaturaPageWidget* widget, unsigned in
   }
 }
 
-static void rotate_point(zatura_t* zatura, unsigned int page, double orig_x, double orig_y, double* x, double* y) {
-  zatura_document_t* document = zatura_get_document(zatura);
-  const unsigned int rotation  = zatura_document_get_rotation(document);
+static void rotate_point(zathura_t* zathura, unsigned int page, double orig_x, double orig_y, double* x, double* y) {
+  zathura_document_t* document = zathura_get_document(zathura);
+  const unsigned int rotation  = zathura_document_get_rotation(document);
   if (rotation == 0) {
     *x = orig_x;
     *y = orig_y;
@@ -976,7 +976,7 @@ static void rotate_point(zatura_t* zatura, unsigned int page, double orig_x, dou
   }
 
   unsigned int height, width;
-  zatura_document_widget_get_cell_size(ZATURA_DOCUMENT_WIDGET(zatura->ui.document_widget), page, &height, &width);
+  zathura_document_widget_get_cell_size(ZATHURA_DOCUMENT_WIDGET(zathura->ui.document_widget), page, &height, &width);
   switch (rotation) {
   case 90:
     *x = orig_y;
@@ -996,24 +996,24 @@ static void rotate_point(zatura_t* zatura, unsigned int page, double orig_x, dou
   }
 }
 
-void zatura_page_widget_clear_selection(ZaturaPageWidget* widget) {
+void zathura_page_widget_clear_selection(ZathuraPageWidget* widget) {
   g_return_if_fail(widget != NULL);
 
-  ZaturaPageWidgetPrivate* priv = zatura_page_widget_get_instance_private(widget);
+  ZathuraPageWidgetPrivate* priv = zathura_page_widget_get_instance_private(widget);
   if (priv->selection.list != NULL) {
     girara_list_free(priv->selection.list);
     priv->selection.list = NULL;
   }
   priv->selection.draw   = false;
   priv->highlighter.draw = false;
-  zatura_page_widget_redraw_canvas(widget);
+  zathura_page_widget_redraw_canvas(widget);
 }
 
-static void cb_zatura_page_widget_button_press_event(GtkGestureClick* gesture, gint n_press, gdouble bx, gdouble by,
+static void cb_zathura_page_widget_button_press_event(GtkGestureClick* gesture, gint n_press, gdouble bx, gdouble by,
                                                       gpointer data) {
   GtkWidget* widget              = GTK_WIDGET(data);
-  ZaturaPageWidget* page        = ZATURA_PAGE_WIDGET(widget);
-  ZaturaPageWidgetPrivate* priv = zatura_page_widget_get_instance_private(page);
+  ZathuraPageWidget* page        = ZATHURA_PAGE_WIDGET(widget);
+  ZathuraPageWidgetPrivate* priv = zathura_page_widget_get_instance_private(page);
 
   const guint gbutton   = gtk_gesture_single_get_current_button(GTK_GESTURE_SINGLE(gesture));
   GdkModifierType state = gtk_event_controller_get_current_event_state(GTK_EVENT_CONTROLLER(gesture));
@@ -1025,31 +1025,31 @@ static void cb_zatura_page_widget_button_press_event(GtkGestureClick* gesture, g
   } else if (n_press == 3) {
     etype = GIRARA_EVENT_3BUTTON_PRESS;
   }
-  if (priv->zatura != NULL && priv->zatura->ui.session != NULL &&
-      girara_has_mouse_event(priv->zatura->ui.session, etype, gbutton, state) == true) {
+  if (priv->zathura != NULL && priv->zathura->ui.session != NULL &&
+      girara_has_mouse_event(priv->zathura->ui.session, etype, gbutton, state) == true) {
     return;
   }
 
   if (gbutton == GDK_BUTTON_PRIMARY) {
-    zatura_page_widget_clear_selection(page);
+    zathura_page_widget_clear_selection(page);
 
     if (n_press == 1) {
       /* clear pages with a selection already */
-      if (priv->zatura != NULL && priv->zatura->ui.document_widget != NULL) {
-        zatura_document_t* document = zatura_page_get_document(priv->page);
+      if (priv->zathura != NULL && priv->zathura->ui.document_widget != NULL) {
+        zathura_document_t* document = zathura_page_get_document(priv->page);
         if (document != NULL) {
-          unsigned int number_of_pages = zatura_document_get_number_of_pages(document);
+          unsigned int number_of_pages = zathura_document_get_number_of_pages(document);
           for (unsigned int i = 0; i < number_of_pages; i++) {
             /* the widget exists only if the background fill already created it */
-            GtkWidget* other_widget = zatura_document_widget_get_page(priv->zatura->ui.document_widget, i);
+            GtkWidget* other_widget = zathura_document_widget_get_page(priv->zathura->ui.document_widget, i);
             if (other_widget == NULL) {
               continue;
             }
-            ZaturaPageWidget* other_page        = ZATURA_PAGE_WIDGET(other_widget);
-            ZaturaPageWidgetPrivate* other_priv = zatura_page_widget_get_instance_private(other_page);
+            ZathuraPageWidget* other_page        = ZATHURA_PAGE_WIDGET(other_widget);
+            ZathuraPageWidgetPrivate* other_priv = zathura_page_widget_get_instance_private(other_page);
 
             if (other_priv->selection.draw == true || other_priv->highlighter.draw == true) {
-              zatura_page_widget_clear_selection(other_page);
+              zathura_page_widget_clear_selection(other_page);
             }
           }
         }
@@ -1057,7 +1057,7 @@ static void cb_zatura_page_widget_button_press_event(GtkGestureClick* gesture, g
 
       /* start the selection */
       double x, y;
-      rotate_point(priv->zatura, zatura_page_get_index(priv->page), bx, by, &x, &y);
+      rotate_point(priv->zathura, zathura_page_get_index(priv->page), bx, by, &x, &y);
       priv->mouse.selection.x1 = x;
       priv->mouse.selection.y1 = y;
       priv->mouse.selection.x2 = x;
@@ -1070,18 +1070,18 @@ static void cb_zatura_page_widget_button_press_event(GtkGestureClick* gesture, g
       priv->mouse.selection.y2 = -1;
     }
   } else if (gbutton == GDK_BUTTON_SECONDARY && n_press == 1) {
-    zatura_page_widget_popup_menu(widget, bx, by);
+    zathura_page_widget_popup_menu(widget, bx, by);
   }
 }
 
-static void cb_zatura_page_widget_button_release_event(GtkGestureClick* gesture, gint UNUSED(n_press), gdouble bx,
+static void cb_zathura_page_widget_button_release_event(GtkGestureClick* gesture, gint UNUSED(n_press), gdouble bx,
                                                         gdouble by, gpointer data) {
   GtkWidget* widget              = GTK_WIDGET(data);
-  ZaturaPageWidget* page        = ZATURA_PAGE_WIDGET(widget);
-  ZaturaPageWidgetPrivate* priv = zatura_page_widget_get_instance_private(page);
+  ZathuraPageWidget* page        = ZATHURA_PAGE_WIDGET(widget);
+  ZathuraPageWidgetPrivate* priv = zathura_page_widget_get_instance_private(page);
 
-  zatura_document_t* document = zatura_page_get_document(priv->page);
-  const double scale           = zatura_document_get_scale(document);
+  zathura_document_t* document = zathura_page_get_document(priv->page);
+  const double scale           = zathura_document_get_scale(document);
 
   const int oldx        = bx;
   const int oldy        = by;
@@ -1099,22 +1099,22 @@ static void cb_zatura_page_widget_button_release_event(GtkGestureClick* gesture,
   if (priv->mouse.selection.x2 == -1 && priv->mouse.selection.y2 == -1) {
     /* simple single click */
     /* get links */
-    if (priv->zatura->global.double_click_follow) {
+    if (priv->zathura->global.double_click_follow) {
       evaluate_link_at_mouse_position(page, oldx, oldy);
     }
   } else if (priv->selection.list != NULL) {
-    zatura_rectangle_t tmp = priv->mouse.selection;
+    zathura_rectangle_t tmp = priv->mouse.selection;
 
     tmp.x1 /= scale;
     tmp.x2 /= scale;
     tmp.y1 /= scale;
     tmp.y2 /= scale;
 
-    g_autofree char* text = zatura_page_get_text(priv->page, tmp, NULL);
+    g_autofree char* text = zathura_page_get_text(priv->page, tmp, NULL);
     if (text != NULL && *text != '\0') {
       /* emit text-selected signal */
       g_signal_emit(page, signals[TEXT_SELECTED], 0, text);
-    } else if (priv->zatura->global.double_click_follow == false) {
+    } else if (priv->zathura->global.double_click_follow == false) {
       evaluate_link_at_mouse_position(page, oldx, oldy);
     }
   }
@@ -1125,9 +1125,9 @@ static void cb_zatura_page_widget_button_release_event(GtkGestureClick* gesture,
   priv->mouse.selection.y2 = -1;
 }
 
-static zatura_rectangle_t next_selection_rectangle(double basepoint_x, double basepoint_y, double next_x,
+static zathura_rectangle_t next_selection_rectangle(double basepoint_x, double basepoint_y, double next_x,
                                                     double next_y) {
-  zatura_rectangle_t rect;
+  zathura_rectangle_t rect;
 
   /* make sure that x2 > x1 && y2 > y1 holds */
   if (next_x > basepoint_x) {
@@ -1148,21 +1148,21 @@ static zatura_rectangle_t next_selection_rectangle(double basepoint_x, double ba
   return rect;
 }
 
-static void cb_zatura_page_widget_motion_notify(GtkEventControllerMotion* controller, gdouble ex, gdouble ey,
+static void cb_zathura_page_widget_motion_notify(GtkEventControllerMotion* controller, gdouble ex, gdouble ey,
                                                  gpointer data) {
   GtkWidget* widget              = GTK_WIDGET(data);
-  ZaturaPageWidget* page        = ZATURA_PAGE_WIDGET(widget);
-  ZaturaPageWidgetPrivate* priv = zatura_page_widget_get_instance_private(page);
+  ZathuraPageWidget* page        = ZATHURA_PAGE_WIDGET(widget);
+  ZathuraPageWidgetPrivate* priv = zathura_page_widget_get_instance_private(page);
 
-  zatura_document_t* document = zatura_page_get_document(priv->page);
-  const double scale           = zatura_document_get_scale(document);
+  zathura_document_t* document = zathura_page_get_document(priv->page);
+  const double scale           = zathura_document_get_scale(document);
   GdkModifierType evstate      = gtk_event_controller_get_current_event_state(GTK_EVENT_CONTROLLER(controller));
 
   if (evstate & GDK_BUTTON1_MASK) { /* holding left mouse button */
-    zatura_page_widget_clear_selection(page);
-    if (evstate & priv->zatura->global.highlighter_modmask) {
+    zathura_page_widget_clear_selection(page);
+    if (evstate & priv->zathura->global.highlighter_modmask) {
       double x, y;
-      rotate_point(priv->zatura, zatura_page_get_index(priv->page), ex, ey, &x, &y);
+      rotate_point(priv->zathura, zathura_page_get_index(priv->page), ex, ey, &x, &y);
       priv->highlighter.bounds = next_selection_rectangle(priv->mouse.selection.x1, priv->mouse.selection.y1, x, y);
       priv->highlighter.bounds.x1 /= scale;
       priv->highlighter.bounds.y1 /= scale;
@@ -1170,27 +1170,27 @@ static void cb_zatura_page_widget_motion_notify(GtkEventControllerMotion* contro
       priv->highlighter.bounds.y2 /= scale;
 
       priv->highlighter.draw = true;
-      zatura_page_widget_redraw_canvas(page);
+      zathura_page_widget_redraw_canvas(page);
     } else {
       /* calculate next selection */
-      rotate_point(priv->zatura, zatura_page_get_index(priv->page), ex, ey, &priv->mouse.selection.x2,
+      rotate_point(priv->zathura, zathura_page_get_index(priv->page), ex, ey, &priv->mouse.selection.x2,
                    &priv->mouse.selection.y2);
 
-      zatura_rectangle_t selection = priv->mouse.selection;
+      zathura_rectangle_t selection = priv->mouse.selection;
       selection.x1 /= scale;
       selection.y1 /= scale;
       selection.x2 /= scale;
       selection.y2 /= scale;
 
-      priv->selection.list = zatura_page_get_selection(priv->page, selection, NULL);
+      priv->selection.list = zathura_page_get_selection(priv->page, selection, NULL);
       if (priv->selection.list != NULL && girara_list_size(priv->selection.list) != 0) {
         priv->selection.draw = true;
-        zatura_page_widget_redraw_canvas(page);
+        zathura_page_widget_redraw_canvas(page);
       }
     }
   } else {
     if (priv->links.retrieved == false) {
-      priv->links.list      = zatura_page_links_get(priv->page, NULL);
+      priv->links.list      = zathura_page_links_get(priv->page, NULL);
       priv->links.retrieved = true;
       priv->links.n         = (priv->links.list == NULL) ? 0 : girara_list_size(priv->links.list);
     }
@@ -1198,8 +1198,8 @@ static void cb_zatura_page_widget_motion_notify(GtkEventControllerMotion* contro
     if (priv->links.list != NULL && priv->links.n > 0) {
       bool over_link = false;
       for (size_t idx = 0; idx != girara_list_size(priv->links.list); ++idx) {
-        zatura_link_t* link     = girara_list_nth(priv->links.list, idx);
-        zatura_rectangle_t rect = recalc_rectangle(priv->page, zatura_link_get_position(link));
+        zathura_link_t* link     = girara_list_nth(priv->links.list, idx);
+        zathura_rectangle_t rect = recalc_rectangle(priv->page, zathura_link_get_position(link));
         if (rect.x1 <= ex && rect.x2 >= ex && rect.y1 <= ey && rect.y2 >= ey) {
           over_link = true;
           break;
@@ -1218,15 +1218,15 @@ static void cb_zatura_page_widget_motion_notify(GtkEventControllerMotion* contro
   }
 }
 
-static void cb_zatura_page_widget_leave_notify(GtkEventControllerMotion* UNUSED(controller), gpointer data) {
-  ZaturaPageWidget* page        = ZATURA_PAGE_WIDGET(data);
-  ZaturaPageWidgetPrivate* priv = zatura_page_widget_get_instance_private(page);
+static void cb_zathura_page_widget_leave_notify(GtkEventControllerMotion* UNUSED(controller), gpointer data) {
+  ZathuraPageWidget* page        = ZATHURA_PAGE_WIDGET(data);
+  ZathuraPageWidgetPrivate* priv = zathura_page_widget_get_instance_private(page);
 
   bool keep_selection = false;
-  girara_setting_get(priv->zatura->ui.session, "selection-keep-highlight", &keep_selection);
+  girara_setting_get(priv->zathura->ui.session, "selection-keep-highlight", &keep_selection);
 
   if (keep_selection == false) {
-    zatura_page_widget_clear_selection(page);
+    zathura_page_widget_clear_selection(page);
   }
 
   if (priv->mouse.over_link == true) {
@@ -1236,14 +1236,14 @@ static void cb_zatura_page_widget_leave_notify(GtkEventControllerMotion* UNUSED(
 }
 
 /* show context menu for the image under the click position */
-static void zatura_page_widget_popup_menu(GtkWidget* widget, double x, double y) {
+static void zathura_page_widget_popup_menu(GtkWidget* widget, double x, double y) {
   g_return_if_fail(widget != NULL);
 
-  ZaturaPageWidget* page        = ZATURA_PAGE_WIDGET(widget);
-  ZaturaPageWidgetPrivate* priv = zatura_page_widget_get_instance_private(page);
+  ZathuraPageWidget* page        = ZATHURA_PAGE_WIDGET(widget);
+  ZathuraPageWidgetPrivate* priv = zathura_page_widget_get_instance_private(page);
 
   if (priv->images.retrieved == false) {
-    priv->images.list      = zatura_page_images_get(priv->page, NULL);
+    priv->images.list      = zathura_page_images_get(priv->page, NULL);
     priv->images.retrieved = true;
   }
 
@@ -1252,10 +1252,10 @@ static void zatura_page_widget_popup_menu(GtkWidget* widget, double x, double y)
   }
 
   /* find the image under the click position */
-  zatura_image_t* image = NULL;
+  zathura_image_t* image = NULL;
   for (size_t idx = 0; idx != girara_list_size(priv->images.list); ++idx) {
-    zatura_image_t* image_it = girara_list_nth(priv->images.list, idx);
-    zatura_rectangle_t rect  = recalc_rectangle(priv->page, image_it->position);
+    zathura_image_t* image_it = girara_list_nth(priv->images.list, idx);
+    zathura_rectangle_t rect  = recalc_rectangle(priv->page, image_it->position);
     if (rect.x1 <= x && rect.x2 >= x && rect.y1 <= y && rect.y2 >= y) {
       image = image_it;
     }
@@ -1288,14 +1288,14 @@ static void zatura_page_widget_popup_menu(GtkWidget* widget, double x, double y)
 }
 
 static void cb_menu_image_copy(GSimpleAction* UNUSED(action), GVariant* UNUSED(parameter), gpointer data) {
-  ZaturaPageWidget* page = ZATURA_PAGE_WIDGET(data);
+  ZathuraPageWidget* page = ZATHURA_PAGE_WIDGET(data);
   g_return_if_fail(page != NULL);
-  ZaturaPageWidgetPrivate* priv = zatura_page_widget_get_instance_private(page);
+  ZathuraPageWidgetPrivate* priv = zathura_page_widget_get_instance_private(page);
   if (priv->images.current == NULL) {
     return;
   }
 
-  cairo_surface_t* surface = zatura_page_image_get_cairo(priv->page, priv->images.current, NULL);
+  cairo_surface_t* surface = zathura_page_image_get_cairo(priv->page, priv->images.current, NULL);
   if (surface == NULL) {
     return;
   }
@@ -1345,18 +1345,18 @@ static void cb_menu_image_copy(GSimpleAction* UNUSED(action), GVariant* UNUSED(p
 }
 
 static void cb_menu_image_save(GSimpleAction* UNUSED(action), GVariant* UNUSED(parameter), gpointer data) {
-  ZaturaPageWidget* page = ZATURA_PAGE_WIDGET(data);
+  ZathuraPageWidget* page = ZATHURA_PAGE_WIDGET(data);
   g_return_if_fail(page != NULL);
-  ZaturaPageWidgetPrivate* priv = zatura_page_widget_get_instance_private(page);
+  ZathuraPageWidgetPrivate* priv = zathura_page_widget_get_instance_private(page);
   if (priv->images.current == NULL || priv->images.list == NULL) {
     return;
   }
 
   /* generate the image identifier used by :export */
-  unsigned int page_id  = zatura_page_get_index(priv->page) + 1;
+  unsigned int page_id  = zathura_page_get_index(priv->page) + 1;
   unsigned int image_id = 1;
   for (size_t idx = 0; idx != girara_list_size(priv->images.list); ++idx, ++image_id) {
-    zatura_image_t* image_it = girara_list_nth(priv->images.list, idx);
+    zathura_image_t* image_it = girara_list_nth(priv->images.list, idx);
     if (image_it == priv->images.current) {
       break;
     }
@@ -1364,61 +1364,61 @@ static void cb_menu_image_save(GSimpleAction* UNUSED(action), GVariant* UNUSED(p
 
   g_autofree char* export_command = g_strdup_printf(":export image-p%d-%d ", page_id, image_id);
   girara_argument_t argument      = {.n = 0, .data = export_command};
-  sc_focus_inputbar(priv->zatura->ui.session, &argument, NULL, 0);
+  sc_focus_inputbar(priv->zathura->ui.session, &argument, NULL, 0);
 
   priv->images.current = NULL;
 }
 
-void zatura_page_widget_update_view_time(ZaturaPageWidget* widget) {
-  g_return_if_fail(ZATURA_IS_PAGE_WIDGET(widget));
-  ZaturaPageWidgetPrivate* priv = zatura_page_widget_get_instance_private(widget);
+void zathura_page_widget_update_view_time(ZathuraPageWidget* widget) {
+  g_return_if_fail(ZATHURA_IS_PAGE_WIDGET(widget));
+  ZathuraPageWidgetPrivate* priv = zathura_page_widget_get_instance_private(widget);
 
-  if (zatura_page_get_visibility(priv->page) == true) {
-    zatura_render_request_update_view_time(priv->render_request);
+  if (zathura_page_get_visibility(priv->page) == true) {
+    zathura_render_request_update_view_time(priv->render_request);
   }
   /* do not kick the initial render while it is held */
-  if (priv->surface == NULL && priv->zatura->sync.initial_render_held == false) {
-    zatura_render_request(priv->render_request, g_get_real_time());
+  if (priv->surface == NULL && priv->zathura->sync.initial_render_held == false) {
+    zathura_render_request(priv->render_request, g_get_real_time());
   }
 }
 
-bool zatura_page_widget_have_surface(ZaturaPageWidget* widget) {
-  g_return_val_if_fail(ZATURA_IS_PAGE_WIDGET(widget), false);
-  ZaturaPageWidgetPrivate* priv = zatura_page_widget_get_instance_private(widget);
+bool zathura_page_widget_have_surface(ZathuraPageWidget* widget) {
+  g_return_val_if_fail(ZATHURA_IS_PAGE_WIDGET(widget), false);
+  ZathuraPageWidgetPrivate* priv = zathura_page_widget_get_instance_private(widget);
   return priv->surface != NULL;
 }
 
-void zatura_page_widget_abort_render_request(ZaturaPageWidget* widget) {
-  g_return_if_fail(ZATURA_IS_PAGE_WIDGET(widget));
-  ZaturaPageWidgetPrivate* priv = zatura_page_widget_get_instance_private(widget);
-  zatura_render_request_abort(priv->render_request);
+void zathura_page_widget_abort_render_request(ZathuraPageWidget* widget) {
+  g_return_if_fail(ZATHURA_IS_PAGE_WIDGET(widget));
+  ZathuraPageWidgetPrivate* priv = zathura_page_widget_get_instance_private(widget);
+  zathura_render_request_abort(priv->render_request);
 
   /* Make sure that if we are not cached and invisible, that there is no
    * surface.
    *
    * TODO: Maybe this should be moved somewhere else. */
-  if (zatura_page_widget_have_surface(widget) == true && priv->cached == false) {
-    zatura_page_widget_update_surface(widget, NULL, false);
+  if (zathura_page_widget_have_surface(widget) == true && priv->cached == false) {
+    zathura_page_widget_update_surface(widget, NULL, false);
   }
 }
 
-zatura_page_t* zatura_page_widget_get_page(ZaturaPageWidget* widget) {
-  g_return_val_if_fail(ZATURA_IS_PAGE_WIDGET(widget), NULL);
-  ZaturaPageWidgetPrivate* priv = zatura_page_widget_get_instance_private(widget);
+zathura_page_t* zathura_page_widget_get_page(ZathuraPageWidget* widget) {
+  g_return_val_if_fail(ZATHURA_IS_PAGE_WIDGET(widget), NULL);
+  ZathuraPageWidgetPrivate* priv = zathura_page_widget_get_instance_private(widget);
 
   return priv->page;
 }
 
-void zatura_page_widget_set_size_request(ZaturaPageWidget* widget, int width, int height) {
+void zathura_page_widget_set_size_request(ZathuraPageWidget* widget, int width, int height) {
   g_return_if_fail(widget != NULL);
-  ZaturaPageWidgetPrivate* priv = zatura_page_widget_get_instance_private(widget);
+  ZathuraPageWidgetPrivate* priv = zathura_page_widget_get_instance_private(widget);
   gtk_widget_set_size_request(GTK_WIDGET(widget), width, height);
   if (priv->drawing_area != NULL) {
     gtk_widget_set_size_request(priv->drawing_area, width, height);
   }
 
-  zatura_page_widget_abort_render_request(widget);
-  zatura_page_widget_update_surface(widget, NULL, true);
+  zathura_page_widget_abort_render_request(widget);
+  zathura_page_widget_update_surface(widget, NULL, true);
 
   /* queue_resize does not imply queue_draw in gtk4, ensure the drawing area runs cb_page_draw */
   if (priv->drawing_area != NULL) {
@@ -1426,10 +1426,10 @@ void zatura_page_widget_set_size_request(ZaturaPageWidget* widget, int width, in
   }
 }
 
-void zatura_page_widget_clear_thumbnail(ZaturaPageWidget* widget) {
+void zathura_page_widget_clear_thumbnail(ZathuraPageWidget* widget) {
   g_return_if_fail(widget != NULL);
 
-  ZaturaPageWidgetPrivate* priv = zatura_page_widget_get_instance_private(widget);
+  ZathuraPageWidgetPrivate* priv = zathura_page_widget_get_instance_private(widget);
   cairo_surface_destroy(priv->thumbnail);
   priv->thumbnail = NULL;
 }

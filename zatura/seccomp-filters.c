@@ -35,7 +35,7 @@
 #define ALLOW_RULE(call) ADD_RULE("allow", SCMP_ACT_ALLOW, call, 0)
 #define ERRNO_RULE(call) ADD_RULE("errno", SCMP_ACT_ERRNO(ENOSYS), call, 0)
 
-int seccomp_enable_strict_filter(zatura_t* zatura) {
+int seccomp_enable_strict_filter(zathura_t* zathura) {
   /* prevent child processes from getting more priv e.g. via setuid, capabilities, ... */
   if (prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0)) {
     girara_error("prctl SET_NO_NEW_PRIVS: %s", g_strerror(errno));
@@ -181,7 +181,7 @@ int seccomp_enable_strict_filter(zatura_t* zatura) {
 
 /* Permit X11 specific syscalls */
 #ifdef GDK_WINDOWING_X11
-  GdkDisplay* display = gtk_widget_get_display(zatura->ui.session->gtk.view);
+  GdkDisplay* display = gtk_widget_get_display(zathura->ui.session->gtk.view);
 
   if (GDK_IS_X11_DISPLAY(display)) {
     girara_debug("On X11, supporting X11 syscalls");

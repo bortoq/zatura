@@ -6,14 +6,14 @@
 #include <stdbool.h>
 #include "zatura.h"
 
-struct zatura_bookmark_s {
+struct zathura_bookmark_s {
   gchar* id;
   unsigned int page;
   double x;
   double y;
 };
 
-typedef struct zatura_bookmark_s zatura_bookmark_t;
+typedef struct zathura_bookmark_s zathura_bookmark_t;
 
 /**
  * Create a bookmark and add it to the list of bookmarks.
@@ -22,7 +22,7 @@ typedef struct zatura_bookmark_s zatura_bookmark_t;
  * @param page The bookmark's page.
  * @return the bookmark instance or NULL on failure.
  */
-zatura_bookmark_t* zatura_bookmark_add(zatura_t* zatura, const gchar* id, unsigned int page);
+zathura_bookmark_t* zathura_bookmark_add(zathura_t* zathura, const gchar* id, unsigned int page);
 
 /**
  * Remove a bookmark from the list of bookmarks.
@@ -30,7 +30,7 @@ zatura_bookmark_t* zatura_bookmark_add(zatura_t* zatura, const gchar* id, unsign
  * @param id The bookmark's id.
  * @return true on success, false otherwise
  */
-bool zatura_bookmark_remove(zatura_t* zatura, const gchar* id);
+bool zathura_bookmark_remove(zathura_t* zathura, const gchar* id);
 
 /**
  * Get bookmark from the list of bookmarks.
@@ -38,13 +38,13 @@ bool zatura_bookmark_remove(zatura_t* zatura, const gchar* id);
  * @param id The bookmark's id.
  * @return The bookmark instance if it exists or NULL otherwise.
  */
-zatura_bookmark_t* zatura_bookmark_get(zatura_t* zatura, const gchar* id);
+zathura_bookmark_t* zathura_bookmark_get(zathura_t* zathura, const gchar* id);
 
 /**
  * Initialize bookmark system
  * @param zatura The zatura instance.
  */
-bool zatura_bookmarks_init(zatura_t* zatura);
+bool zathura_bookmarks_init(zathura_t* zathura);
 
 /**
  * Load bookmarks for a specific file.
@@ -52,12 +52,12 @@ bool zatura_bookmarks_init(zatura_t* zatura);
  * @param file The file.
  * @return true on success, false otherwise
  */
-bool zatura_bookmarks_load(zatura_t* zatura, const gchar* file);
+bool zathura_bookmarks_load(zathura_t* zathura, const gchar* file);
 
 /**
  * Free boomark system
  * @param zatura The zatura instance.
  */
-void zatura_bookmarks_free(zatura_t* zatura);
+void zathura_bookmarks_free(zathura_t* zathura);
 
 #endif // BOOKMARKS_H

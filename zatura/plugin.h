@@ -8,7 +8,7 @@
 
 #include "types.h"
 #include "plugin-api.h"
-#include "zatura-version.h"
+#include "zathura-version.h"
 #include "zatura.h"
 
 /**
@@ -16,16 +16,16 @@
  *
  * @return A plugin manager object or NULL if an error occurred
  */
-zatura_plugin_manager_t* zatura_plugin_manager_new(void);
+zathura_plugin_manager_t* zathura_plugin_manager_new(void);
 
 /**
  * Frees the plugin manager
  *
  * @param plugin_manager
  */
-void zatura_plugin_manager_free(zatura_plugin_manager_t* plugin_manager);
+void zathura_plugin_manager_free(zathura_plugin_manager_t* plugin_manager);
 
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(zatura_plugin_manager_t, zatura_plugin_manager_free)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(zathura_plugin_manager_t, zathura_plugin_manager_free)
 
 /**
  * Add colon-separated list of directories to the plugin manager's plugin search path
@@ -33,7 +33,7 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(zatura_plugin_manager_t, zatura_plugin_manager_fre
  * @param plugin_manager  The plain manager
  * @param dir Colon-separated list of directories
  */
-void zatura_plugin_manager_set_dir(zatura_plugin_manager_t* plugin_manager, const char* dir);
+void zathura_plugin_manager_set_dir(zathura_plugin_manager_t* plugin_manager, const char* dir);
 
 /**
  * Loads all plugins available in the previously given directories
@@ -41,7 +41,7 @@ void zatura_plugin_manager_set_dir(zatura_plugin_manager_t* plugin_manager, cons
  * @param plugin_manager The plugin manager
  * @return Success if some plugins have been loaded, false otherwise
  */
-bool zatura_plugin_manager_load(zatura_plugin_manager_t* plugin_manager);
+bool zathura_plugin_manager_load(zathura_plugin_manager_t* plugin_manager);
 
 /**
  * Returns the (if available) associated plugin
@@ -50,7 +50,7 @@ bool zatura_plugin_manager_load(zatura_plugin_manager_t* plugin_manager);
  * @param type The document type
  * @return The plugin or NULL if no matching plugin is available
  */
-const zatura_plugin_t* zatura_plugin_manager_get_plugin(const zatura_plugin_manager_t* plugin_manager,
+const zathura_plugin_t* zathura_plugin_manager_get_plugin(const zathura_plugin_manager_t* plugin_manager,
                                                           const char* type);
 
 /**
@@ -59,7 +59,7 @@ const zatura_plugin_t* zatura_plugin_manager_get_plugin(const zatura_plugin_mana
  * @param plugin_manager The plugin manager
  * @return List of plugins or NULL
  */
-girara_list_t* zatura_plugin_manager_get_plugins(const zatura_plugin_manager_t* plugin_manager);
+girara_list_t* zathura_plugin_manager_get_plugins(const zathura_plugin_manager_t* plugin_manager);
 
 /**
  * Return a list of supported content types
@@ -67,7 +67,7 @@ girara_list_t* zatura_plugin_manager_get_plugins(const zatura_plugin_manager_t* 
  * @param plugin_manager The plugin manager
  * @return List of plugins or NULL
  */
-girara_list_t* zatura_plugin_manager_get_content_types(const zatura_plugin_manager_t* plugin_manager);
+girara_list_t* zathura_plugin_manager_get_content_types(const zathura_plugin_manager_t* plugin_manager);
 
 /**
  * Returns the plugin functions
@@ -75,7 +75,7 @@ girara_list_t* zatura_plugin_manager_get_content_types(const zatura_plugin_manag
  * @param plugin The plugin
  * @return The plugin functions
  */
-const zatura_plugin_functions_t* zatura_plugin_get_functions(const zatura_plugin_t* plugin);
+const zathura_plugin_functions_t* zathura_plugin_get_functions(const zathura_plugin_t* plugin);
 
 /**
  * Returns the name of the plugin
@@ -83,7 +83,7 @@ const zatura_plugin_functions_t* zatura_plugin_get_functions(const zatura_plugin
  * @param plugin The plugin
  * @return The name of the plugin or NULL
  */
-const char* zatura_plugin_get_name(const zatura_plugin_t* plugin);
+const char* zathura_plugin_get_name(const zathura_plugin_t* plugin);
 
 /**
  * Returns the path to the plugin
@@ -91,7 +91,7 @@ const char* zatura_plugin_get_name(const zatura_plugin_t* plugin);
  * @param plugin The plugin
  * @return The path of the plugin or NULL
  */
-const char* zatura_plugin_get_path(const zatura_plugin_t* plugin);
+const char* zathura_plugin_get_path(const zathura_plugin_t* plugin);
 
 /**
  * Returns the version information of the plugin
@@ -99,6 +99,6 @@ const char* zatura_plugin_get_path(const zatura_plugin_t* plugin);
  * @param plugin The plugin
  * @return The version information of the plugin
  */
-const char* zatura_plugin_get_version(const zatura_plugin_t* plugin);
+const char* zathura_plugin_get_version(const zathura_plugin_t* plugin);
 
 #endif // PLUGIN_H

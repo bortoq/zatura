@@ -1,31 +1,31 @@
 /* SPDX-License-Identifier: Zlib */
 
-#ifndef ZATURA_DATABASE_SQLITE_H
-#define ZATURA_DATABASE_SQLITE_H
+#ifndef ZATHURA_DATABASE_SQLITE_H
+#define ZATHURA_DATABASE_SQLITE_H
 
 #include "database.h"
 
-#define ZATURA_TYPE_SQLDATABASE (zatura_sqldatabase_get_type())
-#define ZATURA_SQLDATABASE(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj), ZATURA_TYPE_SQLDATABASE, ZaturaSQLDatabase))
-#define ZATURA_IS_SQLDATABASE(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj), ZATURA_TYPE_SQLDATABASE))
-#define ZATURA_SQLDATABASE_CLASS(klass)                                                                               \
-  (G_TYPE_CHECK_CLASS_CAST((klass), ZATURA_TYPE_SQLDATABASE, ZaturaSQLDatabaseClass))
-#define ZATURA_IS_SQLDATABASE_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), ZATURA_TYPE_SQLDATABASE))
-#define ZATURA_SQLDATABASE_GET_CLASS(obj)                                                                             \
-  (G_TYPE_INSTANCE_GET_CLASS((obj), ZATURA_TYPE_SQLDATABASE, ZaturaSQLDatabaseClass))
+#define ZATHURA_TYPE_SQLDATABASE (zathura_sqldatabase_get_type())
+#define ZATHURA_SQLDATABASE(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj), ZATHURA_TYPE_SQLDATABASE, ZathuraSQLDatabase))
+#define ZATHURA_IS_SQLDATABASE(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj), ZATHURA_TYPE_SQLDATABASE))
+#define ZATHURA_SQLDATABASE_CLASS(klass)                                                                               \
+  (G_TYPE_CHECK_CLASS_CAST((klass), ZATHURA_TYPE_SQLDATABASE, ZathuraSQLDatabaseClass))
+#define ZATHURA_IS_SQLDATABASE_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), ZATHURA_TYPE_SQLDATABASE))
+#define ZATHURA_SQLDATABASE_GET_CLASS(obj)                                                                             \
+  (G_TYPE_INSTANCE_GET_CLASS((obj), ZATHURA_TYPE_SQLDATABASE, ZathuraSQLDatabaseClass))
 
-typedef struct _ZaturaSQLDatabase ZaturaSQLDatabase;
-typedef struct _ZaturaSQLDatabaseClass ZaturaSQLDatabaseClass;
+typedef struct _ZathuraSQLDatabase ZathuraSQLDatabase;
+typedef struct _ZathuraSQLDatabaseClass ZathuraSQLDatabaseClass;
 
-struct _ZaturaSQLDatabase {
+struct _ZathuraSQLDatabase {
   GObject parent_instance;
 };
 
-struct _ZaturaSQLDatabaseClass {
+struct _ZathuraSQLDatabaseClass {
   GObjectClass parent_class;
 };
 
-GType zatura_sqldatabase_get_type(void);
+GType zathura_sqldatabase_get_type(void);
 
 /**
  * Initialize database system.
@@ -33,6 +33,6 @@ GType zatura_sqldatabase_get_type(void);
  * @param path Path to the sqlite database.
  * @return A valid zatura_database_t instance or NULL on failure
  */
-zatura_database_t* zatura_sqldatabase_new(const char* path);
+zathura_database_t* zathura_sqldatabase_new(const char* path);
 
 #endif

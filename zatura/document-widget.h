@@ -10,30 +10,30 @@
 /**
  * The document view widget.
  */
-struct zatura_document_widget_s {
+struct zathura_document_widget_s {
   GtkWidget parent;
 };
 
-struct zatura_document_widget_class_s {
+struct zathura_document_widget_class_s {
   GtkWidgetClass parent_class;
 };
 
-#define ZATURA_TYPE_DOCUMENT_WIDGET (zatura_document_widget_get_type())
-#define ZATURA_DOCUMENT_WIDGET(obj)                                                                                   \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj), ZATURA_TYPE_DOCUMENT_WIDGET, ZaturaDocumentWidget))
-#define ZATURA_DOCUMENT_WIDGET_CLASS(obj)                                                                             \
-  (G_TYPE_CHECK_CLASS_CAST((obj), ZATURA_TYPE_DOCUMENT_WIDGET, ZaturaDocumentWidgetClass))
-#define ZATURA_IS_DOCUMENT_WIDGET(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj), ZATURA_TYPE_DOCUMENT_WIDGET))
-#define ZATURA_IS_DOCUMENT_WIDGET_CLASS(obj) (G_TYPE_CHECK_CLASS_TYPE((obj), ZATURA_TYPE_DOCUMENT_WIDGET))
-#define ZATURA_DOCUMENT_WIDGET_GET_CLASS(obj)                                                                         \
-  (G_TYPE_INSTANCE_GET_CLASS((obj), ZATURA_TYPE_DOCUMENT_WIDGET, ZaturaDocumentWidgetClass))
+#define ZATHURA_TYPE_DOCUMENT_WIDGET (zathura_document_widget_get_type())
+#define ZATHURA_DOCUMENT_WIDGET(obj)                                                                                   \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj), ZATHURA_TYPE_DOCUMENT_WIDGET, ZathuraDocumentWidget))
+#define ZATHURA_DOCUMENT_WIDGET_CLASS(obj)                                                                             \
+  (G_TYPE_CHECK_CLASS_CAST((obj), ZATHURA_TYPE_DOCUMENT_WIDGET, ZathuraDocumentWidgetClass))
+#define ZATHURA_IS_DOCUMENT_WIDGET(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj), ZATHURA_TYPE_DOCUMENT_WIDGET))
+#define ZATHURA_IS_DOCUMENT_WIDGET_CLASS(obj) (G_TYPE_CHECK_CLASS_TYPE((obj), ZATHURA_TYPE_DOCUMENT_WIDGET))
+#define ZATHURA_DOCUMENT_WIDGET_GET_CLASS(obj)                                                                         \
+  (G_TYPE_INSTANCE_GET_CLASS((obj), ZATHURA_TYPE_DOCUMENT_WIDGET, ZathuraDocumentWidgetClass))
 
 /**
  * Returns the type of the document view widget.
  *
  * @return the type
  */
-GType zatura_document_widget_get_type(void);
+GType zathura_document_widget_get_type(void);
 
 /**
  * Create a document view widget.
@@ -42,7 +42,7 @@ GType zatura_document_widget_get_type(void);
  * @param zatura_document the associated document, or NULL for an empty widget
  * @return a document view widget
  */
-GtkWidget* zatura_document_widget_new(zatura_t* zatura, zatura_document_t* document);
+GtkWidget* zathura_document_widget_new(zathura_t* zathura, zathura_document_t* document);
 
 /**
  * Associate a document with the widget and initialize its page storage.
@@ -52,7 +52,7 @@ GtkWidget* zatura_document_widget_new(zatura_t* zatura, zatura_document_t* docum
  * @param zatura_document the document, or NULL to clear the widget
  * @return true on success
  */
-bool zatura_document_widget_set_document(ZaturaDocumentWidget* document_widget, zatura_document_t* document);
+bool zathura_document_widget_set_document(ZathuraDocumentWidget* document_widget, zathura_document_t* document);
 
 /**
  * Return the document associated with the widget.
@@ -60,7 +60,7 @@ bool zatura_document_widget_set_document(ZaturaDocumentWidget* document_widget, 
  * @param document the document widget
  * @return the associated document
  */
-zatura_document_t* zatura_document_widget_get_document(ZaturaDocumentWidget* document);
+zathura_document_t* zathura_document_widget_get_document(ZathuraDocumentWidget* document);
 
 /**
  * Return a page widget by page number.
@@ -69,7 +69,7 @@ zatura_document_t* zatura_document_widget_get_document(ZaturaDocumentWidget* doc
  * @param page_number the page number
  * @return the page widget, or NULL if it has not been created
  */
-GtkWidget* zatura_document_widget_get_page(ZaturaDocumentWidget* document, unsigned int page_number);
+GtkWidget* zathura_document_widget_get_page(ZathuraDocumentWidget* document, unsigned int page_number);
 
 /**
  * Create a page widget if necessary and attach it to the document grid.
@@ -78,7 +78,7 @@ GtkWidget* zatura_document_widget_get_page(ZaturaDocumentWidget* document, unsig
  * @param page_number the page number
  * @return the page widget, or NULL on error
  */
-GtkWidget* zatura_document_widget_ensure_page(ZaturaDocumentWidget* document, unsigned int page_number);
+GtkWidget* zathura_document_widget_ensure_page(ZathuraDocumentWidget* document, unsigned int page_number);
 
 /**
  * Schedule creation of all missing page widgets at low idle priority.
@@ -87,14 +87,14 @@ GtkWidget* zatura_document_widget_ensure_page(ZaturaDocumentWidget* document, un
  *
  * @param document the document widget
  */
-void zatura_document_widget_start_page_widget_preload(ZaturaDocumentWidget* document);
+void zathura_document_widget_start_page_widget_preload(ZathuraDocumentWidget* document);
 
 /**
  * Cancel page-widget preloading and reset its completion state.
  *
  * @param document the document widget
  */
-void zatura_document_widget_stop_page_widget_preload(ZaturaDocumentWidget* document);
+void zathura_document_widget_stop_page_widget_preload(ZathuraDocumentWidget* document);
 
 /**
  * Return whether the most recent page-widget preload completed.
@@ -102,7 +102,7 @@ void zatura_document_widget_stop_page_widget_preload(ZaturaDocumentWidget* docum
  * @param document the document widget
  * @return true if all page widgets were created by the preload
  */
-bool zatura_document_widget_page_widgets_loaded(ZaturaDocumentWidget* document);
+bool zathura_document_widget_page_widgets_loaded(ZathuraDocumentWidget* document);
 
 /**
  * Recalculate page visibility from the viewport. This creates newly visible
@@ -111,7 +111,7 @@ bool zatura_document_widget_page_widgets_loaded(ZaturaDocumentWidget* document);
  *
  * @param document the document widget
  */
-void zatura_document_widget_update_visible_pages(ZaturaDocumentWidget* document);
+void zathura_document_widget_update_visible_pages(ZathuraDocumentWidget* document);
 
 /**
  * Render the document's current page synchronously and install the resulting
@@ -120,7 +120,7 @@ void zatura_document_widget_update_visible_pages(ZaturaDocumentWidget* document)
  *
  * @param document the document widget
  */
-void zatura_document_widget_render_current_page(ZaturaDocumentWidget* document);
+void zathura_document_widget_render_current_page(ZathuraDocumentWidget* document);
 
 /**
  * Check whether a page widget exists and has a rendered surface.
@@ -129,7 +129,7 @@ void zatura_document_widget_render_current_page(ZaturaDocumentWidget* document);
  * @param page_number the page number
  * @return true if the page widget has a rendered surface
  */
-bool zatura_document_widget_page_has_surface(ZaturaDocumentWidget* document, unsigned int page_number);
+bool zathura_document_widget_page_has_surface(ZathuraDocumentWidget* document, unsigned int page_number);
 
 /**
  * Enable or disable signature information on all existing page widgets and on
@@ -138,7 +138,7 @@ bool zatura_document_widget_page_has_surface(ZaturaDocumentWidget* document, uns
  * @param document the document widget
  * @param draw whether signature information should be drawn
  */
-void zatura_document_widget_set_draw_signatures(ZaturaDocumentWidget* document, bool draw);
+void zathura_document_widget_set_draw_signatures(ZathuraDocumentWidget* document, bool draw);
 
 /**
  * Enable or disable search-result highlighting on all existing page widgets.
@@ -146,7 +146,7 @@ void zatura_document_widget_set_draw_signatures(ZaturaDocumentWidget* document, 
  * @param document the document widget
  * @param draw whether search results should be drawn
  */
-void zatura_document_widget_set_draw_search_results(ZaturaDocumentWidget* document, bool draw);
+void zathura_document_widget_set_draw_search_results(ZathuraDocumentWidget* document, bool draw);
 
 /**
  * Prepare link hints for the visible pages. Search-result highlighting is
@@ -155,14 +155,14 @@ void zatura_document_widget_set_draw_search_results(ZaturaDocumentWidget* docume
  * @param document the document widget
  * @return true if at least one visible page contains a link
  */
-bool zatura_document_widget_prepare_links(ZaturaDocumentWidget* document);
+bool zathura_document_widget_prepare_links(ZathuraDocumentWidget* document);
 
 /**
  * Disable link hints on all existing page widgets.
  *
  * @param document the document widget
  */
-void zatura_document_widget_hide_links(ZaturaDocumentWidget* document);
+void zathura_document_widget_hide_links(ZathuraDocumentWidget* document);
 
 /**
  * Find a link by its displayed index among the visible page widgets.
@@ -172,7 +172,7 @@ void zatura_document_widget_hide_links(ZaturaDocumentWidget* document);
  * @param index the displayed link index
  * @return the matching link, or NULL if no visible page contains it
  */
-zatura_link_t* zatura_document_widget_get_visible_link(ZaturaDocumentWidget* document, unsigned int index);
+zathura_link_t* zathura_document_widget_get_visible_link(ZathuraDocumentWidget* document, unsigned int index);
 
 /**
  * Count search results on page widgets before a given page. The upper bound is
@@ -183,7 +183,7 @@ zatura_link_t* zatura_document_widget_get_visible_link(ZaturaDocumentWidget* doc
  * @param end_page exclusive upper page bound
  * @return the number of search results in pages [0, end_page)
  */
-unsigned int zatura_document_widget_get_search_result_count(ZaturaDocumentWidget* document, unsigned int end_page);
+unsigned int zathura_document_widget_get_search_result_count(ZathuraDocumentWidget* document, unsigned int end_page);
 
 /**
  * Update internal layout structures when pages-per-row,
@@ -191,12 +191,12 @@ unsigned int zatura_document_widget_get_search_result_count(ZaturaDocumentWidget
  *
  * @param document ZaturaDocumentWidget
  */
-void zatura_document_widget_refresh_layout(ZaturaDocumentWidget* document);
+void zathura_document_widget_refresh_layout(ZathuraDocumentWidget* document);
 
-void zatura_document_widget_update_mode(ZaturaDocumentWidget* document);
+void zathura_document_widget_update_mode(ZathuraDocumentWidget* document);
 
 /** Whether a layout transition is waiting to restore the selected page during allocation. */
-bool zatura_document_widget_mode_change_pending(ZaturaDocumentWidget* document);
+bool zathura_document_widget_mode_change_pending(ZathuraDocumentWidget* document);
 
 /**
  * Calculate the position of each grid cell.
@@ -204,7 +204,7 @@ bool zatura_document_widget_mode_change_pending(ZaturaDocumentWidget* document);
  *
  * @param document ZaturaDocumentWidget
  */
-void zatura_document_widget_compute_layout(ZaturaDocumentWidget* document);
+void zathura_document_widget_compute_layout(ZathuraDocumentWidget* document);
 
 /**
  * Return the position of a cell from the document's layout table in pixels.
@@ -216,7 +216,7 @@ void zatura_document_widget_compute_layout(ZaturaDocumentWidget* document);
  * @return pos_x     pixel offset in the x direction
  * @return pos_y     pixel offset in the y direction
  */
-void zatura_document_widget_get_cell_pos(ZaturaDocumentWidget* document, unsigned int page_index, unsigned int* pos_x,
+void zathura_document_widget_get_cell_pos(ZathuraDocumentWidget* document, unsigned int page_index, unsigned int* pos_x,
                                           unsigned int* pos_y);
 
 /**
@@ -229,7 +229,7 @@ void zatura_document_widget_get_cell_pos(ZaturaDocumentWidget* document, unsigne
  * @return height    cell height
  * @return width     cell width
  */
-void zatura_document_widget_get_cell_size(ZaturaDocumentWidget* document, unsigned int page_index,
+void zathura_document_widget_get_cell_size(ZathuraDocumentWidget* document, unsigned int page_index,
                                            unsigned int* height, unsigned int* width);
 
 /**
@@ -241,7 +241,7 @@ void zatura_document_widget_get_cell_size(ZaturaDocumentWidget* document, unsign
  * @return pos       pixel offset
  * @return size      row size
  */
-void zatura_document_widget_get_row(ZaturaDocumentWidget* document, unsigned int row, unsigned int* pos,
+void zathura_document_widget_get_row(ZathuraDocumentWidget* document, unsigned int row, unsigned int* pos,
                                      unsigned int* size);
 
 /**
@@ -253,7 +253,7 @@ void zatura_document_widget_get_row(ZaturaDocumentWidget* document, unsigned int
  * @return pos       pixel offset
  * @return size      col size
  */
-void zatura_document_widget_get_col(ZaturaDocumentWidget* document, unsigned int col, unsigned int* pos,
+void zathura_document_widget_get_col(ZathuraDocumentWidget* document, unsigned int col, unsigned int* pos,
                                      unsigned int* size);
 
 /**
@@ -265,7 +265,7 @@ void zatura_document_widget_get_col(ZaturaDocumentWidget* document, unsigned int
  * @return height  document height in pixels
  * @return width   document width in pixels
  */
-void zatura_document_widget_get_document_size(ZaturaDocumentWidget* document, unsigned int* height,
+void zathura_document_widget_get_document_size(ZathuraDocumentWidget* document, unsigned int* height,
                                                unsigned int* width);
 
 /**
@@ -273,14 +273,14 @@ void zatura_document_widget_get_document_size(ZaturaDocumentWidget* document, un
  *
  * @param document ZaturaDocumentWidget
  */
-void zatura_document_widget_clear_pages(ZaturaDocumentWidget* document);
+void zathura_document_widget_clear_pages(ZathuraDocumentWidget* document);
 
 /**
  * Clear all thumbnails.
  *
  * @param document ZaturaDocumentWidget
  */
-void zatura_document_widget_clear_thumbnails(ZaturaDocumentWidget* document);
+void zathura_document_widget_clear_thumbnails(ZathuraDocumentWidget* document);
 
 /**
  * This function is used to unmark all pages as not rendered. This should
@@ -289,7 +289,7 @@ void zatura_document_widget_clear_thumbnails(ZaturaDocumentWidget* document);
  *
  * @param zatura Zatura object
  */
-void zatura_document_widget_render_all(ZaturaDocumentWidget* document);
+void zathura_document_widget_render_all(ZathuraDocumentWidget* document);
 
 /**
  * Sets the layout of the pages in the document
@@ -300,7 +300,7 @@ void zatura_document_widget_render_all(ZaturaDocumentWidget* document);
  * @param[in]  pages_per_row     number of pages per row
  * @param[in]  first_page_column column of the first page (first column is 1)
  */
-void zatura_document_widget_set_page_layout(ZaturaDocumentWidget* document, unsigned int page_v_padding,
+void zathura_document_widget_set_page_layout(ZathuraDocumentWidget* document, unsigned int page_v_padding,
                                              unsigned int page_h_padding, unsigned int pages_per_row,
                                              unsigned int first_page_column);
 
@@ -310,7 +310,7 @@ void zatura_document_widget_set_page_layout(ZaturaDocumentWidget* document, unsi
  * @param document The document
  * @return The padding in pixels between pages
  */
-unsigned int zatura_document_widget_get_page_v_padding(ZaturaDocumentWidget* document);
+unsigned int zathura_document_widget_get_page_v_padding(ZathuraDocumentWidget* document);
 
 /**
  * Returns the horizontal padding in pixels between pages
@@ -318,7 +318,7 @@ unsigned int zatura_document_widget_get_page_v_padding(ZaturaDocumentWidget* doc
  * @param document The document
  * @return The padding in pixels between pages
  */
-unsigned int zatura_document_widget_get_page_h_padding(ZaturaDocumentWidget* document);
+unsigned int zathura_document_widget_get_page_h_padding(ZathuraDocumentWidget* document);
 
 /**
  * Returns the number of pages per row
@@ -326,7 +326,7 @@ unsigned int zatura_document_widget_get_page_h_padding(ZaturaDocumentWidget* doc
  * @param document The document
  * @return The number of pages per row
  */
-unsigned int zatura_document_widget_get_pages_per_row(ZaturaDocumentWidget* document);
+unsigned int zathura_document_widget_get_pages_per_row(ZathuraDocumentWidget* document);
 
 /**
  * Returns the column for the first page (first column = 1)
@@ -334,6 +334,6 @@ unsigned int zatura_document_widget_get_pages_per_row(ZaturaDocumentWidget* docu
  * @param document The document
  * @return The column for the first page
  */
-unsigned int zatura_document_widget_get_first_page_column(ZaturaDocumentWidget* document);
+unsigned int zathura_document_widget_get_first_page_column(ZathuraDocumentWidget* document);
 
 #endif // DOCUMENT_WIDGET_H

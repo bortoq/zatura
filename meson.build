@@ -8,9 +8,9 @@ version = meson.project_version()
 version_array = version.split('.')
 
 # Rules for plugin API and ABI (non-exhaustive):
-# * zatura_plugin_function_t: If functions are added or removed or their
+# * zathura_plugin_functions_t: If functions are added or removed or their
 #   signature changes, bump both ABI and API.
-# * zatura_plugin_definition_t: If the struct changes in an ABI-incompatible
+# * zathura_plugin_definition_t: If the struct changes in an ABI-incompatible
 #   way, bump the ABI.
 plugin_api_version = '8'
 plugin_abi_version = '9'
@@ -63,7 +63,8 @@ build_dependencies = [libm, girara, glib, gio, gthread, gmodule, gtk4, cairo, ma
 defines = [
   '-DGETTEXT_PACKAGE="io.github.bortoq.zatura"',
   '-DLOCALEDIR="@0@"'.format(join_paths(prefix, localedir)),
-  '-DZATURA_PLUGINDIR="@0@"'.format(join_paths(prefix, plugindir)),
+  '-DZATHURA_PLUGINDIR="@0@"'.format(join_paths(prefix, plugindir)),
+  '-DZATHURA_LEGACY_PLUGINDIR="@0@"'.format(join_paths(prefix, get_option('libdir'), 'zathura')),
   '-DSYSCONFDIR="@0@"'.format(sysconfdir),
   '-D_DEFAULT_SOURCE',
 ]
@@ -96,7 +97,7 @@ endif
 # generate version header file
 version_header = configure_file(
   input: 'zatura/version.h.in',
-  output: 'zatura-version.h',
+  output: 'zathura-version.h',
   configuration: conf_data
 )
 
@@ -227,6 +228,7 @@ zatura = executable(
   win_subsystem: 'windows'
 )
 install_headers(headers, subdir: 'zatura')
+install_headers(headers, subdir: 'zathura')
 
 # pkg-config file
 pkg = import('pkgconfig')
@@ -240,6 +242,17 @@ pkg.generate(
     'apiversion=@0@'.format(plugin_api_version),
     'abiversion=@0@'.format(plugin_abi_version),
     'plugindir=${libdir}/zatura'
+  ]
+)
+pkg.generate(
+  name: 'zathura',
+  description: 'document viewer - compatible plugin API',
+  version: version,
+  requires: ['girara', 'cairo'],
+  variables: [
+    'apiversion=@0@'.format(plugin_api_version),
+    'abiversion=@0@'.format(plugin_abi_version),
+    'plugindir=${libdir}/zathura'
   ]
 )
 

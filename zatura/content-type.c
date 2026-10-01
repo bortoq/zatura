@@ -10,7 +10,7 @@
 
 #include "macros.h"
 
-struct zatura_content_type_context_s {
+struct zathura_content_type_context_s {
   magic_t magic;
 };
 
@@ -18,8 +18,8 @@ static int list_cmpstr(const void* lhs, const void* rhs) {
   return g_strcmp0(lhs, rhs);
 }
 
-zatura_content_type_context_t* zatura_content_type_new(void) {
-  zatura_content_type_context_t* context = g_try_malloc0(sizeof(zatura_content_type_context_t));
+zathura_content_type_context_t* zathura_content_type_new(void) {
+  zathura_content_type_context_t* context = g_try_malloc0(sizeof(zathura_content_type_context_t));
   if (context == NULL) {
     return NULL;
   }
@@ -44,7 +44,7 @@ zatura_content_type_context_t* zatura_content_type_new(void) {
   return context;
 }
 
-void zatura_content_type_free(zatura_content_type_context_t* context) {
+void zathura_content_type_free(zathura_content_type_context_t* context) {
   if (context != NULL && context->magic != NULL) {
     magic_close(context->magic);
   }
@@ -55,7 +55,7 @@ void zatura_content_type_free(zatura_content_type_context_t* context) {
 /** Read a most GT_MAX_READ bytes before falling back to file. */
 static const size_t GT_MAX_READ = 1 << 16;
 
-static char* guess_type_magic(zatura_content_type_context_t* context, const char* path) {
+static char* guess_type_magic(zathura_content_type_context_t* context, const char* path) {
   if (context == NULL || context->magic == NULL) {
     return NULL;
   }
@@ -112,7 +112,7 @@ static char* guess_type_glib(const char* path) {
   return NULL;
 }
 
-char* zatura_content_type_guess(zatura_content_type_context_t* context, const char* path,
+char* zathura_content_type_guess(zathura_content_type_context_t* context, const char* path,
                                  const girara_list_t* supported_content_types) {
   /* try libmagic first */
   g_autofree char* content_type = guess_type_magic(context, path);

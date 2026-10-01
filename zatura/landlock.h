@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: Zlib */
 
-#ifndef ZATURA_LANDLOCK_H
-#define ZATURA_LANDLOCK_H
+#ifndef ZATHURA_LANDLOCK_H
+#define ZATHURA_LANDLOCK_H
 
 /*
 ** Remove write and execute permissions

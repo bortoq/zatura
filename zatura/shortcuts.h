@@ -404,6 +404,6 @@ bool sc_file_chooser(girara_session_t* session, girara_argument_t* argument, gir
  * @param mode The equal mode to apply
  * @return true if no error occurred otherwise false
  */
-bool apply_equal_page_mode(zatura_t* zatura, zatura_equal_mode_t mode);
+bool apply_equal_page_mode(zathura_t* zathura, zathura_equal_mode_t mode);
 
 #endif // SHORTCUTS_H

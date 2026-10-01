@@ -10,13 +10,13 @@
  *
  * @param zatura The zatura session
  */
-void config_load_default(zatura_t* zatura);
+void config_load_default(zathura_t* zathura);
 
 /**
  * Loads and evaluates a configuration file
  *
  * @param zatura The zatura session
  */
-void config_load_files(zatura_t* zatura);
+void config_load_files(zathura_t* zathura);
 
 #endif // CONFIG_H

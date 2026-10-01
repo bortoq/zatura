@@ -22,7 +22,7 @@
 #include "utils.h"
 #include "zatura.h"
 
-#define ZATURA_RC "zaturarc"
+#define ZATHURA_RC "zaturarc"
 #ifndef WITH_SANDBOX
 #define DEFAULT_DB "sqlite"
 #else
@@ -36,10 +36,10 @@ static void cb_jumplist_change(girara_session_t* session, const char* UNUSED(nam
   g_return_if_fail(value != NULL);
   g_return_if_fail(session != NULL);
   g_return_if_fail(session->global.data != NULL);
-  zatura_t* zatura = session->global.data;
+  zathura_t* zathura = session->global.data;
 
   const int* ivalue = value;
-  zatura_jumplist_set_max_size(zatura, MAX(0, *ivalue));
+  zathura_jumplist_set_max_size(zathura, MAX(0, *ivalue));
 }
 
 static void cb_color(girara_session_t* session, const char* name, girara_setting_type_t UNUSED(type), const void* value,
@@ -62,36 +62,36 @@ static void cb_color_change(girara_session_t* session, const char* name, girara_
   g_return_if_fail(session != NULL);
   g_return_if_fail(session->global.data != NULL);
   g_return_if_fail(name != NULL);
-  zatura_t* zatura = session->global.data;
+  zathura_t* zathura = session->global.data;
 
   const char* string_value = (const char*)value;
   if (g_strcmp0(name, "highlight-color") == 0) {
-    parse_color(&zatura->ui.colors.highlight_color, string_value);
+    parse_color(&zathura->ui.colors.highlight_color, string_value);
   } else if (g_strcmp0(name, "highlight-fg") == 0) {
-    parse_color(&zatura->ui.colors.highlight_color_fg, string_value);
+    parse_color(&zathura->ui.colors.highlight_color_fg, string_value);
   } else if (g_strcmp0(name, "highlight-active-color") == 0) {
-    parse_color(&zatura->ui.colors.highlight_color_active, string_value);
+    parse_color(&zathura->ui.colors.highlight_color_active, string_value);
   } else if (g_strcmp0(name, "recolor-darkcolor") == 0) {
-    if (zatura->sync.render_thread != NULL) {
-      zatura_renderer_set_recolor_colors_str(zatura->sync.render_thread, NULL, string_value);
+    if (zathura->sync.render_thread != NULL) {
+      zathura_renderer_set_recolor_colors_str(zathura->sync.render_thread, NULL, string_value);
     }
   } else if (g_strcmp0(name, "recolor-lightcolor") == 0) {
-    if (zatura->sync.render_thread != NULL) {
-      zatura_renderer_set_recolor_colors_str(zatura->sync.render_thread, string_value, NULL);
+    if (zathura->sync.render_thread != NULL) {
+      zathura_renderer_set_recolor_colors_str(zathura->sync.render_thread, string_value, NULL);
     }
   } else if (g_strcmp0(name, "render-loading-bg") == 0) {
-    parse_color(&zatura->ui.colors.render_loading_bg, string_value);
+    parse_color(&zathura->ui.colors.render_loading_bg, string_value);
   } else if (g_strcmp0(name, "render-loading-fg") == 0) {
-    parse_color(&zatura->ui.colors.render_loading_fg, string_value);
+    parse_color(&zathura->ui.colors.render_loading_fg, string_value);
   } else if (g_strcmp0(name, "signature-success-color") == 0) {
-    parse_color(&zatura->ui.colors.signature_success, string_value);
+    parse_color(&zathura->ui.colors.signature_success, string_value);
   } else if (g_strcmp0(name, "signature-warning-color") == 0) {
-    parse_color(&zatura->ui.colors.signature_warning, string_value);
+    parse_color(&zathura->ui.colors.signature_warning, string_value);
   } else if (g_strcmp0(name, "signature-error-color") == 0) {
-    parse_color(&zatura->ui.colors.signature_error, string_value);
+    parse_color(&zathura->ui.colors.signature_error, string_value);
   }
 
-  zatura_document_widget_render_all(zatura->ui.document_widget);
+  zathura_document_widget_render_all(zathura->ui.document_widget);
 }
 
 static void cb_nohlsearch_changed(girara_session_t* session, const char* UNUSED(name),
@@ -99,11 +99,11 @@ static void cb_nohlsearch_changed(girara_session_t* session, const char* UNUSED(
   g_return_if_fail(value != NULL);
   g_return_if_fail(session != NULL);
   g_return_if_fail(session->global.data != NULL);
-  zatura_t* zatura = session->global.data;
+  zathura_t* zathura = session->global.data;
 
   const bool* bvalue = value;
-  document_draw_search_results(zatura, !*bvalue);
-  zatura_document_widget_render_all(zatura->ui.document_widget);
+  document_draw_search_results(zathura, !*bvalue);
+  zathura_document_widget_render_all(zathura->ui.document_widget);
 }
 
 static void cb_doubleclick_changed(girara_session_t* session, const char* UNUSED(name),
@@ -111,9 +111,9 @@ static void cb_doubleclick_changed(girara_session_t* session, const char* UNUSED
   g_return_if_fail(value != NULL);
   g_return_if_fail(session != NULL);
   g_return_if_fail(session->global.data != NULL);
-  zatura_t* zatura = session->global.data;
+  zathura_t* zathura = session->global.data;
 
-  zatura->global.double_click_follow = *(const bool*)value;
+  zathura->global.double_click_follow = *(const bool*)value;
 }
 
 static void cb_global_modifiers_changed(girara_session_t* session, const char* name, girara_setting_type_t UNUSED(type),
@@ -121,13 +121,13 @@ static void cb_global_modifiers_changed(girara_session_t* session, const char* n
   g_return_if_fail(value != NULL);
   g_return_if_fail(session != NULL);
   g_return_if_fail(session->global.data != NULL);
-  zatura_t* zatura = session->global.data;
+  zathura_t* zathura = session->global.data;
 
   GdkModifierType* p;
   if (g_strcmp0(name, "synctex-edit-modifier") == 0) {
-    p = &zatura->global.synctex_edit_modmask;
+    p = &zathura->global.synctex_edit_modmask;
   } else if (g_strcmp0(name, "highlighter-modifier") == 0) {
-    p = &zatura->global.highlighter_modmask;
+    p = &zathura->global.highlighter_modmask;
   } else {
     girara_error("unreachable");
     return;
@@ -161,14 +161,14 @@ static void cb_window_statbusbar_changed(girara_session_t* session, const char* 
   g_return_if_fail(value != NULL);
   g_return_if_fail(session != NULL);
   g_return_if_fail(session->global.data != NULL);
-  zatura_t* zatura = session->global.data;
+  zathura_t* zathura = session->global.data;
 
   const bool is_window_setting = g_str_has_prefix(name, "window-");
   if (is_window_setting) {
-    g_autofree char* formatted_filename = get_formatted_filename(zatura, !is_window_setting);
-    girara_set_window_title(zatura->ui.session, formatted_filename);
+    g_autofree char* formatted_filename = get_formatted_filename(zathura, !is_window_setting);
+    girara_set_window_title(zathura->ui.session, formatted_filename);
   } else {
-    statusbar_page_number_update(zatura);
+    statusbar_page_number_update(zathura);
   }
 }
 
@@ -177,14 +177,14 @@ static void cb_show_signature_info(girara_session_t* session, const char* UNUSED
   g_return_if_fail(value != NULL);
   g_return_if_fail(session != NULL);
   g_return_if_fail(session->global.data != NULL);
-  zatura_t* zatura = session->global.data;
+  zathura_t* zathura = session->global.data;
 
-  if (zatura_has_document(zatura) == false) {
+  if (zathura_has_document(zathura) == false) {
     return;
   }
 
-  zatura_document_widget_set_draw_signatures(zatura->ui.document_widget, *(const bool*)value);
-  zatura_document_widget_update_visible_pages(zatura->ui.document_widget);
+  zathura_document_widget_set_draw_signatures(zathura->ui.document_widget, *(const bool*)value);
+  zathura_document_widget_update_visible_pages(zathura->ui.document_widget);
 }
 
 static void cb_setting_recolor_adjust_lightness_change(girara_session_t* session, const char* name,
@@ -194,14 +194,14 @@ static void cb_setting_recolor_adjust_lightness_change(girara_session_t* session
   g_return_if_fail(session != NULL);
   g_return_if_fail(session->global.data != NULL);
   g_return_if_fail(name != NULL);
-  zatura_t* zatura = session->global.data;
+  zathura_t* zathura = session->global.data;
 
   const bool bool_value = *((const bool*)value);
 
-  if (zatura->sync.render_thread != NULL &&
-      zatura_renderer_recolor_adjust_lightness_enabled(zatura->sync.render_thread) != bool_value) {
-    zatura_renderer_enable_recolor_adjust_lightness(zatura->sync.render_thread, bool_value);
-    zatura_document_widget_render_all(zatura->ui.document_widget);
+  if (zathura->sync.render_thread != NULL &&
+      zathura_renderer_recolor_adjust_lightness_enabled(zathura->sync.render_thread) != bool_value) {
+    zathura_renderer_enable_recolor_adjust_lightness(zathura->sync.render_thread, bool_value);
+    zathura_document_widget_render_all(zathura->ui.document_widget);
   }
 }
 
@@ -215,7 +215,7 @@ static void cb_font(girara_session_t* session, const char* UNUSED(name), girara_
 static void cb_guioptions(girara_session_t* session, const char* UNUSED(name), girara_setting_type_t UNUSED(type),
                           const void* value, void* UNUSED(data)) {
   g_return_if_fail(session != NULL && value != NULL);
-  zatura_t* zatura = session->global.data;
+  zathura_t* zathura = session->global.data;
 
   /* set default values */
   bool show_commandline = false;
@@ -247,11 +247,11 @@ static void cb_guioptions(girara_session_t* session, const char* UNUSED(name), g
   }
 
   /* apply settings */
-  if (zatura->ui.view) {
+  if (zathura->ui.view) {
     GtkPolicyType hpolicy = show_hscrollbar ? GTK_POLICY_AUTOMATIC : GTK_POLICY_EXTERNAL;
     GtkPolicyType vpolicy = show_vscrollbar ? GTK_POLICY_AUTOMATIC : GTK_POLICY_EXTERNAL;
 
-    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(zatura->ui.view), hpolicy, vpolicy);
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(zathura->ui.view), hpolicy, vpolicy);
   }
 
   /* apply settings */
@@ -275,20 +275,20 @@ static void cb_guioptions(girara_session_t* session, const char* UNUSED(name), g
 static void cb_scroll_step_value_changed(girara_session_t* session, const char* UNUSED(name),
                                          girara_setting_type_t UNUSED(type), const void* value, void* UNUSED(data)) {
   g_return_if_fail(session != NULL && value != NULL);
-  zatura_t* zatura = session->global.data;
-  if (zatura->ui.view == NULL) {
+  zathura_t* zathura = session->global.data;
+  if (zathura->ui.view == NULL) {
     return;
   }
 
-  GtkAdjustment* v_adj = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(zatura->ui.view));
+  GtkAdjustment* v_adj = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(zathura->ui.view));
   if (v_adj) {
     gtk_adjustment_set_step_increment(v_adj, *(float*)value);
   }
 }
 
 static void add_default_shortcuts(girara_session_t* gsession, girara_mode_t mode) {
-  girara_shortcut_add(gsession, 0, GDK_KEY_a, NULL, sc_adjust_window, mode, ZATURA_ADJUST_BESTFIT, NULL);
-  girara_shortcut_add(gsession, 0, GDK_KEY_s, NULL, sc_adjust_window, mode, ZATURA_ADJUST_WIDTH, NULL);
+  girara_shortcut_add(gsession, 0, GDK_KEY_a, NULL, sc_adjust_window, mode, ZATHURA_ADJUST_BESTFIT, NULL);
+  girara_shortcut_add(gsession, 0, GDK_KEY_s, NULL, sc_adjust_window, mode, ZATHURA_ADJUST_WIDTH, NULL);
 
   girara_shortcut_add(gsession, 0, GDK_KEY_F, NULL, sc_display_link, mode, 0, NULL);
   girara_shortcut_add(gsession, 0, GDK_KEY_c, NULL, sc_copy_link, mode, 0, NULL);
@@ -420,34 +420,34 @@ static void add_default_mouse_events(girara_session_t* gsession, girara_mode_t m
   girara_mouse_event_add(gsession, GDK_BUTTON2_MASK, 0, sc_mouse_scroll, mode, GIRARA_EVENT_MOTION_NOTIFY, 0, NULL);
 }
 
-void config_load_default(zatura_t* zatura) {
-  g_return_if_fail(zatura != NULL && zatura->ui.session != NULL);
+void config_load_default(zathura_t* zathura) {
+  g_return_if_fail(zathura != NULL && zathura->ui.session != NULL);
 
   int int_value              = 0;
   unsigned uint_value        = 0;
   float float_value          = 0;
   bool bool_value            = false;
-  girara_session_t* gsession = zatura->ui.session;
+  girara_session_t* gsession = zathura->ui.session;
 
   /* mode settings */
-  zatura->modes.normal       = gsession->modes.normal;
-  zatura->modes.fullscreen   = girara_mode_add(gsession, "fullscreen");
-  zatura->modes.index        = girara_mode_add(gsession, "index");
-  zatura->modes.insert       = girara_mode_add(gsession, "insert");
-  zatura->modes.presentation = girara_mode_add(gsession, "presentation");
+  zathura->modes.normal       = gsession->modes.normal;
+  zathura->modes.fullscreen   = girara_mode_add(gsession, "fullscreen");
+  zathura->modes.index        = girara_mode_add(gsession, "index");
+  zathura->modes.insert       = girara_mode_add(gsession, "insert");
+  zathura->modes.presentation = girara_mode_add(gsession, "presentation");
 
-#define NORMAL zatura->modes.normal
-#define INSERT zatura->modes.insert
-#define INDEX zatura->modes.index
-#define FULLSCREEN zatura->modes.fullscreen
-#define PRESENTATION zatura->modes.presentation
+#define NORMAL zathura->modes.normal
+#define INSERT zathura->modes.insert
+#define INDEX zathura->modes.index
+#define FULLSCREEN zathura->modes.fullscreen
+#define PRESENTATION zathura->modes.presentation
 
   const girara_mode_t all_modes[] = {
       NORMAL, INSERT, INDEX, FULLSCREEN, PRESENTATION,
   };
 
   /* Set default mode */
-  girara_mode_set(gsession, zatura->modes.normal);
+  girara_mode_set(gsession, zathura->modes.normal);
 
   /* values */
   const int statusbar_h_padding         = 8;
@@ -520,9 +520,9 @@ void config_load_default(zatura_t* zatura) {
   girara_setting_add(gsession, "zoom-min",              &uint_value,  UINT,   false, _("Zoom minimum"), NULL, NULL);
   uint_value = 1000;
   girara_setting_add(gsession, "zoom-max",              &uint_value,  UINT,   false, _("Zoom maximum"), NULL, NULL);
-  uint_value = ZATURA_PAGE_CACHE_DEFAULT_SIZE;
+  uint_value = ZATHURA_PAGE_CACHE_DEFAULT_SIZE;
   girara_setting_add(gsession, "page-cache-size",       &uint_value,  UINT,   true,  _("Maximum number of pages to keep in the cache"), NULL, NULL);
-  uint_value = ZATURA_PAGE_THUMBNAIL_DEFAULT_SIZE;
+  uint_value = ZATHURA_PAGE_THUMBNAIL_DEFAULT_SIZE;
   girara_setting_add(gsession, "page-thumbnail-size",   &uint_value,  UINT,   true,  _("Maximum size in pixels of thumbnails to keep in the cache"), NULL, NULL);
   uint_value = 2000;
   girara_setting_add(gsession, "jumplist-size",         &uint_value,  UINT,   false, _("Number of positions to remember in the jumplist"), cb_jumplist_change, NULL);
@@ -861,20 +861,20 @@ void config_load_default(zatura_t* zatura) {
   girara_argument_mapping_add(gsession, "specific",           ZOOM_SPECIFIC);
   girara_argument_mapping_add(gsession, "top",                TOP);
   girara_argument_mapping_add(gsession, "up",                 UP);
-  girara_argument_mapping_add(gsession, "best-fit",           ZATURA_ADJUST_BESTFIT);
-  girara_argument_mapping_add(gsession, "width",              ZATURA_ADJUST_WIDTH);
+  girara_argument_mapping_add(gsession, "best-fit",           ZATHURA_ADJUST_BESTFIT);
+  girara_argument_mapping_add(gsession, "width",              ZATHURA_ADJUST_WIDTH);
   girara_argument_mapping_add(gsession, "rotate-cw",          ROTATE_CW);
   girara_argument_mapping_add(gsession, "rotate-ccw",         ROTATE_CCW);
-  girara_argument_mapping_add(gsession, "equal_none",         ZATURA_EQUAL_NONE);
-  girara_argument_mapping_add(gsession, "equal_width",        ZATURA_EQUAL_WIDTH);
-  girara_argument_mapping_add(gsession, "equal_height",       ZATURA_EQUAL_HEIGHT);
+  girara_argument_mapping_add(gsession, "equal_none",         ZATHURA_EQUAL_NONE);
+  girara_argument_mapping_add(gsession, "equal_width",        ZATHURA_EQUAL_WIDTH);
+  girara_argument_mapping_add(gsession, "equal_height",       ZATHURA_EQUAL_HEIGHT);
   girara_argument_mapping_add(gsession, "smooth-up",          SMOOTH_UP);
   girara_argument_mapping_add(gsession, "smooth-down",        SMOOTH_DOWN);
   /* clang-format on */
 }
 
-void config_load_files(zatura_t* zatura) {
-  g_return_if_fail(zatura != NULL);
+void config_load_files(zathura_t* zathura) {
+  g_return_if_fail(zathura != NULL);
 
   /* load global configuration files */
   g_autofree char* config_path = girara_get_xdg_path(XDG_CONFIG_DIRS);
@@ -883,14 +883,14 @@ void config_load_files(zatura_t* zatura) {
     ssize_t size              = g_strv_length(config_dirs) - 1;
     for (; size >= 0; --size) {
       const char* dir       = config_dirs[size];
-      g_autofree char* file = g_build_filename(dir, ZATURA_RC, NULL);
-      girara_config_parse(zatura->ui.session, file);
+      g_autofree char* file = g_build_filename(dir, ZATHURA_RC, NULL);
+      girara_config_parse(zathura->ui.session, file);
     }
   }
 
-  girara_config_parse(zatura->ui.session, SYSCONFDIR "/" ZATURA_RC);
+  girara_config_parse(zathura->ui.session, SYSCONFDIR "/" ZATHURA_RC);
 
   /* load local configuration files */
-  g_autofree char* configuration_file = g_build_filename(zatura->config.config_dir, ZATURA_RC, NULL);
-  girara_config_parse(zatura->ui.session, configuration_file);
+  g_autofree char* configuration_file = g_build_filename(zathura->config.config_dir, ZATHURA_RC, NULL);
+  girara_config_parse(zathura->ui.session, configuration_file);
 }

@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: Zlib */
 
-#ifndef ZATURA_LINKS_INTERNAL_H
-#define ZATURA_LINKS_INTERNAL_H
+#ifndef ZATHURA_LINKS_INTERNAL_H
+#define ZATHURA_LINKS_INTERNAL_H
 
 #include "links.h"
 
@@ -13,7 +13,7 @@
  * @param zatura Zatura instance
  * @param link The link
  */
-void zatura_link_evaluate(zatura_t* zatura, zatura_link_t* link);
+void zathura_link_evaluate(zathura_t* zathura, zathura_link_t* link);
 
 /**
  * Display a link using girara_notify
@@ -21,7 +21,7 @@ void zatura_link_evaluate(zatura_t* zatura, zatura_link_t* link);
  * @param zatura Zatura instance
  * @param link The link
  */
-void zatura_link_display(zatura_t* zatura, zatura_link_t* link);
+void zathura_link_display(zathura_t* zathura, zathura_link_t* link);
 
 /**
  * Copy a link into the clipboard using and display it using girara_notify
@@ -30,6 +30,6 @@ void zatura_link_display(zatura_t* zatura, zatura_link_t* link);
  * @param link The link
  * @param selection target clipboard
  */
-void zatura_link_copy(zatura_t* zatura, zatura_link_t* link, GdkClipboard* selection);
+void zathura_link_copy(zathura_t* zathura, zathura_link_t* link, GdkClipboard* selection);
 
 #endif

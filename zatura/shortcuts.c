@@ -31,26 +31,26 @@
 #include "zatura.h"
 
 /* Helper function for highlighting the links */
-static bool draw_links(zatura_t* zatura) {
-  return zatura_document_widget_prepare_links(zatura->ui.document_widget);
+static bool draw_links(zathura_t* zathura) {
+  return zathura_document_widget_prepare_links(zathura->ui.document_widget);
 }
 
 /* Common code for sc_follow, sc_display_link and sc_copy_link */
-static bool link_shortcuts(zatura_t* zatura, GCallback callback, const char* text) {
-  zatura_document_t* document = zatura_get_document(zatura);
-  if (document == NULL || zatura->ui.session == NULL) {
+static bool link_shortcuts(zathura_t* zathura, GCallback callback, const char* text) {
+  zathura_document_t* document = zathura_get_document(zathura);
+  if (document == NULL || zathura->ui.session == NULL) {
     return false;
   }
 
-  bool show_links = draw_links(zatura);
+  bool show_links = draw_links(zathura);
 
   /* ask for input */
   if (show_links == true) {
-    GiraraDialog* inputbar = girara_dialog(zatura->ui.session, text, FALSE);
-    g_signal_connect(inputbar, "hide", G_CALLBACK(cb_hide_links), zatura);
+    GiraraDialog* inputbar = girara_dialog(zathura->ui.session, text, FALSE);
+    g_signal_connect(inputbar, "hide", G_CALLBACK(cb_hide_links), zathura);
 
-    zatura_document_set_adjust_mode(document, ZATURA_ADJUST_INPUTBAR);
-    g_signal_connect(inputbar, "activate", callback, zatura->ui.session);
+    zathura_document_set_adjust_mode(document, ZATHURA_ADJUST_INPUTBAR);
+    g_signal_connect(inputbar, "activate", callback, zathura->ui.session);
   }
 
   return false;
@@ -60,44 +60,44 @@ static bool link_shortcuts(zatura_t* zatura, GCallback callback, const char* tex
 static gboolean redo_search(gpointer data) {
   g_return_val_if_fail(data, G_SOURCE_REMOVE);
 
-  zatura_t* zatura = data;
-  if (!zatura_has_document(zatura) || !zatura->global.search_string || !strlen(zatura->global.search_string)) {
+  zathura_t* zathura = data;
+  if (!zathura_has_document(zathura) || !zathura->global.search_string || !strlen(zathura->global.search_string)) {
     girara_debug("no search to redo, aborting");
     return G_SOURCE_REMOVE;
   }
 
   girara_debug("redoing search");
   // retry later when we have the document widget
-  if (!zatura_document_widget_page_widgets_loaded(zatura->ui.document_widget)) {
+  if (!zathura_document_widget_page_widgets_loaded(zathura->ui.document_widget)) {
     return G_SOURCE_CONTINUE;
   }
 
-  zatura_error_t error = ZATURA_ERROR_OK;
+  zathura_error_t error = ZATHURA_ERROR_OK;
 
-  unsigned int number_of_pages     = zatura_document_get_number_of_pages(zatura->document);
-  unsigned int current_page_number = zatura_document_get_current_page_number(zatura->document);
+  unsigned int number_of_pages     = zathura_document_get_number_of_pages(zathura->document);
+  unsigned int current_page_number = zathura_document_get_current_page_number(zathura->document);
 
   /* reset search results */
-  zatura->global.total_search_results  = 0;
-  zatura->global.current_search_result = 0;
+  zathura->global.total_search_results  = 0;
+  zathura->global.current_search_result = 0;
 
   /* search pages */
   for (unsigned int page_id = 0; page_id < number_of_pages; ++page_id) {
     unsigned int index   = (page_id + current_page_number) % number_of_pages;
-    zatura_page_t* page = zatura_document_get_page(zatura->document, index);
+    zathura_page_t* page = zathura_document_get_page(zathura->document, index);
     if (!page) {
       continue;
     }
 
-    GtkWidget* page_widget   = zatura_page_get_widget(zatura, page);
+    GtkWidget* page_widget   = zathura_page_get_widget(zathura, page);
     GObject* obj_page_widget = G_OBJECT(page_widget);
 
-    g_autoptr(girara_list_t) result = zatura_page_search_text(page, zatura->global.search_string, &error);
+    g_autoptr(girara_list_t) result = zathura_page_search_text(page, zathura->global.search_string, &error);
     const size_t result_size        = result ? girara_list_size(result) : 0;
 
     if (!result_size) {
       g_object_set(obj_page_widget, "search-results", NULL, NULL);
-      if (error == ZATURA_ERROR_NOT_IMPLEMENTED) {
+      if (error == ZATHURA_ERROR_NOT_IMPLEMENTED) {
         return G_SOURCE_REMOVE;
       } else {
         continue;
@@ -106,18 +106,18 @@ static gboolean redo_search(gpointer data) {
 
     g_object_set(obj_page_widget, "search-results", g_steal_pointer(&result), NULL);
 
-    if (zatura->global.search_direction == BACKWARD) {
+    if (zathura->global.search_direction == BACKWARD) {
       /* start at bottom hit in page */
       g_object_set(obj_page_widget, "search-current", result_size - 1, NULL);
     } else {
       g_object_set(obj_page_widget, "search-current", 0, NULL);
     }
 
-    zatura->global.total_search_results += result_size;
+    zathura->global.total_search_results += result_size;
   }
 
   /* highlight search results */
-  document_draw_search_results(zatura, true);
+  document_draw_search_results(zathura, true);
   return G_SOURCE_REMOVE;
 }
 
@@ -125,34 +125,34 @@ bool sc_abort(girara_session_t* session, girara_argument_t* UNUSED(argument), gi
               unsigned int UNUSED(t)) {
   g_return_val_if_fail(session != NULL, false);
   g_return_val_if_fail(session->global.data != NULL, false);
-  zatura_t* zatura = session->global.data;
+  zathura_t* zathura = session->global.data;
 
-  if (zatura_has_document(zatura)) {
-    zatura_document_t* document = zatura_get_document(zatura);
+  if (zathura_has_document(zathura)) {
+    zathura_document_t* document = zathura_get_document(zathura);
     bool clear_search            = true;
     girara_setting_get(session, "abort-clear-search", &clear_search);
 
-    zatura_document_widget_hide_links(zatura->ui.document_widget);
-    const unsigned int number_of_pages = zatura_document_get_number_of_pages(document);
+    zathura_document_widget_hide_links(zathura->ui.document_widget);
+    const unsigned int number_of_pages = zathura_document_get_number_of_pages(document);
     for (unsigned int page_id = 0; page_id < number_of_pages; ++page_id) {
-      zatura_page_t* page = zatura_document_get_page(document, page_id);
+      zathura_page_t* page = zathura_document_get_page(document, page_id);
       if (!page) {
         continue;
       }
 
-      GtkWidget* page_widget = zatura_page_get_widget(zatura, page);
+      GtkWidget* page_widget = zathura_page_get_widget(zathura, page);
       /* the widget exists only if the background fill already created it */
       if (!page_widget) {
         continue;
       }
-      zatura_page_widget_clear_selection(ZATURA_PAGE_WIDGET(page_widget));
+      zathura_page_widget_clear_selection(ZATHURA_PAGE_WIDGET(page_widget));
     }
 
     if (clear_search == true) {
-      document_draw_search_results(zatura, false);
+      document_draw_search_results(zathura, false);
     }
 
-    girara_statusbar_item_set_text(zatura->ui.statusbar.search_count, "");
+    girara_statusbar_item_set_text(zathura->ui.statusbar.search_count, "");
   }
 
   /* Setting the mode back here has not worked for ages. We need another way to
@@ -168,17 +168,17 @@ bool sc_adjust_window(girara_session_t* session, girara_argument_t* argument, gi
                       unsigned int UNUSED(t)) {
   g_return_val_if_fail(session != NULL, false);
   g_return_val_if_fail(session->global.data != NULL, false);
-  zatura_t* zatura = session->global.data;
+  zathura_t* zathura = session->global.data;
   g_return_val_if_fail(argument != NULL, false);
 
-  if (argument->n < ZATURA_ADJUST_NONE || argument->n >= ZATURA_ADJUST_MODE_NUMBER) {
+  if (argument->n < ZATHURA_ADJUST_NONE || argument->n >= ZATHURA_ADJUST_MODE_NUMBER) {
     girara_error("Invalid adjust mode: %d", argument->n);
     girara_notify(session, GIRARA_ERROR, _("Invalid adjust mode: %d"), argument->n);
   } else {
     girara_debug("Setting adjust mode to: %d", argument->n);
 
-    zatura_document_set_adjust_mode(zatura_get_document(zatura), argument->n);
-    adjust_view(zatura);
+    zathura_document_set_adjust_mode(zathura_get_document(zathura), argument->n);
+    adjust_view(zathura);
   }
 
   return false;
@@ -197,9 +197,9 @@ bool sc_cycle_first_column(girara_session_t* session, girara_argument_t* UNUSED(
                            girara_event_t* UNUSED(event), unsigned int t) {
   g_return_val_if_fail(session != NULL, false);
   g_return_val_if_fail(session->global.data != NULL, false);
-  zatura_t* zatura = session->global.data;
+  zathura_t* zathura = session->global.data;
 
-  if (!zatura_has_document(zatura)) {
+  if (!zathura_has_document(zathura)) {
     girara_notify(session, GIRARA_WARNING, _("No document opened."));
     return false;
   }
@@ -223,38 +223,38 @@ bool sc_display_link(girara_session_t* session, girara_argument_t* UNUSED(argume
                      unsigned int UNUSED(t)) {
   g_return_val_if_fail(session != NULL, false);
   g_return_val_if_fail(session->global.data != NULL, false);
-  zatura_t* zatura = session->global.data;
+  zathura_t* zathura = session->global.data;
 
-  return link_shortcuts(zatura, G_CALLBACK(cb_sc_display_link), "Display Link: ");
+  return link_shortcuts(zathura, G_CALLBACK(cb_sc_display_link), "Display Link: ");
 }
 
 bool sc_copy_link(girara_session_t* session, girara_argument_t* UNUSED(argument), girara_event_t* UNUSED(event),
                   unsigned int UNUSED(t)) {
   g_return_val_if_fail(session != NULL, false);
   g_return_val_if_fail(session->global.data != NULL, false);
-  zatura_t* zatura = session->global.data;
+  zathura_t* zathura = session->global.data;
 
-  return link_shortcuts(zatura, G_CALLBACK(cb_sc_copy_link), "Copy Link: ");
+  return link_shortcuts(zathura, G_CALLBACK(cb_sc_copy_link), "Copy Link: ");
 }
 
 bool sc_copy_filepath(girara_session_t* session, girara_argument_t* UNUSED(argument), girara_event_t* UNUSED(event),
                       unsigned int UNUSED(t)) {
   g_return_val_if_fail(session != NULL, false);
   g_return_val_if_fail(session->global.data != NULL, false);
-  zatura_t* zatura = session->global.data;
+  zathura_t* zathura = session->global.data;
 
-  if (!zatura_has_document(zatura)) {
+  if (!zathura_has_document(zathura)) {
     girara_notify(session, GIRARA_ERROR, _("No document opened."));
     return false;
   }
 
-  zatura_document_t* document = zatura_get_document(zatura);
-  GdkClipboard* selection      = get_selection(zatura);
+  zathura_document_t* document = zathura_get_document(zathura);
+  GdkClipboard* selection      = get_selection(zathura);
   if (!selection) {
     return false;
   }
 
-  const char* file_path = zatura_document_get_path(document);
+  const char* file_path = zathura_document_get_path(document);
   if (!file_path) {
     girara_debug("Could not get file path for copying");
     return false;
@@ -275,33 +275,33 @@ bool sc_copy_filepath(girara_session_t* session, girara_argument_t* UNUSED(argum
   return true;
 }
 
-bool apply_equal_page_mode(zatura_t* zatura, zatura_equal_mode_t mode) {
-  g_return_val_if_fail(zatura != NULL, false);
-  g_return_val_if_fail(zatura_has_document(zatura), false);
+bool apply_equal_page_mode(zathura_t* zathura, zathura_equal_mode_t mode) {
+  g_return_val_if_fail(zathura != NULL, false);
+  g_return_val_if_fail(zathura_has_document(zathura), false);
 
-  zatura_document_t* document    = zatura_get_document(zatura);
-  const unsigned int npag         = zatura_document_get_number_of_pages(document);
-  const unsigned int current_page = zatura_document_get_current_page_number(document);
-  zatura_page_t* c_page          = zatura_document_get_page(document, current_page);
+  zathura_document_t* document    = zathura_get_document(zathura);
+  const unsigned int npag         = zathura_document_get_number_of_pages(document);
+  const unsigned int current_page = zathura_document_get_current_page_number(document);
+  zathura_page_t* c_page          = zathura_document_get_page(document, current_page);
 
   girara_debug("Setting page equal mode to: %d", mode);
   for (unsigned int i = 0; i != npag; i++) {
-    zatura_page_t* page_i = zatura_document_get_page(document, i);
+    zathura_page_t* page_i = zathura_document_get_page(document, i);
 
     switch (mode) {
-    case ZATURA_EQUAL_WIDTH:
-      zatura_page_set_zoom(page_i, zatura_page_get_width(c_page) / zatura_page_get_width(page_i));
+    case ZATHURA_EQUAL_WIDTH:
+      zathura_page_set_zoom(page_i, zathura_page_get_width(c_page) / zathura_page_get_width(page_i));
       break;
-    case ZATURA_EQUAL_HEIGHT:
-      zatura_page_set_zoom(page_i, zatura_page_get_height(c_page) / zatura_page_get_height(page_i));
+    case ZATHURA_EQUAL_HEIGHT:
+      zathura_page_set_zoom(page_i, zathura_page_get_height(c_page) / zathura_page_get_height(page_i));
       break;
     default:
-      zatura_page_set_zoom(page_i, 1.0);
+      zathura_page_set_zoom(page_i, 1.0);
     }
   }
 
-  zatura_document_widget_render_all(zatura->ui.document_widget);
-  refresh_view(zatura);
+  zathura_document_widget_render_all(zathura->ui.document_widget);
+  refresh_view(zathura);
 
   return true;
 }
@@ -310,25 +310,25 @@ bool sc_equal_page_mode(girara_session_t* session, girara_argument_t* argument, 
                         unsigned int UNUSED(t)) {
   g_return_val_if_fail(session != NULL, false);
   g_return_val_if_fail(session->global.data != NULL, false);
-  zatura_t* zatura = session->global.data;
+  zathura_t* zathura = session->global.data;
   g_return_val_if_fail(argument != NULL, false);
 
-  if (argument->n >= ZATURA_EQUAL_MODE_NUMBER) {
+  if (argument->n >= ZATHURA_EQUAL_MODE_NUMBER) {
     girara_error("equal mode: unknown mode %d", argument->n);
     return false;
   }
 
-  return apply_equal_page_mode(zatura, argument->n);
+  return apply_equal_page_mode(zathura, argument->n);
 }
 
 bool sc_focus_inputbar(girara_session_t* session, girara_argument_t* argument, girara_event_t* UNUSED(event),
                        unsigned int UNUSED(t)) {
   g_return_val_if_fail(session != NULL, false);
   g_return_val_if_fail(session->global.data != NULL, false);
-  zatura_t* zatura = session->global.data;
+  zathura_t* zathura = session->global.data;
   g_return_val_if_fail(argument != NULL, false);
 
-  zatura_document_set_adjust_mode(zatura->document, ZATURA_ADJUST_INPUTBAR);
+  zathura_document_set_adjust_mode(zathura->document, ZATHURA_ADJUST_INPUTBAR);
 
   if (!gtk_widget_get_visible(GTK_WIDGET(session->gtk.inputbar))) {
     gtk_widget_set_visible(GTK_WIDGET(session->gtk.inputbar), TRUE);
@@ -345,8 +345,8 @@ bool sc_focus_inputbar(girara_session_t* session, girara_argument_t* argument, g
     gtk_editable_set_text(GTK_EDITABLE(inputbar_entry), (char*)argument->data);
 
     /* append filepath */
-    if (argument->n == APPEND_FILEPATH && zatura_has_document(zatura)) {
-      const char* file_path = zatura_document_get_path(zatura->document);
+    if (argument->n == APPEND_FILEPATH && zathura_has_document(zathura)) {
+      const char* file_path = zathura_document_get_path(zathura->document);
       if (!file_path) {
         return false;
       }
@@ -369,32 +369,32 @@ bool sc_follow(girara_session_t* session, girara_argument_t* UNUSED(argument), g
                unsigned int UNUSED(t)) {
   g_return_val_if_fail(session != NULL, false);
   g_return_val_if_fail(session->global.data != NULL, false);
-  zatura_t* zatura = session->global.data;
+  zathura_t* zathura = session->global.data;
 
-  return link_shortcuts(zatura, G_CALLBACK(cb_sc_follow), "Follow Link: ");
+  return link_shortcuts(zathura, G_CALLBACK(cb_sc_follow), "Follow Link: ");
 }
 
 bool sc_goto(girara_session_t* session, girara_argument_t* argument, girara_event_t* UNUSED(event), unsigned int t) {
   g_return_val_if_fail(session != NULL, false);
   g_return_val_if_fail(session->global.data != NULL, false);
-  zatura_t* zatura = session->global.data;
+  zathura_t* zathura = session->global.data;
   g_return_val_if_fail(argument != NULL, false);
-  g_return_val_if_fail(zatura_has_document(zatura), false);
+  g_return_val_if_fail(zathura_has_document(zathura), false);
 
-  zatura_document_t* document = zatura_get_document(zatura);
+  zathura_document_t* document = zathura_get_document(zathura);
 
-  zatura_jumplist_add(zatura);
+  zathura_jumplist_add(zathura);
   if (t) {
     /* add offset */
-    t += zatura_document_get_page_offset(document);
+    t += zathura_document_get_page_offset(document);
 
-    page_set(zatura, t - 1);
+    page_set(zathura, t - 1);
   } else if (argument->n == TOP) {
-    page_set(zatura, 0);
+    page_set(zathura, 0);
   } else if (argument->n == BOTTOM) {
-    page_set(zatura, zatura_document_get_number_of_pages(document) - 1);
+    page_set(zathura, zathura_document_get_number_of_pages(document) - 1);
   }
-  zatura_jumplist_add(zatura);
+  zathura_jumplist_add(zathura);
 
   return false;
 }
@@ -403,21 +403,21 @@ bool sc_goto(girara_session_t* session, girara_argument_t* argument, girara_even
 static double position_moved_by(GtkAdjustment* adjustment, double pixels) {
   const double span = gtk_adjustment_get_upper(adjustment) - gtk_adjustment_get_lower(adjustment);
   if (span <= 0) {
-    return zatura_adjustment_get_ratio(adjustment);
+    return zathura_adjustment_get_ratio(adjustment);
   }
 
   /* keep the ratio within the valid range */
-  return CLAMP(zatura_adjustment_get_ratio(adjustment) + pixels / span, 0.0, 1.0);
+  return CLAMP(zathura_adjustment_get_ratio(adjustment) + pixels / span, 0.0, 1.0);
 }
 
 bool sc_mouse_scroll(girara_session_t* session, girara_argument_t* argument, girara_event_t* event, unsigned int t) {
   g_return_val_if_fail(session != NULL, false);
   g_return_val_if_fail(session->global.data != NULL, false);
-  zatura_t* zatura = session->global.data;
+  zathura_t* zathura = session->global.data;
   g_return_val_if_fail(argument != NULL, false);
   g_return_val_if_fail(event != NULL, false);
 
-  if (!zatura_has_document(zatura)) {
+  if (!zathura_has_document(zathura)) {
     return false;
   }
 
@@ -435,26 +435,26 @@ bool sc_mouse_scroll(girara_session_t* session, girara_argument_t* argument, gir
 
     /* drag */
   case GIRARA_EVENT_BUTTON_PRESS:
-    zatura->shortcut.mouse.x = event->x;
-    zatura->shortcut.mouse.y = event->y;
+    zathura->shortcut.mouse.x = event->x;
+    zathura->shortcut.mouse.y = event->y;
     break;
   case GIRARA_EVENT_BUTTON_RELEASE:
-    zatura->shortcut.mouse.x = 0;
-    zatura->shortcut.mouse.y = 0;
+    zathura->shortcut.mouse.x = 0;
+    zathura->shortcut.mouse.y = 0;
     break;
   case GIRARA_EVENT_MOTION_NOTIFY:
-    x_adj = gtk_scrolled_window_get_hadjustment(GTK_SCROLLED_WINDOW(zatura->ui.view));
-    y_adj = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(zatura->ui.view));
+    x_adj = gtk_scrolled_window_get_hadjustment(GTK_SCROLLED_WINDOW(zathura->ui.view));
+    y_adj = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(zathura->ui.view));
 
     if (x_adj == NULL || y_adj == NULL) {
       return false;
     }
 
-    position_set(zatura, position_moved_by(x_adj, zatura->shortcut.mouse.x - event->x),
-                 position_moved_by(y_adj, zatura->shortcut.mouse.y - event->y));
+    position_set(zathura, position_moved_by(x_adj, zathura->shortcut.mouse.x - event->x),
+                 position_moved_by(y_adj, zathura->shortcut.mouse.y - event->y));
     /* save the current cursor position so the next motion event measures only the new movement */
-    zatura->shortcut.mouse.x = event->x;
-    zatura->shortcut.mouse.y = event->y;
+    zathura->shortcut.mouse.x = event->x;
+    zathura->shortcut.mouse.y = event->y;
     break;
 
     /* unhandled events */
@@ -468,11 +468,11 @@ bool sc_mouse_scroll(girara_session_t* session, girara_argument_t* argument, gir
 bool sc_mouse_zoom(girara_session_t* session, girara_argument_t* argument, girara_event_t* event, unsigned int t) {
   g_return_val_if_fail(session != NULL, false);
   g_return_val_if_fail(session->global.data != NULL, false);
-  zatura_t* zatura = session->global.data;
+  zathura_t* zathura = session->global.data;
   g_return_val_if_fail(argument != NULL, false);
   g_return_val_if_fail(event != NULL, false);
 
-  if (!zatura_has_document(zatura)) {
+  if (!zathura_has_document(zathura)) {
     return false;
   }
 
@@ -498,14 +498,14 @@ bool sc_navigate(girara_session_t* session, girara_argument_t* argument, girara_
                  unsigned int t) {
   g_return_val_if_fail(session != NULL, false);
   g_return_val_if_fail(session->global.data != NULL, false);
-  zatura_t* zatura = session->global.data;
+  zathura_t* zathura = session->global.data;
   g_return_val_if_fail(argument != NULL, false);
-  g_return_val_if_fail(zatura_has_document(zatura), false);
+  g_return_val_if_fail(zathura_has_document(zathura), false);
 
-  zatura_document_t* document = zatura_get_document(zatura);
+  zathura_document_t* document = zathura_get_document(zathura);
 
-  int number_of_pages = zatura_document_get_number_of_pages(document);
-  int new_page        = zatura_document_get_current_page_number(document);
+  int number_of_pages = zathura_document_get_number_of_pages(document);
+  int new_page        = zathura_document_get_current_page_number(document);
 
   bool scroll_wrap = false;
   girara_setting_get(session, "scroll-wrap", &scroll_wrap);
@@ -541,7 +541,7 @@ bool sc_navigate(girara_session_t* session, girara_argument_t* argument, girara_
     }
   }
 
-  page_set(zatura, new_page);
+  page_set(zathura, new_page);
 
   return false;
 }
@@ -550,14 +550,14 @@ bool sc_print(girara_session_t* session, girara_argument_t* UNUSED(argument), gi
               unsigned int UNUSED(t)) {
   g_return_val_if_fail(session != NULL, false);
   g_return_val_if_fail(session->global.data != NULL, false);
-  zatura_t* zatura = session->global.data;
+  zathura_t* zathura = session->global.data;
 
-  if (!zatura_has_document(zatura)) {
+  if (!zathura_has_document(zathura)) {
     girara_notify(session, GIRARA_ERROR, _("No document opened."));
     return false;
   }
 
-  print(zatura);
+  print(zathura);
 
   return true;
 }
@@ -578,33 +578,33 @@ bool sc_reload(girara_session_t* session, girara_argument_t* UNUSED(argument), g
                unsigned int UNUSED(t)) {
   g_return_val_if_fail(session != NULL, false);
   g_return_val_if_fail(session->global.data != NULL, false);
-  zatura_t* zatura = session->global.data;
+  zathura_t* zathura = session->global.data;
 
-  if (zatura->file_monitor.monitor == NULL) {
+  if (zathura->file_monitor.monitor == NULL) {
     return false;
   }
 
   /* Get file info (zoom, current page, etc.) */
-  zatura_fileinfo_t file_info;
-  if (zatura->document == NULL && zatura->predecessor_document != NULL) {
+  zathura_fileinfo_t file_info;
+  if (zathura->document == NULL && zathura->predecessor_document != NULL) {
     /* Try to get the info from the predecessor document if the current does not exist */
-    file_info = zatura_get_prefileinfo(zatura);
+    file_info = zathura_get_prefileinfo(zathura);
   } else {
-    file_info = zatura_get_fileinfo(zatura);
+    file_info = zathura_get_fileinfo(zathura);
   }
 
   /* close current document */
   girara_debug("closing document");
-  document_close(zatura, true);
+  document_close(zathura, true);
 
   /* reopen document with old file info */
   girara_debug("reopening document on page %u", file_info.current_page);
-  document_open(zatura, zatura_filemonitor_get_filepath(zatura->file_monitor.monitor), NULL,
-                zatura->file_monitor.password, file_info.current_page, &file_info);
+  document_open(zathura, zathura_filemonitor_get_filepath(zathura->file_monitor.monitor), NULL,
+                zathura->file_monitor.password, file_info.current_page, &file_info);
 
   // redo search to preserve the previous search state
-  if (zatura->global.search_string && zatura->global.are_search_results_highlighted) {
-    g_idle_add_full(G_PRIORITY_LOW + 10, redo_search, zatura, NULL);
+  if (zathura->global.search_string && zathura->global.are_search_results_highlighted) {
+    g_idle_add_full(G_PRIORITY_LOW + 10, redo_search, zathura, NULL);
   }
 
   return true;
@@ -613,11 +613,11 @@ bool sc_reload(girara_session_t* session, girara_argument_t* UNUSED(argument), g
 bool sc_rotate(girara_session_t* session, girara_argument_t* argument, girara_event_t* UNUSED(event), unsigned int t) {
   g_return_val_if_fail(session != NULL, false);
   g_return_val_if_fail(session->global.data != NULL, false);
-  zatura_t* zatura = session->global.data;
-  g_return_val_if_fail(zatura_has_document(zatura), false);
+  zathura_t* zathura = session->global.data;
+  g_return_val_if_fail(zathura_has_document(zathura), false);
 
-  zatura_document_t* document   = zatura_get_document(zatura);
-  const unsigned int page_number = zatura_document_get_current_page_number(document);
+  zathura_document_t* document   = zathura_get_document(zathura);
+  const unsigned int page_number = zathura_document_get_current_page_number(document);
 
   unsigned int angle = 90;
   if (argument && argument->n == ROTATE_CCW) {
@@ -626,24 +626,24 @@ bool sc_rotate(girara_session_t* session, girara_argument_t* argument, girara_ev
 
   /* update rotate value */
   t                     = (t == 0) ? 1 : t;
-  unsigned int rotation = zatura_document_get_rotation(document);
-  zatura_document_set_rotation(document, (rotation + angle * t) % 360);
+  unsigned int rotation = zathura_document_get_rotation(document);
+  zathura_document_set_rotation(document, (rotation + angle * t) % 360);
 
   /* update scale */
-  girara_argument_t new_argument = {.n = zatura_document_get_adjust_mode(document), .data = NULL};
-  sc_adjust_window(zatura->ui.session, &new_argument, NULL, 0);
+  girara_argument_t new_argument = {.n = zathura_document_get_adjust_mode(document), .data = NULL};
+  sc_adjust_window(zathura->ui.session, &new_argument, NULL, 0);
 
   /* render all pages again */
-  zatura_document_widget_render_all(zatura->ui.document_widget);
+  zathura_document_widget_render_all(zathura->ui.document_widget);
 
-  page_set(zatura, page_number);
+  page_set(zathura, page_number);
 
   return false;
 }
 
 /* full page scrolling in single page mode steps the current page since the adjustment spans one page */
-static bool scroll_single_page_full(zatura_t* zatura, bool down) {
-  GtkAdjustment* vadj    = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(zatura->ui.view));
+static bool scroll_single_page_full(zathura_t* zathura, bool down) {
+  GtkAdjustment* vadj    = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(zathura->ui.view));
   const double page_size = gtk_adjustment_get_page_size(vadj);
   const double lower     = gtk_adjustment_get_lower(vadj);
   const double upper     = gtk_adjustment_get_upper(vadj);
@@ -651,24 +651,24 @@ static bool scroll_single_page_full(zatura_t* zatura, bool down) {
   const double maxvalue  = upper - page_size;
 
   float overlap = 0.0;
-  girara_setting_get(zatura->ui.session, "scroll-full-overlap", &overlap);
+  girara_setting_get(zathura->ui.session, "scroll-full-overlap", &overlap);
   const double step = (1.0 - overlap) * page_size;
 
-  zatura_document_t* document = zatura_get_document(zatura);
-  const unsigned int page      = zatura_document_get_current_page_number(document);
-  const unsigned int npag      = zatura_document_get_number_of_pages(document);
+  zathura_document_t* document = zathura_get_document(zathura);
+  const unsigned int page      = zathura_document_get_current_page_number(document);
+  const unsigned int npag      = zathura_document_get_number_of_pages(document);
 
   if (down) {
     if (value < maxvalue - 1.0) {
-      position_set(zatura, zatura_document_get_position_x(document), position_moved_by(vadj, step));
+      position_set(zathura, zathura_document_get_position_x(document), position_moved_by(vadj, step));
     } else if (page + 1 < npag) {
-      page_set(zatura, page + 1);
+      page_set(zathura, page + 1);
     }
   } else {
     if (value > lower + 1.0) {
-      position_set(zatura, zatura_document_get_position_x(document), position_moved_by(vadj, -step));
+      position_set(zathura, zathura_document_get_position_x(document), position_moved_by(vadj, -step));
     } else if (page > 0) {
-      page_set(zatura, page - 1);
+      page_set(zathura, page - 1);
     }
   }
   return false;
@@ -677,62 +677,62 @@ static bool scroll_single_page_full(zatura_t* zatura, bool down) {
 bool sc_scroll(girara_session_t* session, girara_argument_t* argument, girara_event_t* event, unsigned int t) {
   g_return_val_if_fail(session != NULL, false);
   g_return_val_if_fail(session->global.data != NULL, false);
-  zatura_t* zatura = session->global.data;
+  zathura_t* zathura = session->global.data;
   g_return_val_if_fail(argument != NULL, false);
-  if (!zatura_has_document(zatura)) {
+  if (!zathura_has_document(zathura)) {
     return false;
   }
 
   /* in single page mode the adjustment spans one page so route a full page scroll through the page */
   if (argument->n == FULL_DOWN || argument->n == FULL_UP) {
     int layout_mode = DOCUMENT_WIDGET_GRID;
-    g_object_get(zatura->ui.document_widget, "layout-mode", &layout_mode, NULL);
+    g_object_get(zathura->ui.document_widget, "layout-mode", &layout_mode, NULL);
     if (layout_mode == DOCUMENT_WIDGET_SINGLE) {
-      return scroll_single_page_full(zatura, argument->n == FULL_DOWN);
+      return scroll_single_page_full(zathura, argument->n == FULL_DOWN);
     }
   }
 
   /* if TOP or BOTTOM, go there and we are done */
   if (argument->n == TOP) {
-    zatura_jumplist_add(zatura);
-    position_set(zatura, -1, 0);
-    zatura_jumplist_add(zatura);
+    zathura_jumplist_add(zathura);
+    position_set(zathura, -1, 0);
+    zathura_jumplist_add(zathura);
     return false;
   } else if (argument->n == BOTTOM) {
-    zatura_jumplist_add(zatura);
-    position_set(zatura, -1, 1.0);
-    zatura_jumplist_add(zatura);
+    zathura_jumplist_add(zathura);
+    position_set(zathura, -1, 1.0);
+    zathura_jumplist_add(zathura);
     return false;
   }
 
   /* Retrieve current page and position */
-  zatura_document_t* document = zatura_get_document(zatura);
-  const unsigned int page_id   = zatura_document_get_current_page_number(document);
-  double pos_x                 = zatura_document_get_position_x(document);
-  double pos_y                 = zatura_document_get_position_y(document);
+  zathura_document_t* document = zathura_get_document(zathura);
+  const unsigned int page_id   = zathura_document_get_current_page_number(document);
+  double pos_x                 = zathura_document_get_position_x(document);
+  double pos_y                 = zathura_document_get_position_y(document);
 
   /* If PAGE_TOP or PAGE_BOTTOM, go there and we are done */
   if (argument->n == PAGE_TOP) {
     double dontcare = 0.5;
-    page_number_to_position(zatura, page_id, dontcare, 0.0, &dontcare, &pos_y);
-    position_set(zatura, pos_x, pos_y);
+    page_number_to_position(zathura, page_id, dontcare, 0.0, &dontcare, &pos_y);
+    position_set(zathura, pos_x, pos_y);
     return false;
   } else if (argument->n == PAGE_BOTTOM) {
     double dontcare = 0.5;
-    page_number_to_position(zatura, page_id, dontcare, 1.0, &dontcare, &pos_y);
-    position_set(zatura, pos_x, pos_y);
+    page_number_to_position(zathura, page_id, dontcare, 1.0, &dontcare, &pos_y);
+    position_set(zathura, pos_x, pos_y);
     return false;
   }
 
   /* If SMOOTH_(UP|DOWN), use GtkScrolledWindow signal */
   if (argument->n == SMOOTH_UP) {
     gboolean handled = FALSE;
-    g_signal_emit_by_name(G_OBJECT(zatura->ui.view), "scroll-child", GTK_SCROLL_STEP_BACKWARD, FALSE, &handled);
+    g_signal_emit_by_name(G_OBJECT(zathura->ui.view), "scroll-child", GTK_SCROLL_STEP_BACKWARD, FALSE, &handled);
 
     return false;
   } else if (argument->n == SMOOTH_DOWN) {
     gboolean handled = FALSE;
-    g_signal_emit_by_name(G_OBJECT(zatura->ui.view), "scroll-child", GTK_SCROLL_STEP_FORWARD, FALSE, &handled);
+    g_signal_emit_by_name(G_OBJECT(zathura->ui.view), "scroll-child", GTK_SCROLL_STEP_FORWARD, FALSE, &handled);
 
     return false;
   }
@@ -743,11 +743,11 @@ bool sc_scroll(girara_session_t* session, girara_argument_t* argument, girara_ev
 
   unsigned int view_width  = 0;
   unsigned int view_height = 0;
-  zatura_document_get_viewport_size(document, &view_height, &view_width);
+  zathura_document_get_viewport_size(document, &view_height, &view_width);
 
   unsigned int doc_width  = 0;
   unsigned int doc_height = 0;
-  zatura_document_widget_get_document_size(ZATURA_DOCUMENT_WIDGET(zatura->ui.document_widget), &doc_height,
+  zathura_document_widget_get_document_size(ZATHURA_DOCUMENT_WIDGET(zathura->ui.document_widget), &doc_height,
                                             &doc_width);
 
   float scroll_step = 40;
@@ -773,9 +773,9 @@ bool sc_scroll(girara_session_t* session, girara_argument_t* argument, girara_ev
   }
 
   const unsigned int v_padding =
-      zatura_document_widget_get_page_v_padding(ZATURA_DOCUMENT_WIDGET(zatura->ui.document_widget));
+      zathura_document_widget_get_page_v_padding(ZATHURA_DOCUMENT_WIDGET(zathura->ui.document_widget));
   const unsigned int h_padding =
-      zatura_document_widget_get_page_h_padding(ZATURA_DOCUMENT_WIDGET(zatura->ui.document_widget));
+      zathura_document_widget_get_page_h_padding(ZATHURA_DOCUMENT_WIDGET(zathura->ui.document_widget));
 
   const double vstep = (double)(view_height + v_padding) / (double)doc_height;
   const double hstep = (double)(view_width + h_padding) / (double)doc_width;
@@ -846,35 +846,35 @@ bool sc_scroll(girara_session_t* session, girara_argument_t* argument, girara_ev
   }
 
   /* snap to the border if we change page */
-  const unsigned int new_page_id = position_to_page_number(zatura, pos_x, pos_y);
+  const unsigned int new_page_id = position_to_page_number(zathura, pos_x, pos_y);
   if (scroll_page_aware == true && page_id != new_page_id) {
     double dummy = 0.0;
     switch (argument->n) {
     case FULL_LEFT:
     case HALF_LEFT:
-      page_number_to_position(zatura, new_page_id, 1.0, 0.0, &pos_x, &dummy);
+      page_number_to_position(zathura, new_page_id, 1.0, 0.0, &pos_x, &dummy);
       break;
 
     case FULL_RIGHT:
     case HALF_RIGHT:
-      page_number_to_position(zatura, new_page_id, 0.0, 0.0, &pos_x, &dummy);
+      page_number_to_position(zathura, new_page_id, 0.0, 0.0, &pos_x, &dummy);
       break;
 
     case FULL_UP:
     case HALF_UP:
     case PARTIAL_UP:
-      page_number_to_position(zatura, new_page_id, 0.0, 1.0, &dummy, &pos_y);
+      page_number_to_position(zathura, new_page_id, 0.0, 1.0, &dummy, &pos_y);
       break;
 
     case FULL_DOWN:
     case HALF_DOWN:
     case PARTIAL_DOWN:
-      page_number_to_position(zatura, new_page_id, 0.0, 0.0, &dummy, &pos_y);
+      page_number_to_position(zathura, new_page_id, 0.0, 0.0, &dummy, &pos_y);
       break;
     }
   }
 
-  position_set(zatura, pos_x, pos_y);
+  position_set(zathura, pos_x, pos_y);
   return false;
 }
 
@@ -882,35 +882,35 @@ bool sc_jumplist(girara_session_t* session, girara_argument_t* argument, girara_
                  unsigned int t) {
   g_return_val_if_fail(session != NULL, false);
   g_return_val_if_fail(session->global.data != NULL, false);
-  zatura_t* zatura = session->global.data;
+  zathura_t* zathura = session->global.data;
   g_return_val_if_fail(argument != NULL, false);
-  g_return_val_if_fail(zatura_has_document(zatura), false);
+  g_return_val_if_fail(zathura_has_document(zathura), false);
 
   /* if no jumps in the jumplist */
-  if (!zatura->jumplist.size) {
+  if (!zathura->jumplist.size) {
     return true;
   }
 
-  zatura_jump_t* jump         = NULL;
-  zatura_jump_t* current_jump = zatura_jumplist_current(zatura);
+  zathura_jump_t* jump         = NULL;
+  zathura_jump_t* current_jump = zathura_jumplist_current(zathura);
 
   switch (argument->n) {
   case FORWARD:
     for (int n = (t == 0 ? 1 : t); n > 0; n--) {
-      zatura_jumplist_forward(zatura);
+      zathura_jumplist_forward(zathura);
     }
     break;
   case BACKWARD:
     for (int n = (t == 0 ? 1 : t); n > 0; n--) {
-      zatura_jumplist_backward(zatura);
+      zathura_jumplist_backward(zathura);
     }
     break;
   }
-  jump = zatura_jumplist_current(zatura);
+  jump = zathura_jumplist_current(zathura);
 
   if (jump != current_jump) {
-    page_set(zatura, jump->page);
-    position_set(zatura, jump->x, jump->y);
+    page_set(zathura, jump->page);
+    position_set(zathura, jump->x, jump->y);
   }
 
   return false;
@@ -919,12 +919,12 @@ bool sc_jumplist(girara_session_t* session, girara_argument_t* argument, girara_
 bool sc_bisect(girara_session_t* session, girara_argument_t* argument, girara_event_t* UNUSED(event), unsigned int t) {
   g_return_val_if_fail(session != NULL, false);
   g_return_val_if_fail(session->global.data != NULL, false);
-  zatura_t* zatura = session->global.data;
+  zathura_t* zathura = session->global.data;
   g_return_val_if_fail(argument != NULL, false);
-  g_return_val_if_fail(zatura_has_document(zatura), false);
+  g_return_val_if_fail(zathura_has_document(zathura), false);
 
-  const unsigned int num_pages = zatura_document_get_number_of_pages(zatura->document);
-  const unsigned int cur_page  = zatura_document_get_current_page_number(zatura->document);
+  const unsigned int num_pages = zathura_document_get_number_of_pages(zathura->document);
+  const unsigned int cur_page  = zathura_document_get_current_page_number(zathura->document);
 
   /* process arguments */
   int direction;
@@ -935,27 +935,27 @@ bool sc_bisect(girara_session_t* session, girara_argument_t* argument, girara_ev
       /* nothing to do */
       return false;
     } else if (t > cur_page) {
-      zatura->bisect.start = cur_page;
-      zatura->bisect.end   = t;
+      zathura->bisect.start = cur_page;
+      zathura->bisect.end   = t;
       direction             = BACKWARD;
     } else {
-      zatura->bisect.start = t;
-      zatura->bisect.end   = cur_page;
+      zathura->bisect.start = t;
+      zathura->bisect.end   = cur_page;
       direction             = FORWARD;
     }
   } else {
     direction = argument->n;
 
     /* setup initial bisect range */
-    zatura_jump_t* jump = zatura_jumplist_current(zatura);
+    zathura_jump_t* jump = zathura_jumplist_current(zathura);
     if (!jump) {
       girara_debug("bisecting between first and last page because there are no jumps");
-      zatura->bisect.start = 0;
-      zatura->bisect.end   = num_pages - 1;
-    } else if (jump->page != cur_page || jump->page != zatura->bisect.last_jump) {
+      zathura->bisect.start = 0;
+      zathura->bisect.end   = num_pages - 1;
+    } else if (jump->page != cur_page || jump->page != zathura->bisect.last_jump) {
       girara_debug("last jump doesn't match up, starting new bisecting");
-      zatura->bisect.start = 0;
-      zatura->bisect.end   = num_pages - 1;
+      zathura->bisect.start = 0;
+      zathura->bisect.end   = num_pages - 1;
 
       unsigned int prev_page;
       if (direction == FORWARD) {
@@ -965,38 +965,38 @@ bool sc_bisect(girara_session_t* session, girara_argument_t* argument, girara_ev
       }
 
       /* check if we have previous jumps */
-      if (zatura_jumplist_has_previous(zatura) == true) {
-        zatura_jumplist_backward(zatura);
-        jump = zatura_jumplist_current(zatura);
+      if (zathura_jumplist_has_previous(zathura) == true) {
+        zathura_jumplist_backward(zathura);
+        jump = zathura_jumplist_current(zathura);
         if (jump != NULL) {
           prev_page = jump->page;
         }
-        zatura_jumplist_forward(zatura);
+        zathura_jumplist_forward(zathura);
       }
 
-      zatura->bisect.start     = MIN(prev_page, cur_page);
-      zatura->bisect.end       = MAX(prev_page, cur_page);
-      zatura->bisect.last_jump = cur_page;
+      zathura->bisect.start     = MIN(prev_page, cur_page);
+      zathura->bisect.end       = MAX(prev_page, cur_page);
+      zathura->bisect.last_jump = cur_page;
     }
   }
 
-  girara_debug("bisecting between %d and %d, at %d", zatura->bisect.start, zatura->bisect.end, cur_page);
-  if (zatura->bisect.start == zatura->bisect.end) {
+  girara_debug("bisecting between %d and %d, at %d", zathura->bisect.start, zathura->bisect.end, cur_page);
+  if (zathura->bisect.start == zathura->bisect.end) {
     /* nothing to do */
     return false;
   }
 
   unsigned int next_page  = cur_page;
-  unsigned int next_start = zatura->bisect.start;
-  unsigned int next_end   = zatura->bisect.end;
+  unsigned int next_start = zathura->bisect.start;
+  unsigned int next_end   = zathura->bisect.end;
 
   /* here we have next_start <= next_page <= next_end */
 
   /* bisect step */
   switch (direction) {
   case FORWARD:
-    if (cur_page != zatura->bisect.end) {
-      next_page = (cur_page + zatura->bisect.end) / 2;
+    if (cur_page != zathura->bisect.end) {
+      next_page = (cur_page + zathura->bisect.end) / 2;
       if (next_page == cur_page) {
         ++next_page;
       }
@@ -1005,8 +1005,8 @@ bool sc_bisect(girara_session_t* session, girara_argument_t* argument, girara_ev
     break;
 
   case BACKWARD:
-    if (cur_page != zatura->bisect.start) {
-      next_page = (cur_page + zatura->bisect.start) / 2;
+    if (cur_page != zathura->bisect.start) {
+      next_page = (cur_page + zathura->bisect.start) / 2;
       if (next_page == cur_page) {
         --next_page;
       }
@@ -1020,14 +1020,14 @@ bool sc_bisect(girara_session_t* session, girara_argument_t* argument, girara_ev
     return false;
   }
 
-  girara_debug("bisecting between %u and %u, jumping to %u", zatura->bisect.start, zatura->bisect.end, next_page);
-  zatura->bisect.last_jump = next_page;
-  zatura->bisect.start     = next_start;
-  zatura->bisect.end       = next_end;
+  girara_debug("bisecting between %u and %u, jumping to %u", zathura->bisect.start, zathura->bisect.end, next_page);
+  zathura->bisect.last_jump = next_page;
+  zathura->bisect.start     = next_start;
+  zathura->bisect.end       = next_end;
 
-  zatura_jumplist_add(zatura);
-  page_set(zatura, next_page);
-  zatura_jumplist_add(zatura);
+  zathura_jumplist_add(zathura);
+  page_set(zathura, next_page);
+  zathura_jumplist_add(zathura);
 
   return false;
 }
@@ -1036,9 +1036,9 @@ bool sc_search(girara_session_t* session, girara_argument_t* argument, girara_ev
                unsigned int UNUSED(t)) {
   g_return_val_if_fail(session != NULL, false);
   g_return_val_if_fail(session->global.data != NULL, false);
-  zatura_t* zatura = session->global.data;
+  zathura_t* zathura = session->global.data;
 
-  return search_document(zatura, argument, false);
+  return search_document(zathura, argument, false);
 }
 
 /* helper: get the current row index from the column view selection */
@@ -1107,15 +1107,15 @@ bool sc_navigate_index(girara_session_t* session, girara_argument_t* argument, g
                        unsigned int t) {
   g_return_val_if_fail(session != NULL, false);
   g_return_val_if_fail(session->global.data != NULL, false);
-  zatura_t* zatura = session->global.data;
+  zathura_t* zathura = session->global.data;
   g_return_val_if_fail(argument != NULL, false);
-  g_return_val_if_fail(zatura_has_document(zatura), false);
+  g_return_val_if_fail(zathura_has_document(zathura), false);
 
-  if (!zatura->ui.index) {
+  if (!zathura->ui.index) {
     return false;
   }
 
-  GtkListView* view            = GTK_LIST_VIEW(gtk_scrolled_window_get_child(GTK_SCROLLED_WINDOW(zatura->ui.index)));
+  GtkListView* view            = GTK_LIST_VIEW(gtk_scrolled_window_get_child(GTK_SCROLLED_WINDOW(zathura->ui.index)));
   GtkSelectionModel* selection = gtk_list_view_get_model(view);
   GListModel* model            = G_LIST_MODEL(selection);
   const guint n_items          = g_list_model_get_n_items(model);
@@ -1256,7 +1256,7 @@ bool sc_navigate_index(girara_session_t* session, girara_argument_t* argument, g
     }
     break;
   case SELECT:
-    cb_index_row_activated(view, pos, zatura);
+    cb_index_row_activated(view, pos, zathura);
     return false;
   }
 
@@ -1293,7 +1293,7 @@ static void index_row_bind(GtkSignalListItemFactory* UNUSED(factory), GObject* l
   GtkWidget* page               = gtk_widget_get_next_sibling(expander);
   GtkWidget* alt                = gtk_widget_get_next_sibling(page);
   GtkTreeListRow* row           = gtk_list_item_get_item(GTK_LIST_ITEM(listitem));
-  ZaturaIndexElementObject* it = gtk_tree_list_row_get_item(row);
+  ZathuraIndexElementObject* it = gtk_tree_list_row_get_item(row);
 
   gtk_tree_expander_set_list_row(GTK_TREE_EXPANDER(expander), row);
   gtk_label_set_markup(GTK_LABEL(gtk_tree_expander_get_child(GTK_TREE_EXPANDER(expander))), it->title);
@@ -1304,7 +1304,7 @@ static void index_row_bind(GtkSignalListItemFactory* UNUSED(factory), GObject* l
 
 /* GtkTreeListModelCreateModelFunc */
 static GListModel* index_create_child_model(gpointer item, gpointer UNUSED(user_data)) {
-  ZaturaIndexElementObject* obj = item;
+  ZathuraIndexElementObject* obj = item;
   if (obj->children == NULL) {
     return NULL;
   }
@@ -1319,20 +1319,20 @@ bool sc_toggle_index(girara_session_t* session, girara_argument_t* UNUSED(argume
                      unsigned int UNUSED(t)) {
   g_return_val_if_fail(session != NULL, false);
   g_return_val_if_fail(session->global.data != NULL, false);
-  zatura_t* zatura = session->global.data;
-  if (!zatura_has_document(zatura)) {
+  zathura_t* zathura = session->global.data;
+  if (!zathura_has_document(zathura)) {
     return false;
   }
 
-  if (zatura->ui.index == NULL) {
+  if (zathura->ui.index == NULL) {
     /* create new index widget */
-    zatura->ui.index = gtk_scrolled_window_new();
-    if (zatura->ui.index == NULL) {
+    zathura->ui.index = gtk_scrolled_window_new();
+    if (zathura->ui.index == NULL) {
       return false;
     }
-    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(zatura->ui.index), GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(zathura->ui.index), GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
 
-    g_autoptr(girara_tree_node_t) document_index = zatura_document_index_generate(zatura->document, NULL);
+    g_autoptr(girara_tree_node_t) document_index = zathura_document_index_generate(zathura->document, NULL);
     if (document_index == NULL) {
       girara_notify(session, GIRARA_WARNING, _("This document does not contain any index"));
       goto error_free;
@@ -1348,43 +1348,43 @@ bool sc_toggle_index(girara_session_t* session, girara_argument_t* UNUSED(argume
 
     gtk_widget_add_css_class(GTK_WIDGET(view), "indexmode");
 
-    g_signal_connect(view, "activate", G_CALLBACK(cb_index_activate), zatura);
+    g_signal_connect(view, "activate", G_CALLBACK(cb_index_activate), zathura);
 
     /* the tree list model, selection, and list view consume their model/factory references */
 
     gtk_widget_set_visible(GTK_WIDGET(view), TRUE);
-    gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(zatura->ui.index), GTK_WIDGET(view));
+    gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(zathura->ui.index), GTK_WIDGET(view));
   }
 
-  if (girara_mode_get(session) == zatura->modes.index) {
-    girara_set_view(zatura->ui.session, zatura->ui.view);
-    girara_mode_set(zatura->ui.session, zatura->modes.normal);
-    refresh_view(zatura);
+  if (girara_mode_get(session) == zathura->modes.index) {
+    girara_set_view(zathura->ui.session, zathura->ui.view);
+    girara_mode_set(zathura->ui.session, zathura->modes.normal);
+    refresh_view(zathura);
   } else {
-    zatura_jumplist_add(zatura);
+    zathura_jumplist_add(zathura);
 
-    const zatura_adjust_mode_t adjust_mode = zatura_document_get_adjust_mode(zatura->document);
-    if (adjust_mode == ZATURA_ADJUST_INPUTBAR) {
-      zatura_document_set_adjust_mode(zatura->document, ZATURA_ADJUST_NONE);
+    const zathura_adjust_mode_t adjust_mode = zathura_document_get_adjust_mode(zathura->document);
+    if (adjust_mode == ZATHURA_ADJUST_INPUTBAR) {
+      zathura_document_set_adjust_mode(zathura->document, ZATHURA_ADJUST_NONE);
     }
 
-    girara_set_view(session, zatura->ui.index);
-    index_scroll_to_current_page(zatura);
-    girara_mode_set(zatura->ui.session, zatura->modes.index);
+    girara_set_view(session, zathura->ui.index);
+    index_scroll_to_current_page(zathura);
+    girara_mode_set(zathura->ui.session, zathura->modes.index);
   }
 
   return false;
 
 error_free:
-  if (zatura->ui.index) {
-    GtkWidget* index_parent = gtk_widget_get_parent(zatura->ui.index);
+  if (zathura->ui.index) {
+    GtkWidget* index_parent = gtk_widget_get_parent(zathura->ui.index);
     if (GTK_IS_STACK(index_parent)) {
-      gtk_stack_remove(GTK_STACK(index_parent), zatura->ui.index);
+      gtk_stack_remove(GTK_STACK(index_parent), zathura->ui.index);
     } else {
-      g_object_ref_sink(zatura->ui.index);
-      g_object_unref(zatura->ui.index);
+      g_object_ref_sink(zathura->ui.index);
+      g_object_unref(zathura->ui.index);
     }
-    zatura->ui.index = NULL;
+    zathura->ui.index = NULL;
   }
 
   return false;
@@ -1394,31 +1394,31 @@ bool sc_toggle_page_mode(girara_session_t* session, girara_argument_t* UNUSED(ar
                          unsigned int UNUSED(t)) {
   g_return_val_if_fail(session != NULL, false);
   g_return_val_if_fail(session->global.data != NULL, false);
-  zatura_t* zatura = session->global.data;
+  zathura_t* zathura = session->global.data;
 
-  if (!zatura_has_document(zatura)) {
+  if (!zathura_has_document(zathura)) {
     girara_notify(session, GIRARA_WARNING, _("No document opened."));
     return false;
   }
 
-  unsigned int page_id = zatura_document_get_current_page_number(zatura->document);
+  unsigned int page_id = zathura_document_get_current_page_number(zathura->document);
 
   unsigned int pages_per_row = 1;
-  girara_setting_get(zatura->ui.session, "pages-per-row", &pages_per_row);
+  girara_setting_get(zathura->ui.session, "pages-per-row", &pages_per_row);
 
   unsigned int value = 1;
   if (pages_per_row == 1) {
-    value = zatura->shortcut.toggle_page_mode.pages;
+    value = zathura->shortcut.toggle_page_mode.pages;
   } else {
-    zatura->shortcut.toggle_page_mode.pages = pages_per_row;
+    zathura->shortcut.toggle_page_mode.pages = pages_per_row;
   }
 
-  girara_setting_set(zatura->ui.session, "pages-per-row", &value);
-  adjust_view(zatura);
+  girara_setting_set(zathura->ui.session, "pages-per-row", &value);
+  adjust_view(zathura);
 
-  page_set(zatura, page_id);
-  zatura_document_widget_render_all(zatura->ui.document_widget);
-  refresh_view(zatura);
+  page_set(zathura, page_id);
+  zathura_document_widget_render_all(zathura->ui.document_widget);
+  refresh_view(zathura);
 
   return true;
 }
@@ -1427,22 +1427,22 @@ bool sc_toggle_fullscreen(girara_session_t* session, girara_argument_t* UNUSED(a
                           unsigned int UNUSED(t)) {
   g_return_val_if_fail(session != NULL, false);
   g_return_val_if_fail(session->global.data != NULL, false);
-  zatura_t* zatura = session->global.data;
+  zathura_t* zathura = session->global.data;
 
-  if (!zatura_has_document(zatura)) {
+  if (!zathura_has_document(zathura)) {
     girara_notify(session, GIRARA_WARNING, _("No document opened."));
     return false;
   }
 
   const girara_mode_t old_mode = girara_mode_get(session);
-  if (old_mode == zatura->modes.fullscreen) {
+  if (old_mode == zathura->modes.fullscreen) {
     gtk_window_unfullscreen(GTK_WINDOW(session->gtk.window));
-    refresh_view(zatura);
-    girara_mode_set(session, zatura->modes.normal);
-  } else if (old_mode == zatura->modes.normal) {
+    refresh_view(zathura);
+    girara_mode_set(session, zathura->modes.normal);
+  } else if (old_mode == zathura->modes.normal) {
     gtk_window_fullscreen(GTK_WINDOW(session->gtk.window));
-    refresh_view(zatura);
-    girara_mode_set(session, zatura->modes.fullscreen);
+    refresh_view(zathura);
+    girara_mode_set(session, zathura->modes.fullscreen);
   }
 
   return false;
@@ -1452,36 +1452,36 @@ bool sc_toggle_presentation(girara_session_t* session, girara_argument_t* UNUSED
                             girara_event_t* UNUSED(event), unsigned int UNUSED(t)) {
   g_return_val_if_fail(session != NULL, false);
   g_return_val_if_fail(session->global.data != NULL, false);
-  zatura_t* zatura = session->global.data;
+  zathura_t* zathura = session->global.data;
 
-  if (!zatura_has_document(zatura)) {
+  if (!zathura_has_document(zathura)) {
     girara_notify(session, GIRARA_WARNING, _("No document opened."));
     return false;
   }
 
   const girara_mode_t old_mode = girara_mode_get(session);
-  if (old_mode == zatura->modes.presentation) {
+  if (old_mode == zathura->modes.presentation) {
     /* reset pages per row */
-    girara_setting_set(session, "pages-per-row", &zatura->shortcut.toggle_presentation_mode.pages);
+    girara_setting_set(session, "pages-per-row", &zathura->shortcut.toggle_presentation_mode.pages);
 
     // reset layout mode
-    if (zatura->shortcut.toggle_presentation_mode.layout_mode != DOCUMENT_WIDGET_SINGLE) {
-      g_object_set(zatura->ui.document_widget, "layout-mode", zatura->shortcut.toggle_presentation_mode.layout_mode,
+    if (zathura->shortcut.toggle_presentation_mode.layout_mode != DOCUMENT_WIDGET_SINGLE) {
+      g_object_set(zathura->ui.document_widget, "layout-mode", zathura->shortcut.toggle_presentation_mode.layout_mode,
                    NULL);
     }
 
     /* reset first page column */
-    if (zatura->shortcut.toggle_presentation_mode.first_page_column_list) {
+    if (zathura->shortcut.toggle_presentation_mode.first_page_column_list) {
       girara_setting_set(session, "first-page-column",
-                         zatura->shortcut.toggle_presentation_mode.first_page_column_list);
+                         zathura->shortcut.toggle_presentation_mode.first_page_column_list);
     }
 
     /* show status bar if it was enabled */
-    if (zatura->shortcut.toggle_presentation_mode.is_status_bar_visible) {
+    if (zathura->shortcut.toggle_presentation_mode.is_status_bar_visible) {
       gtk_widget_set_visible(GTK_WIDGET(session->gtk.statusbar), TRUE);
     }
     /* show input bar if if was enabled */
-    if (zatura->shortcut.toggle_presentation_mode.is_input_bar_visible) {
+    if (zathura->shortcut.toggle_presentation_mode.is_input_bar_visible) {
       gtk_widget_set_visible(GTK_WIDGET(session->gtk.inputbar), TRUE);
     }
 
@@ -1489,33 +1489,33 @@ bool sc_toggle_presentation(girara_session_t* session, girara_argument_t* UNUSED
     gtk_window_unfullscreen(GTK_WINDOW(session->gtk.window));
 
     /* reset zoom */
-    zatura_document_set_zoom(zatura->document, zatura->shortcut.toggle_presentation_mode.zoom);
-    zatura_document_widget_render_all(zatura->ui.document_widget);
-    refresh_view(zatura);
+    zathura_document_set_zoom(zathura->document, zathura->shortcut.toggle_presentation_mode.zoom);
+    zathura_document_widget_render_all(zathura->ui.document_widget);
+    refresh_view(zathura);
 
     /* set mode */
-    girara_mode_set(session, zatura->modes.normal);
-  } else if (old_mode == zatura->modes.normal) {
+    girara_mode_set(session, zathura->modes.normal);
+  } else if (old_mode == zathura->modes.normal) {
     /* backup pages per row */
-    girara_setting_get(session, "pages-per-row", &zatura->shortcut.toggle_presentation_mode.pages);
+    girara_setting_get(session, "pages-per-row", &zathura->shortcut.toggle_presentation_mode.pages);
 
     /* backup first page column */
-    g_free(zatura->shortcut.toggle_presentation_mode.first_page_column_list);
-    zatura->shortcut.toggle_presentation_mode.first_page_column_list = NULL;
+    g_free(zathura->shortcut.toggle_presentation_mode.first_page_column_list);
+    zathura->shortcut.toggle_presentation_mode.first_page_column_list = NULL;
     /* this will leak. we need to move the values somewhere else */
     girara_setting_get(session, "first-page-column",
-                       &zatura->shortcut.toggle_presentation_mode.first_page_column_list);
+                       &zathura->shortcut.toggle_presentation_mode.first_page_column_list);
 
     /* back up zoom */
-    zatura->shortcut.toggle_presentation_mode.zoom = zatura_document_get_zoom(zatura->document);
+    zathura->shortcut.toggle_presentation_mode.zoom = zathura_document_get_zoom(zathura->document);
 
     // backup layout mode
-    g_object_get(zatura->ui.document_widget, "layout-mode", &zatura->shortcut.toggle_presentation_mode.layout_mode,
+    g_object_get(zathura->ui.document_widget, "layout-mode", &zathura->shortcut.toggle_presentation_mode.layout_mode,
                  NULL);
 
     /* set single view */
-    if (zatura->shortcut.toggle_presentation_mode.layout_mode != DOCUMENT_WIDGET_SINGLE) {
-      g_object_set(zatura->ui.document_widget, "layout-mode", DOCUMENT_WIDGET_SINGLE, NULL);
+    if (zathura->shortcut.toggle_presentation_mode.layout_mode != DOCUMENT_WIDGET_SINGLE) {
+      g_object_set(zathura->ui.document_widget, "layout-mode", DOCUMENT_WIDGET_SINGLE, NULL);
     }
 
     /* the gtk4 grid does not honor single-page layout yet, so force one column for a usable presentation */
@@ -1523,12 +1523,12 @@ bool sc_toggle_presentation(girara_session_t* session, girara_argument_t* UNUSED
     girara_setting_set(session, "pages-per-row", &presentation_pages_per_row);
 
     /* adjust window */
-    girara_argument_t argument = {.n = ZATURA_ADJUST_BESTFIT, .data = NULL};
+    girara_argument_t argument = {.n = ZATHURA_ADJUST_BESTFIT, .data = NULL};
     sc_adjust_window(session, &argument, NULL, 0);
 
-    zatura->shortcut.toggle_presentation_mode.is_status_bar_visible =
+    zathura->shortcut.toggle_presentation_mode.is_status_bar_visible =
         gtk_widget_get_visible(GTK_WIDGET(session->gtk.statusbar));
-    zatura->shortcut.toggle_presentation_mode.is_input_bar_visible =
+    zathura->shortcut.toggle_presentation_mode.is_input_bar_visible =
         gtk_widget_get_visible(GTK_WIDGET(session->gtk.inputbar));
 
     /* hide status and inputbar */
@@ -1537,10 +1537,10 @@ bool sc_toggle_presentation(girara_session_t* session, girara_argument_t* UNUSED
 
     /* set full screen */
     gtk_window_fullscreen(GTK_WINDOW(session->gtk.window));
-    refresh_view(zatura);
+    refresh_view(zathura);
 
     /* set mode */
-    girara_mode_set(session, zatura->modes.presentation);
+    girara_mode_set(session, zathura->modes.presentation);
   }
 
   return false;
@@ -1550,22 +1550,22 @@ bool sc_toggle_single_page_mode(girara_session_t* session, girara_argument_t* UN
                                 girara_event_t* UNUSED(event), unsigned int UNUSED(t)) {
   g_return_val_if_fail(session != NULL, false);
   g_return_val_if_fail(session->global.data != NULL, false);
-  zatura_t* zatura = session->global.data;
+  zathura_t* zathura = session->global.data;
 
-  if (!zatura_has_document(zatura)) {
+  if (!zathura_has_document(zathura)) {
     girara_notify(session, GIRARA_WARNING, _("No document opened."));
     return false;
   }
 
   document_widget_mode_t old_mode;
-  g_object_get(zatura->ui.document_widget, "layout-mode", &old_mode, NULL);
+  g_object_get(zathura->ui.document_widget, "layout-mode", &old_mode, NULL);
   if (old_mode == DOCUMENT_WIDGET_SINGLE) {
-    g_object_set(zatura->ui.document_widget, "layout-mode", DOCUMENT_WIDGET_GRID, NULL);
+    g_object_set(zathura->ui.document_widget, "layout-mode", DOCUMENT_WIDGET_GRID, NULL);
   } else {
     /* Start the transition before changing columns so adjustment feedback cannot change the page. */
-    g_object_set(zatura->ui.document_widget, "layout-mode", DOCUMENT_WIDGET_SINGLE, NULL);
+    g_object_set(zathura->ui.document_widget, "layout-mode", DOCUMENT_WIDGET_SINGLE, NULL);
     const unsigned int pages_per_row = 1;
-    girara_setting_set(zatura->ui.session, "pages-per-row", &pages_per_row);
+    girara_setting_set(zathura->ui.session, "pages-per-row", &pages_per_row);
   }
 
   return true;
@@ -1575,12 +1575,12 @@ bool sc_quit(girara_session_t* session, girara_argument_t* UNUSED(argument), gir
              unsigned int UNUSED(t)) {
   g_return_val_if_fail(session != NULL, false);
   g_return_val_if_fail(session->global.data != NULL, false);
-  zatura_t* zatura = session->global.data;
+  zathura_t* zathura = session->global.data;
 
   girara_argument_t arg = {.n = GIRARA_HIDE, .data = NULL};
   girara_isc_completion(session, &arg, NULL, 0);
 
-  cb_destroy(NULL, zatura);
+  cb_destroy(NULL, zathura);
 
   return false;
 }
@@ -1588,66 +1588,66 @@ bool sc_quit(girara_session_t* session, girara_argument_t* UNUSED(argument), gir
 bool sc_zoom(girara_session_t* session, girara_argument_t* argument, girara_event_t* event, unsigned int t) {
   g_return_val_if_fail(session != NULL, false);
   g_return_val_if_fail(session->global.data != NULL, false);
-  zatura_t* zatura = session->global.data;
+  zathura_t* zathura = session->global.data;
   g_return_val_if_fail(argument != NULL, false);
-  g_return_val_if_fail(zatura_has_document(zatura), false);
+  g_return_val_if_fail(zathura_has_document(zathura), false);
 
   // Cancel current kinetic scrolling.
   // This makes sure that GtkScrolledWindow's internal scroll state is synced to
   // adjustment values later set by zatura_document_set_position_ functions.
   // When later GtkScrolledWindow happen to handle GDK_SCROLL events, it makes
   // sure that the adjustment values are modified correctly.
-  gtk_scrolled_window_set_kinetic_scrolling(GTK_SCROLLED_WINDOW(zatura->ui.view), FALSE);
-  gtk_scrolled_window_set_kinetic_scrolling(GTK_SCROLLED_WINDOW(zatura->ui.view), TRUE);
+  gtk_scrolled_window_set_kinetic_scrolling(GTK_SCROLLED_WINDOW(zathura->ui.view), FALSE);
+  gtk_scrolled_window_set_kinetic_scrolling(GTK_SCROLLED_WINDOW(zathura->ui.view), TRUE);
 
-  zatura_document_set_adjust_mode(zatura->document, ZATURA_ADJUST_NONE);
+  zathura_document_set_adjust_mode(zathura->document, ZATHURA_ADJUST_NONE);
 
   /* retrieve zoom step value */
   unsigned int value = 1;
-  girara_setting_get(zatura->ui.session, "zoom-step", &value);
+  girara_setting_get(zathura->ui.session, "zoom-step", &value);
 
   const int nt           = (t == 0) ? 1 : t;
   const double zoom_step = MAX(DBL_EPSILON, 1.0 + value / 100.0 * nt);
-  const double old_zoom  = zatura_document_get_zoom(zatura->document);
+  const double old_zoom  = zathura_document_get_zoom(zathura->document);
 
   /* specify new zoom value */
   if (argument->n == ZOOM_IN) {
     girara_debug("Increasing zoom by %0.2f.", zoom_step - 1.0);
-    zatura_document_set_zoom(zatura->document, old_zoom * zoom_step);
+    zathura_document_set_zoom(zathura->document, old_zoom * zoom_step);
   } else if (argument->n == ZOOM_OUT) {
     girara_debug("Decreasing zoom by %0.2f.", zoom_step - 1.0);
-    zatura_document_set_zoom(zatura->document, old_zoom / zoom_step);
+    zathura_document_set_zoom(zathura->document, old_zoom / zoom_step);
   } else if (argument->n == ZOOM_SPECIFIC) {
     if (t == 0) {
       girara_debug("Setting zoom to 1.");
-      zatura_document_set_zoom(zatura->document, 1.0);
+      zathura_document_set_zoom(zathura->document, 1.0);
     } else {
       girara_debug("Setting zoom to %0.2f.", t / 100.0);
-      zatura_document_set_zoom(zatura->document, t / 100.0);
+      zathura_document_set_zoom(zathura->document, t / 100.0);
     }
   } else if (argument->n == ZOOM_SMOOTH) {
     const double dy = event ? event->y : 1.0;
     const double z  = pow(zoom_step, -dy);
     girara_debug("Increasing zoom by %0.2f.", z - 1.0);
-    zatura_document_set_zoom(zatura->document, old_zoom * z);
+    zathura_document_set_zoom(zathura->document, old_zoom * z);
   } else {
     girara_debug("Setting zoom to 1.");
-    zatura_document_set_zoom(zatura->document, 1.0);
+    zathura_document_set_zoom(zathura->document, 1.0);
   }
 
   /* zoom limitations */
-  const double zoom = zatura_document_get_zoom(zatura->document);
-  zatura_document_set_zoom(zatura->document, zatura_correct_zoom_value(session, zoom));
+  const double zoom = zathura_document_get_zoom(zathura->document);
+  zathura_document_set_zoom(zathura->document, zathura_correct_zoom_value(session, zoom));
 
-  const double new_zoom = zatura_document_get_zoom(zatura->document);
+  const double new_zoom = zathura_document_get_zoom(zathura->document);
   if (fabs(new_zoom - old_zoom) <= DBL_EPSILON) {
     girara_debug("New and old zoom level are too close: %0.2f vs. %0.2f", new_zoom, old_zoom);
     return false;
   }
 
   girara_debug("Re-rendering with new zoom level %0.2f.", new_zoom);
-  zatura_document_widget_render_all(zatura->ui.document_widget);
-  refresh_view(zatura);
+  zathura_document_widget_render_all(zathura->ui.document_widget);
+  refresh_view(zathura);
 
   return false;
 }
@@ -1673,23 +1673,23 @@ bool sc_exec(girara_session_t* session, girara_argument_t* argument, girara_even
              unsigned int UNUSED(t)) {
   g_return_val_if_fail(session != NULL, false);
   g_return_val_if_fail(session->global.data != NULL, false);
-  zatura_t* zatura = session->global.data;
+  zathura_t* zathura = session->global.data;
 
   if (argument == NULL || argument->data == NULL) {
     return false;
   }
 
   girara_argument_t new_argument = *argument;
-  const char* bus_name           = zatura_dbus_get_name(zatura);
+  const char* bus_name           = zathura_dbus_get_name(zathura);
   char* s                        = girara_replace_substring(new_argument.data, "$DBUS", bus_name);
   if (s == NULL) {
     return false;
   }
   new_argument.data = s;
 
-  if (zatura_has_document(zatura)) {
-    const char* path  = zatura_document_get_path(zatura->document);
-    unsigned int page = zatura_document_get_current_page_number(zatura->document);
+  if (zathura_has_document(zathura)) {
+    const char* path  = zathura_document_get_path(zathura->document);
+    unsigned int page = zathura_document_get_current_page_number(zathura->document);
     char page_buf[G_ASCII_DTOSTR_BUF_SIZE];
     g_ascii_dtostr(page_buf, G_ASCII_DTOSTR_BUF_SIZE, page + 1);
 
@@ -1718,61 +1718,61 @@ bool sc_exec(girara_session_t* session, girara_argument_t* argument, girara_even
 bool sc_zoom_page(girara_session_t* session, girara_argument_t* argument, girara_event_t* event, unsigned int t) {
   g_return_val_if_fail(session != NULL, false);
   g_return_val_if_fail(session->global.data != NULL, false);
-  zatura_t* zatura = session->global.data;
+  zathura_t* zathura = session->global.data;
   g_return_val_if_fail(argument != NULL, false);
-  g_return_val_if_fail(zatura_has_document(zatura), false);
+  g_return_val_if_fail(zathura_has_document(zathura), false);
 
-  zatura_document_set_adjust_mode(zatura->document, ZATURA_ADJUST_NONE);
+  zathura_document_set_adjust_mode(zathura->document, ZATHURA_ADJUST_NONE);
 
   /* retrieve zoom step value */
   unsigned int value = 1;
-  girara_setting_get(zatura->ui.session, "zoom-step", &value);
+  girara_setting_get(zathura->ui.session, "zoom-step", &value);
 
-  unsigned int current_page = zatura_document_get_current_page_number(zatura->document);
-  zatura_page_t* page      = zatura_document_get_page(zatura->document, current_page);
+  unsigned int current_page = zathura_document_get_current_page_number(zathura->document);
+  zathura_page_t* page      = zathura_document_get_page(zathura->document, current_page);
 
   const int nt           = (t == 0) ? 1 : t;
   const double zoom_step = MAX(DBL_EPSILON, 1.0 + value / 100.0 * nt);
-  const double old_zoom  = zatura_page_get_zoom(page);
+  const double old_zoom  = zathura_page_get_zoom(page);
 
   /* specify new zoom value */
   if (argument->n == ZOOM_IN) {
     girara_debug("Increasing page %u zoom by %0.2f.", current_page, zoom_step - 1.0);
-    zatura_page_set_zoom(page, old_zoom * zoom_step);
+    zathura_page_set_zoom(page, old_zoom * zoom_step);
   } else if (argument->n == ZOOM_OUT) {
     girara_debug("Decreasing page %u zoom by %0.2f.", current_page, zoom_step - 1.0);
-    zatura_page_set_zoom(page, old_zoom / zoom_step);
+    zathura_page_set_zoom(page, old_zoom / zoom_step);
   } else if (argument->n == ZOOM_SPECIFIC) {
     if (t == 0) {
       girara_debug("Setting page %u zoom to 1.", current_page);
-      zatura_page_set_zoom(page, 1.0);
+      zathura_page_set_zoom(page, 1.0);
     } else {
       girara_debug("Setting page %u zoom to %0.2f.", current_page, t / 100.0);
-      zatura_page_set_zoom(page, t / 100.0);
+      zathura_page_set_zoom(page, t / 100.0);
     }
   } else if (argument->n == ZOOM_SMOOTH) {
     const double dy = event ? event->y : 1.0;
     const double z  = pow(zoom_step, -dy);
     girara_debug("Increasing page %u zoom by %0.2f.", current_page, z - 1.0);
-    zatura_page_set_zoom(page, old_zoom * z);
+    zathura_page_set_zoom(page, old_zoom * z);
   } else {
     girara_debug("Setting page %u zoom to 1.", current_page);
-    zatura_page_set_zoom(page, 1.0);
+    zathura_page_set_zoom(page, 1.0);
   }
 
   /* zoom limitations */
-  const double zoom = zatura_page_get_zoom(page);
-  zatura_page_set_zoom(page, zatura_correct_zoom_value(session, zoom));
+  const double zoom = zathura_page_get_zoom(page);
+  zathura_page_set_zoom(page, zathura_correct_zoom_value(session, zoom));
 
-  const double new_zoom = zatura_page_get_zoom(page);
+  const double new_zoom = zathura_page_get_zoom(page);
   if (fabs(new_zoom - old_zoom) <= DBL_EPSILON) {
     girara_debug("New and old page %u zoom level are too close: %0.2f vs. %0.2f", current_page, new_zoom, old_zoom);
     return false;
   }
 
   girara_debug("Re-rendering with page %u new zoom level %0.2f.", current_page, new_zoom);
-  zatura_document_widget_render_all(zatura->ui.document_widget);
-  refresh_view(zatura);
+  zathura_document_widget_render_all(zathura->ui.document_widget);
+  refresh_view(zathura);
 
   return false;
 }
@@ -1781,10 +1781,10 @@ bool sc_nohlsearch(girara_session_t* session, girara_argument_t* UNUSED(argument
                    unsigned int UNUSED(t)) {
   g_return_val_if_fail(session != NULL, false);
   g_return_val_if_fail(session->global.data != NULL, false);
-  zatura_t* zatura = session->global.data;
+  zathura_t* zathura = session->global.data;
 
-  document_draw_search_results(zatura, false);
-  zatura_document_widget_render_all(zatura->ui.document_widget);
+  document_draw_search_results(zathura, false);
+  zathura_document_widget_render_all(zathura->ui.document_widget);
 
   return false;
 }
@@ -1793,45 +1793,45 @@ bool sc_snap_to_page(girara_session_t* session, girara_argument_t* UNUSED(argume
                      unsigned int UNUSED(t)) {
   g_return_val_if_fail(session != NULL, false);
   g_return_val_if_fail(session->global.data != NULL, false);
-  zatura_t* zatura = session->global.data;
-  g_return_val_if_fail(zatura_has_document(zatura), false);
-  zatura_document_t* document = zatura->document;
+  zathura_t* zathura = session->global.data;
+  g_return_val_if_fail(zathura_has_document(zathura), false);
+  zathura_document_t* document = zathura->document;
 
-  int page = zatura_document_get_current_page_number(document);
-  return page_set(zatura, page);
+  int page = zathura_document_get_current_page_number(document);
+  return page_set(zathura, page);
 }
 
 /* async callback invoked after the user picks a file or cancels the dialog */
 static void cb_file_chooser_open(GObject* source, GAsyncResult* result, gpointer user_data) {
   GtkFileDialog* dialog   = GTK_FILE_DIALOG(source);
-  zatura_t* zatura      = user_data;
+  zathura_t* zathura      = user_data;
   g_autoptr(GError) error = NULL;
   g_autoptr(GFile) file   = gtk_file_dialog_open_finish(dialog, result, &error);
   if (!file) {
     /* user cancelled, do not warn */
     if (error && !g_error_matches(error, GTK_DIALOG_ERROR, GTK_DIALOG_ERROR_DISMISSED)) {
-      girara_notify(zatura->ui.session, GIRARA_ERROR, "%s", error->message);
+      girara_notify(zathura->ui.session, GIRARA_ERROR, "%s", error->message);
     }
     return;
   }
 
   g_autofree char* path = g_file_get_path(file);
   if (path == NULL) {
-    girara_notify(zatura->ui.session, GIRARA_ERROR, _("Could not get path from file."));
+    girara_notify(zathura->ui.session, GIRARA_ERROR, _("Could not get path from file."));
     return;
   }
 
-  if (zatura_has_document(zatura) == true) {
-    document_close(zatura, false);
+  if (zathura_has_document(zathura) == true) {
+    document_close(zathura, false);
   }
-  document_open_idle(zatura, path, NULL, ZATURA_PAGE_NUMBER_UNSPECIFIED, NULL, NULL, NULL, NULL);
+  document_open_idle(zathura, path, NULL, ZATHURA_PAGE_NUMBER_UNSPECIFIED, NULL, NULL, NULL, NULL);
 }
 
 bool sc_file_chooser(girara_session_t* session, girara_argument_t* UNUSED(argument), girara_event_t* UNUSED(event),
                      unsigned int UNUSED(t)) {
   g_return_val_if_fail(session != NULL, false);
   g_return_val_if_fail(session->global.data != NULL, false);
-  zatura_t* zatura = session->global.data;
+  zathura_t* zathura = session->global.data;
 
 #ifdef WITH_SANDBOX
   /* disable the file dialog in sandbox mode */
@@ -1843,8 +1843,8 @@ bool sc_file_chooser(girara_session_t* session, girara_argument_t* UNUSED(argume
   gtk_file_dialog_set_title(dialog, _("Open file"));
 
   /* build a filter for all mime types supported by loaded plugins */
-  zatura_plugin_manager_t* manager = zatura->plugins.manager;
-  girara_list_t* types              = zatura_plugin_manager_get_content_types(manager);
+  zathura_plugin_manager_t* manager = zathura->plugins.manager;
+  girara_list_t* types              = zathura_plugin_manager_get_content_types(manager);
   if (types && girara_list_size(types) > 0) {
     g_autoptr(GListStore) filters      = g_list_store_new(GTK_TYPE_FILE_FILTER);
     g_autoptr(GtkFileFilter) supported = gtk_file_filter_new();
@@ -1865,9 +1865,9 @@ bool sc_file_chooser(girara_session_t* session, girara_argument_t* UNUSED(argume
 
   /* seed the dialog with the folder of the currently open document */
 
-  if (zatura_has_document(zatura)) {
-    zatura_document_t* document = zatura_get_document(zatura);
-    const char* current_path     = zatura_document_get_path(document);
+  if (zathura_has_document(zathura)) {
+    zathura_document_t* document = zathura_get_document(zathura);
+    const char* current_path     = zathura_document_get_path(document);
     if (current_path) {
       g_autoptr(GFile) current = g_file_new_for_path(current_path);
       gtk_file_dialog_set_initial_file(dialog, current);
@@ -1875,6 +1875,6 @@ bool sc_file_chooser(girara_session_t* session, girara_argument_t* UNUSED(argume
   }
 
   GtkWindow* parent = GTK_WINDOW(session->gtk.window);
-  gtk_file_dialog_open(dialog, parent, NULL, cb_file_chooser_open, zatura);
+  gtk_file_dialog_open(dialog, parent, NULL, cb_file_chooser_open, zathura);
   return true;
 }

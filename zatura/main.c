@@ -51,7 +51,7 @@ static int run_synctex_forward(const char* synctex_fwd, const char* filename, in
     return -1;
   }
 
-  const int ret = zatura_dbus_synctex_position(real_path, input_file, line, column, synctex_pid);
+  const int ret = zathura_dbus_synctex_position(real_path, input_file, line, column, synctex_pid);
   if (ret == -1) {
     /* D-Bus or SyncTeX failed */
     girara_error("Got no usable data from SyncTeX or D-Bus failed in some way.");
@@ -68,28 +68,28 @@ static void init_locale(void) {
   textdomain(GETTEXT_PACKAGE);
 }
 
-static zatura_t* init_zatura(const char* config_dir, const char* data_dir, const char* cache_dir,
+static zathura_t* init_zathura(const char* config_dir, const char* data_dir, const char* cache_dir,
                                const char* plugin_path, char** argv, const char* synctex_editor) {
   /* create zatura session */
-  zatura_t* zatura = zatura_create();
-  if (!zatura) {
+  zathura_t* zathura = zathura_create();
+  if (!zathura) {
     return NULL;
   }
 
-  zatura_set_config_dir(zatura, config_dir);
-  zatura_set_data_dir(zatura, data_dir);
-  zatura_set_cache_dir(zatura, cache_dir);
-  zatura_set_plugin_dir(zatura, plugin_path);
-  zatura_set_argv(zatura, argv);
+  zathura_set_config_dir(zathura, config_dir);
+  zathura_set_data_dir(zathura, data_dir);
+  zathura_set_cache_dir(zathura, cache_dir);
+  zathura_set_plugin_dir(zathura, plugin_path);
+  zathura_set_argv(zathura, argv);
 
   /* Init zatura */
-  if (!zatura_init(zatura)) {
-    zatura_free(zatura);
+  if (!zathura_init(zathura)) {
+    zathura_free(zathura);
     return NULL;
   }
 
   if (synctex_editor) {
-    girara_setting_set(zatura->ui.session, "synctex-editor-command", synctex_editor);
+    girara_setting_set(zathura->ui.session, "synctex-editor-command", synctex_editor);
   }
 
 #ifdef WITH_SANDBOX
@@ -97,27 +97,27 @@ static zatura_t* init_zatura(const char* config_dir, const char* data_dir, const
 #ifdef WITH_LANDLOCK
   if (landlock_drop_write() < 0) {
     girara_error("Failed to apply landlock write restriction.");
-    zatura_free(zatura);
+    zathura_free(zathura);
     return NULL;
   }
 #endif
 #ifdef WITH_SECCOMP
-  if (seccomp_enable_strict_filter(zatura)) {
+  if (seccomp_enable_strict_filter(zathura)) {
     girara_error("Failed to initialize strict seccomp filter.");
-    zatura_free(zatura);
+    zathura_free(zathura);
     return NULL;
   }
 #endif
 #ifdef __OpenBSD__
   if (pledge("stdio rpath", "")) {
     girara_error("Failed to pledge: %s", strerror(errno));
-    zatura_free(zatura);
+    zathura_free(zathura);
     return NULL;
   }
 #endif
 #endif
 
-  return zatura;
+  return zathura;
 }
 
 /* state shared between the application lifecycle callbacks */
@@ -136,35 +136,35 @@ typedef struct {
   const char* raw_file;
   int page_number;
   char** argv;
-  zatura_t* zatura;
-} zatura_app_ctx_t;
+  zathura_t* zathura;
+} zathura_app_ctx_t;
 
 static void cb_app_startup(GApplication* app, gpointer data) {
-  zatura_app_ctx_t* ctx = data;
+  zathura_app_ctx_t* ctx = data;
 
-  ctx->zatura =
-      init_zatura(ctx->config_dir, ctx->data_dir, ctx->cache_dir, ctx->plugin_path, ctx->argv, ctx->synctex_editor);
-  if (!ctx->zatura) {
+  ctx->zathura =
+      init_zathura(ctx->config_dir, ctx->data_dir, ctx->cache_dir, ctx->plugin_path, ctx->argv, ctx->synctex_editor);
+  if (!ctx->zathura) {
     girara_error("Could not initialize zatura.");
     g_application_quit(app);
     return;
   }
 
-  gtk_application_add_window(GTK_APPLICATION(app), GTK_WINDOW(ctx->zatura->ui.session->gtk.window));
+  gtk_application_add_window(GTK_APPLICATION(app), GTK_WINDOW(ctx->zathura->ui.session->gtk.window));
 }
 
 static void cb_app_activate(GApplication* UNUSED(app), gpointer data) {
   /* present the window when the app starts without a file */
-  zatura_app_ctx_t* ctx = data;
-  if (ctx->zatura && ctx->zatura->ui.session && ctx->zatura->ui.session->gtk.window) {
-    gtk_window_present(GTK_WINDOW(ctx->zatura->ui.session->gtk.window));
+  zathura_app_ctx_t* ctx = data;
+  if (ctx->zathura && ctx->zathura->ui.session && ctx->zathura->ui.session->gtk.window) {
+    gtk_window_present(GTK_WINDOW(ctx->zathura->ui.session->gtk.window));
   }
 }
 
 static void cb_app_open(GApplication* UNUSED(app), GFile** files, gint n_files, const gchar* UNUSED(hint),
                         gpointer data) {
-  zatura_app_ctx_t* ctx = data;
-  if (!ctx->zatura || n_files < 1) {
+  zathura_app_ctx_t* ctx = data;
+  if (!ctx->zathura || n_files < 1) {
     return;
   }
 
@@ -187,15 +187,15 @@ static void cb_app_open(GApplication* UNUSED(app), GFile** files, gint n_files, 
   if (page_number > 0) {
     --page_number;
   }
-  document_open_idle(ctx->zatura, path, ctx->password, page_number, ctx->mode, ctx->synctex_fwd, ctx->bookmark_name,
+  document_open_idle(ctx->zathura, path, ctx->password, page_number, ctx->mode, ctx->synctex_fwd, ctx->bookmark_name,
                      ctx->search_string);
 }
 
 static void cb_app_shutdown(GApplication* UNUSED(app), gpointer data) {
-  zatura_app_ctx_t* ctx = data;
-  if (ctx->zatura) {
-    zatura_free(ctx->zatura);
-    ctx->zatura = NULL;
+  zathura_app_ctx_t* ctx = data;
+  if (ctx->zathura) {
+    zathura_free(ctx->zathura);
+    ctx->zathura = NULL;
   }
 }
 
@@ -266,7 +266,7 @@ GIRARA_VISIBLE int main(int argc, char* argv[]) {
   g_autofree gchar* search_string  = NULL;
   gboolean forkback                = false;
   gboolean print_version           = false;
-  gint page_number                 = ZATURA_PAGE_NUMBER_UNSPECIFIED;
+  gint page_number                 = ZATHURA_PAGE_NUMBER_UNSPECIFIED;
   gint synctex_pid                 = -1;
 
   const GOptionEntry entries[] = {
@@ -389,11 +389,11 @@ GIRARA_VISIBLE int main(int argc, char* argv[]) {
 
   /* Print version */
   if (print_version) {
-    g_autoptr(zatura_plugin_manager_t) plugin_manager = zatura_plugin_manager_new();
-    zatura_plugin_manager_set_dir(plugin_manager, plugin_path);
-    zatura_plugin_manager_load(plugin_manager);
+    g_autoptr(zathura_plugin_manager_t) plugin_manager = zathura_plugin_manager_new();
+    zathura_plugin_manager_set_dir(plugin_manager, plugin_path);
+    zathura_plugin_manager_load(plugin_manager);
 
-    g_autofree char* string = zatura_get_version_string(plugin_manager, false);
+    g_autofree char* string = zathura_get_version_string(plugin_manager, false);
     if (string) {
       fprintf(stdout, "%s\n", string);
     }
@@ -413,7 +413,7 @@ GIRARA_VISIBLE int main(int argc, char* argv[]) {
   }
 
   /* run zatura as a GtkApplication */
-  zatura_app_ctx_t ctx = {
+  zathura_app_ctx_t ctx = {
       .config_dir     = config_dir,
       .data_dir       = data_dir,
       .cache_dir      = cache_dir,
@@ -427,7 +427,7 @@ GIRARA_VISIBLE int main(int argc, char* argv[]) {
       .raw_file       = NULL,
       .page_number    = page_number,
       .argv           = argv,
-      .zatura        = NULL,
+      .zathura        = NULL,
   };
 
   /* a NULL application id keeps the process non-unique and skips D-Bus registration */

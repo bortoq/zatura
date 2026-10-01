@@ -61,26 +61,19 @@ remove the remaining `girara-gtk` layer and the `girara` Meson dependency.
 
 ## Minimal plugin compatibility path
 
-The branding commit also renamed public C symbols and the plugin definition
-symbol. Existing zathura plugins therefore cannot be loaded just by adding
-the old plugin directory: they refer to `zathura_*` functions and export a
-`zathura_plugin` definition, while Zatura currently expects `zatura_*` and
-`zatura_plugin`.
+The public C API now uses the original `zathura_*` symbols, `ZATHURA_*`
+macros, and `zathura_plugin` definition again. The executable, application
+ID, UI text, configuration directory, and repository keep the `zatura` name.
+Plugin API and ABI versions remain 8 and 9; `plugin-api.h` matches upstream
+at this version. Both `<zathura/...>` and `<zatura/...>` header locations are
+installed, together with `zathura.pc` and `zatura.pc`. The loader searches
+the original `libdir/zathura` and the newer `libdir/zatura` plugin directories
+and accepts both `ZATHURA_PLUGINS_PATH` and `ZATURA_PLUGINS_PATH`.
 
-The smallest maintainable fix is to restore the historical `zathura_*` C API,
-`ZATHURA_*` plugin macros, and plugin definition symbol in the core source.
-Keep `zatura` for the executable, application ID, UI text, configuration
-directory, and repository. Keep the plugin API and ABI version numbers at 8
-and 9 only if their structs and signatures still match upstream exactly.
-Install the original `zathura.pc` and `<zathura/...>` headers as compatibility
-development files, and search the original `libdir/zathura` plugin directory
-alongside `libdir/zatura`. This also lets upstream plugin source build without
-edits. If co-installation with upstream zathura is required, put the legacy
-development files in a separate prefix or make them an opt-in package to
-avoid file conflicts.
-
-Validate with at least one real upstream plugin built against the original
-headers: confirm its definition symbol, unresolved host symbols, matching
-struct layout, successful load, and document rendering. A second path, adding
-dozens of exported `zathura_*` forwarding symbols to the renamed API, would
-be more code to maintain and more likely to miss a symbol.
+The unmodified upstream `zathura-pdf-poppler` source builds against
+`zathura.pc`, installs into `libdir/zathura`, loads in Zatura, and opens a PDF
+in the GTK window. This checks the real plugin build and load path. Binary
+compatibility with every previously built plugin and every earlier release
+still needs separate testing. For installation beside upstream Zathura, use a
+separate prefix: the compatibility headers and pkg-config file have the same
+paths as upstream's files.

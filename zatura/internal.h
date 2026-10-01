@@ -9,14 +9,14 @@
 /**
  * Zatura password dialog
  */
-typedef struct zatura_password_dialog_info_s {
+typedef struct zathura_password_dialog_info_s {
   char* path;         /**< Path to the file */
   char* uri;          /**< URI to the file */
-  zatura_t* zatura; /**< Zatura session */
-} zatura_password_dialog_info_t;
+  zathura_t* zathura; /**< Zatura session */
+} zathura_password_dialog_info_t;
 
-struct zatura_document_information_entry_s {
-  zatura_document_information_type_t type; /**< Type of the information */
+struct zathura_document_information_entry_s {
+  zathura_document_information_type_t type; /**< Type of the information */
   char* value;                              /**< Value */
 };
 
@@ -26,16 +26,16 @@ struct zatura_document_information_entry_s {
  * @param document The document
  * @return The plugin or NULL
  */
-const zatura_plugin_t* zatura_document_get_plugin(zatura_document_t* document);
+const zathura_plugin_t* zathura_document_get_plugin(zathura_document_t* document);
 
 /* Locks/unlocks the document while a page is parsed on first use. */
-void zatura_document_lock(zatura_document_t* document);
-void zatura_document_unlock(zatura_document_t* document);
+void zathura_document_lock(zathura_document_t* document);
+void zathura_document_unlock(zathura_document_t* document);
 
 /* Parses the page with its plugin on first use, taking the document lock internally. */
-bool zatura_page_load(zatura_page_t* page, zatura_error_t* error);
+bool zathura_page_load(zathura_page_t* page, zathura_error_t* error);
 
 /* Returns true once the page has been parsed by its plugin. */
-bool zatura_page_is_loaded(zatura_page_t* page);
+bool zathura_page_is_loaded(zathura_page_t* page);
 
 #endif // INTERNAL_H

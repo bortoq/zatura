@@ -9,27 +9,27 @@
 #include <sys/types.h>
 #include "types.h"
 
-typedef struct zatura_dbus_class_s ZaturaDbusClass;
+typedef struct zathura_dbus_class_s ZathuraDbusClass;
 
-struct zatura_dbus_s {
+struct zathura_dbus_s {
   GObject parent;
 };
 
-struct zatura_dbus_class_s {
+struct zathura_dbus_class_s {
   GObjectClass parent_class;
 };
 
-#define ZATURA_TYPE_DBUS (zatura_dbus_get_type())
-#define ZATURA_DBUS(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj), ZATURA_TYPE_DBUS, ZaturaDbus))
-#define ZATURA_DBUS_CLASS(obj) (G_TYPE_CHECK_CLASS_CAST((obj), ZATURA_TYPE_DBUS, ZaturaDbus))
-#define ZATURA_IS_DBUS(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj), ZATURA_TYPE_DBUS))
-#define ZATURA_IS_DBUS_CLASS(obj) (G_TYPE_CHECK_CLASS_TYPE((obj), ZATURA_TYPE_DBUS))
-#define ZATURA_DBUS_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS((obj), ZATURA_TYPE_DBUS, ZaturaDbusClass))
+#define ZATHURA_TYPE_DBUS (zathura_dbus_get_type())
+#define ZATHURA_DBUS(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj), ZATHURA_TYPE_DBUS, ZathuraDbus))
+#define ZATHURA_DBUS_CLASS(obj) (G_TYPE_CHECK_CLASS_CAST((obj), ZATHURA_TYPE_DBUS, ZathuraDbus))
+#define ZATHURA_IS_DBUS(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj), ZATHURA_TYPE_DBUS))
+#define ZATHURA_IS_DBUS_CLASS(obj) (G_TYPE_CHECK_CLASS_TYPE((obj), ZATHURA_TYPE_DBUS))
+#define ZATHURA_DBUS_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS((obj), ZATHURA_TYPE_DBUS, ZathuraDbusClass))
 
-GType zatura_dbus_get_type(void);
+GType zathura_dbus_get_type(void);
 
-ZaturaDbus* zatura_dbus_new(zatura_t* zatura);
-const char* zatura_dbus_get_name(zatura_t* zatura);
+ZathuraDbus* zathura_dbus_new(zathura_t* zathura);
+const char* zathura_dbus_get_name(zathura_t* zathura);
 
 /**
  * Emit the 'DocumentOpen' signal on the D-Bus connection.
@@ -37,7 +37,7 @@ const char* zatura_dbus_get_name(zatura_t* zatura);
  * @param zatura Zatura session
  * @param file_path document path
  */
-void zatura_dbus_document_open(zatura_t* zatura, const char* file_path);
+void zathura_dbus_document_open(zathura_t* zathura, const char* file_path);
 
 /**
  * Emit the 'DocumentClose' signal on the D-Bus connection.
@@ -45,7 +45,7 @@ void zatura_dbus_document_open(zatura_t* zatura, const char* file_path);
  * @param zatura Zatura session
  * @param file_path document path
  */
-void zatura_dbus_document_close(zatura_t* zatura, const char* file_path);
+void zathura_dbus_document_close(zathura_t* zathura, const char* file_path);
 
 /**
  * Emit the 'Edit' signal on the D-Bus connection.
@@ -55,7 +55,7 @@ void zatura_dbus_document_close(zatura_t* zatura, const char* file_path);
  * @param x x coordinate
  * @param y y coordinate
  */
-void zatura_dbus_edit(zatura_t* zatura, unsigned int page, unsigned int x, unsigned int y);
+void zathura_dbus_edit(zathura_t* zathura, unsigned int page, unsigned int x, unsigned int y);
 
 /**
  * Highlight rectangles in a zatura instance that has filename open.
@@ -68,6 +68,6 @@ void zatura_dbus_edit(zatura_t* zatura, unsigned int page, unsigned int x, unsig
  * @param column column index (starts at 0)
  * @param hint zatura process ID that has filename open
  */
-int zatura_dbus_synctex_position(const char* filename, const char* input_file, int line, int column, pid_t hint);
+int zathura_dbus_synctex_position(const char* filename, const char* input_file, int line, int column, pid_t hint);
 
 #endif

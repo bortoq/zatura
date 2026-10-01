@@ -28,12 +28,12 @@ static void test_create(void) {
   setup_logger();
   girara_set_log_level(GIRARA_ERROR);
 
-  zatura_t* zatura = zatura_create();
-  g_assert_nonnull(zatura);
+  zathura_t* zathura = zathura_create();
+  g_assert_nonnull(zathura);
   g_assert_nonnull(g_getenv("G_TEST_SRCDIR"));
-  zatura_set_config_dir(zatura, g_getenv("G_TEST_SRCDIR"));
-  g_assert_true(zatura_init(zatura));
-  zatura_free(zatura);
+  zathura_set_config_dir(zathura, g_getenv("G_TEST_SRCDIR"));
+  g_assert_true(zathura_init(zathura));
+  zathura_free(zathura);
 }
 
 int main(int argc, char* argv[]) {

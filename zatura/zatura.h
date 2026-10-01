@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: Zlib */
 
-#ifndef ZATURA_H
-#define ZATURA_H
+#ifndef ZATHURA_H
+#define ZATHURA_H
 
 #include <stdbool.h>
 #include <girara-gtk/types.h>
@@ -78,23 +78,23 @@ enum {
 
 /* unspecified page number */
 enum {
-  ZATURA_PAGE_NUMBER_UNSPECIFIED = INT_MIN,
+  ZATHURA_PAGE_NUMBER_UNSPECIFIED = INT_MIN,
 };
 
 /* cache constants */
 enum {
-  ZATURA_PAGE_CACHE_DEFAULT_SIZE     = 16,
-  ZATURA_PAGE_CACHE_MAX_SIZE         = 1024,
-  ZATURA_PAGE_THUMBNAIL_DEFAULT_SIZE = 4 * 1024 * 1024
+  ZATHURA_PAGE_CACHE_DEFAULT_SIZE     = 16,
+  ZATHURA_PAGE_CACHE_MAX_SIZE         = 1024,
+  ZATHURA_PAGE_THUMBNAIL_DEFAULT_SIZE = 4 * 1024 * 1024
 };
 
 /* forward declaration for types from database.h */
-typedef struct _ZaturaDatabase zatura_database_t;
-typedef struct zatura_fileinfo_s zatura_fileinfo_t;
+typedef struct _ZathuraDatabase zathura_database_t;
+typedef struct zathura_fileinfo_s zathura_fileinfo_t;
 /* forward declaration for types from content-type.h */
-typedef struct zatura_content_type_context_s zatura_content_type_context_t;
+typedef struct zathura_content_type_context_s zathura_content_type_context_t;
 
-struct zatura_s {
+struct zathura_s {
   struct {
     girara_session_t* session; /**< girara interface session */
 
@@ -117,12 +117,12 @@ struct zatura_s {
     } colors;
 
     GtkWidget* view;                        /**< Scrolled Window */
-    ZaturaDocumentWidget* document_widget; /**< Widget that contains all rendered pages */
+    ZathuraDocumentWidget* document_widget; /**< Widget that contains all rendered pages */
     GtkWidget* index;                       /**< Widget to show the index of the document */
   } ui;
 
   struct {
-    ZaturaRenderer* render_thread; /**< The thread responsible for rendering the pages */
+    ZathuraRenderer* render_thread; /**< The thread responsible for rendering the pages */
     bool initial_render_held;       /**< holds the focused page first render until the view is painted */
     bool scale_settled;       /**< set when the device scale settled so the viewport allocation renders the page */
     bool view_painted;        /**< set after the first frame so a display that never changes scale renders next frame */
@@ -174,7 +174,7 @@ struct zatura_s {
     girara_list_t* bookmarks; /**< bookmarks */
   } bookmarks;
 
-  zatura_jumplist_t jumplist;
+  zathura_jumplist_t jumplist;
 
   struct {
     guint refresh_view;
@@ -189,17 +189,17 @@ struct zatura_s {
     gchar* file;
   } stdin_support;
 
-  zatura_document_t* document;                       /**< The current document */
-  zatura_document_t* predecessor_document;           /**< The document from before a reload */
-  ZaturaDocumentWidget* predecessor_document_widget; /**< The document widget from before a reload */
-  zatura_database_t* database;                       /**< The database */
-  ZaturaDbus* dbus;                                  /**< D-Bus service */
+  zathura_document_t* document;                       /**< The current document */
+  zathura_document_t* predecessor_document;           /**< The document from before a reload */
+  ZathuraDocumentWidget* predecessor_document_widget; /**< The document widget from before a reload */
+  zathura_database_t* database;                       /**< The database */
+  ZathuraDbus* dbus;                                  /**< D-Bus service */
 
   /**
    * File monitor
    */
   struct {
-    ZaturaFileMonitor* monitor; /**< File monitor */
+    ZathuraFileMonitor* monitor; /**< File monitor */
     gchar* password;             /**< Save password */
   } file_monitor;
 
@@ -243,7 +243,7 @@ struct zatura_s {
   /**
    * Context for MIME type detection
    */
-  zatura_content_type_context_t* content_type_context;
+  zathura_content_type_context_t* content_type_context;
 
 #ifdef WITH_SYNCTEX
   /**
@@ -260,7 +260,7 @@ struct zatura_s {
  *
  * @return zatura session object or NULL if zatura could not be creeated
  */
-zatura_t* zatura_create(void);
+zathura_t* zathura_create(void);
 
 /**
  * Initializes zatura
@@ -268,16 +268,16 @@ zatura_t* zatura_create(void);
  * @param zatura The zatura session
  * @return true if initialization has been successful
  */
-bool zatura_init(zatura_t* zatura);
+bool zathura_init(zathura_t* zathura);
 
 /**
  * Free zatura session
  *
  * @param zatura The zatura session
  */
-void zatura_free(zatura_t* zatura);
+void zathura_free(zathura_t* zathura);
 
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(zatura_t, zatura_free)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(zathura_t, zathura_free)
 
 /**
  * Set the path to the configuration directory
@@ -285,7 +285,7 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(zatura_t, zatura_free)
  * @param zatura The zatura session
  * @param dir Directory path
  */
-void zatura_set_config_dir(zatura_t* zatura, const char* dir);
+void zathura_set_config_dir(zathura_t* zathura, const char* dir);
 
 /**
  * Set the path to the data directory
@@ -293,7 +293,7 @@ void zatura_set_config_dir(zatura_t* zatura, const char* dir);
  * @param zatura The zatura session
  * @param dir Directory path
  */
-void zatura_set_data_dir(zatura_t* zatura, const char* dir);
+void zathura_set_data_dir(zathura_t* zathura, const char* dir);
 
 /**
  * Set the path to the cache directory.
@@ -301,7 +301,7 @@ void zatura_set_data_dir(zatura_t* zatura, const char* dir);
  * @param zatura The Zatura session
  * @param dir Directory path
  */
-void zatura_set_cache_dir(zatura_t* zatura, const char* dir);
+void zathura_set_cache_dir(zathura_t* zathura, const char* dir);
 
 /**
  * Set the path to the plugin directory
@@ -309,7 +309,7 @@ void zatura_set_cache_dir(zatura_t* zatura, const char* dir);
  * @param zatura The zatura session
  * @param dir Directory path
  */
-void zatura_set_plugin_dir(zatura_t* zatura, const char* dir);
+void zathura_set_plugin_dir(zathura_t* zathura, const char* dir);
 
 /**
  * Sets the program parameters
@@ -317,14 +317,14 @@ void zatura_set_plugin_dir(zatura_t* zatura, const char* dir);
  * @param zatura The zatura session
  * @param argv List of arguments
  */
-void zatura_set_argv(zatura_t* zatura, char** argv);
+void zathura_set_argv(zathura_t* zathura, char** argv);
 
 /**
  * Calculate and store the monitor PPI for the view widget
  *
  * @param zatura The zatura session
  */
-void zatura_update_view_ppi(zatura_t* zatura);
+void zathura_update_view_ppi(zathura_t* zathura);
 
 /**
  * Opens a file
@@ -337,11 +337,11 @@ void zatura_update_view_ppi(zatura_t* zatura);
  *
  * @return If no error occurred true, otherwise false, is returned.
  */
-bool document_open(zatura_t* zatura, const char* path, const char* uri, const char* password, int page_number,
-                   zatura_fileinfo_t* file_info);
+bool document_open(zathura_t* zathura, const char* path, const char* uri, const char* password, int page_number,
+                   zathura_fileinfo_t* file_info);
 
 /* render the focused page synchronously once the device scale has settled */
-void render_focused_page_now(zatura_t* zatura);
+void render_focused_page_now(zathura_t* zathura);
 
 /**
  * Opens a file
@@ -353,7 +353,7 @@ void render_focused_page_now(zatura_t* zatura);
  *
  * @return If no error occurred true, otherwise false, is returned.
  */
-bool document_open_synctex(zatura_t* zatura, const char* path, const char* uri, const char* password,
+bool document_open_synctex(zathura_t* zathura, const char* path, const char* uri, const char* password,
                            const char* synctex);
 
 /**
@@ -366,7 +366,7 @@ bool document_open_synctex(zatura_t* zatura, const char* path, const char* uri, 
  * @param mode Open in given page mode
  * @param synctex SyncTeX string
  */
-void document_open_idle(zatura_t* zatura, const char* path, const char* password, int page_number, const char* mode,
+void document_open_idle(zathura_t* zathura, const char* path, const char* password, int page_number, const char* mode,
                         const char* synctex, const char* bookmark_name, const char* search_string);
 
 /**
@@ -378,7 +378,7 @@ void document_open_idle(zatura_t* zatura, const char* path, const char* password
  *
  * @return If no error occurred true, otherwise false, is returned.
  */
-bool document_save(zatura_t* zatura, const char* path, bool overwrite);
+bool document_save(zathura_t* zathura, const char* path, bool overwrite);
 
 /**
  * Get fileinfo (zoom, current page, etc).
@@ -387,7 +387,7 @@ bool document_save(zatura_t* zatura, const char* path, bool overwrite);
  *
  * @return file_info (caller needs to g_free(file_info.first_page_column_list))
  */
-zatura_fileinfo_t zatura_get_fileinfo(zatura_t* zatura);
+zathura_fileinfo_t zathura_get_fileinfo(zathura_t* zathura);
 
 /**
  * Get fileinfo of the predecessor document (zoom, current page, etc).
@@ -396,7 +396,7 @@ zatura_fileinfo_t zatura_get_fileinfo(zatura_t* zatura);
  *
  * @return file_info (caller needs to g_free(file_info.first_page_column_list))
  */
-zatura_fileinfo_t zatura_get_prefileinfo(zatura_t* zatura);
+zathura_fileinfo_t zathura_get_prefileinfo(zathura_t* zathura);
 
 /**
  * Frees the "predecessor" buffers used for smooth-reload
@@ -404,7 +404,7 @@ zatura_fileinfo_t zatura_get_prefileinfo(zatura_t* zatura);
  * @param zatura The zatura session
  * @return If no error occurred true, otherwise false, is returned.
  */
-bool document_predecessor_free(zatura_t* zatura);
+bool document_predecessor_free(zathura_t* zathura);
 
 /**
  * Closes the current opened document
@@ -413,7 +413,7 @@ bool document_predecessor_free(zatura_t* zatura);
  * @param keep_monitor Set to true if monitor should be kept (sc_reload)
  * @return If no error occurred true, otherwise false, is returned.
  */
-bool document_close(zatura_t* zatura, bool keep_monitor);
+bool document_close(zathura_t* zathura, bool keep_monitor);
 
 /**
  * Opens the page with the given number
@@ -422,7 +422,7 @@ bool document_close(zatura_t* zatura, bool keep_monitor);
  * @param page_id The id of the page that should be set
  * @return If no error occurred true, otherwise false, is returned.
  */
-bool page_set(zatura_t* zatura, unsigned int page_id);
+bool page_set(zathura_t* zathura, unsigned int page_id);
 
 /**
  * Moves to the given position
@@ -432,21 +432,21 @@ bool page_set(zatura_t* zatura, unsigned int page_id);
  * @param position_y Y coordinate
  * @return If no error occurred true, otherwise false, is returned.
  */
-bool position_set(zatura_t* zatura, double position_x, double position_y);
+bool position_set(zathura_t* zathura, double position_x, double position_y);
 
 /**
  * Refresh the page view
  *
  * @param zatura Zatura session
  */
-void refresh_view(zatura_t* zatura);
+void refresh_view(zathura_t* zathura);
 
 /**
  * Recompute the scale according to settings
  *
  * @param zatura Zatura session
  */
-bool adjust_view(zatura_t* zatura);
+bool adjust_view(zathura_t* zathura);
 
 /**
  * Updates the page number in the statusbar. Note that 1 will be added to the
@@ -454,7 +454,7 @@ bool adjust_view(zatura_t* zatura);
  *
  * @param zatura The zatura session
  */
-void statusbar_page_number_update(zatura_t* zatura);
+void statusbar_page_number_update(zathura_t* zathura);
 
 /**
  * Gets the nicely formatted filename of the loaded document according to settings
@@ -464,7 +464,7 @@ void statusbar_page_number_update(zatura_t* zatura);
  *
  * return Printable filename. Free with g_free.
  */
-char* get_formatted_filename(zatura_t* zatura, bool statusbar);
+char* get_formatted_filename(zathura_t* zathura, bool statusbar);
 
 /**
  * Check wether a document is opened
@@ -472,7 +472,7 @@ char* get_formatted_filename(zatura_t* zatura, bool statusbar);
  * @param zatura The zatura session
  * @return bool indicating whether a document is open
  */
-bool zatura_has_document(zatura_t* zatura);
+bool zathura_has_document(zathura_t* zathura);
 
 /**
  * Obtain the currently opened document
@@ -480,7 +480,7 @@ bool zatura_has_document(zatura_t* zatura);
  * @param zatura The zatura session
  * @return the currently opened document
  */
-zatura_document_t* zatura_get_document(zatura_t* zatura);
+zathura_document_t* zathura_get_document(zathura_t* zathura);
 
 /**
  * Modify and normalize the current search result count
@@ -489,7 +489,7 @@ zatura_document_t* zatura_get_document(zatura_t* zatura);
  * @param zatura The zatura session
  * @param diff The amount to modify
  */
-void zatura_modify_current_search_result(zatura_t* zatura, int diff);
+void zathura_modify_current_search_result(zathura_t* zathura, int diff);
 
 /**
  * Set the current search result count to the last one before the current page
@@ -497,6 +497,6 @@ void zatura_modify_current_search_result(zatura_t* zatura, int diff);
  * @param zatura The zatura session
  * @param current_page_number The current page number
  */
-void zatura_set_current_search_result_previous_pages(zatura_t* zatura, unsigned int current_page_number);
+void zathura_set_current_search_result_previous_pages(zathura_t* zathura, unsigned int current_page_number);
 
-#endif // ZATURA_H
+#endif // ZATHURA_H

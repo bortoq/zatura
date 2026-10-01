@@ -10,6 +10,6 @@
  *
  * @param zatura
  */
-void print(zatura_t* zatura);
+void print(zathura_t* zathura);
 
 #endif // PRINT_H

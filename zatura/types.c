@@ -10,12 +10,12 @@
 #include "links.h"
 #include "internal.h"
 
-zatura_index_element_t* zatura_index_element_new(const char* title) {
+zathura_index_element_t* zathura_index_element_new(const char* title) {
   if (title == NULL) {
     return NULL;
   }
 
-  zatura_index_element_t* res = g_try_malloc0(sizeof(zatura_index_element_t));
+  zathura_index_element_t* res = g_try_malloc0(sizeof(zathura_index_element_t));
   if (res == NULL) {
     return NULL;
   }
@@ -25,17 +25,17 @@ zatura_index_element_t* zatura_index_element_new(const char* title) {
   return res;
 }
 
-void zatura_index_element_free(zatura_index_element_t* index) {
+void zathura_index_element_free(zathura_index_element_t* index) {
   if (index == NULL) {
     return;
   }
 
   g_free(index->title);
-  zatura_link_free(index->link);
+  zathura_link_free(index->link);
   g_free(index);
 }
 
-zatura_image_buffer_t* zatura_image_buffer_create(unsigned int width, unsigned int height) {
+zathura_image_buffer_t* zathura_image_buffer_create(unsigned int width, unsigned int height) {
   g_return_val_if_fail(width != 0, NULL);
   g_return_val_if_fail(height != 0, NULL);
 
@@ -44,7 +44,7 @@ zatura_image_buffer_t* zatura_image_buffer_create(unsigned int width, unsigned i
     return NULL;
   }
 
-  zatura_image_buffer_t* image_buffer = g_try_malloc(sizeof(zatura_image_buffer_t));
+  zathura_image_buffer_t* image_buffer = g_try_malloc(sizeof(zathura_image_buffer_t));
   if (image_buffer == NULL) {
     return NULL;
   }
@@ -63,7 +63,7 @@ zatura_image_buffer_t* zatura_image_buffer_create(unsigned int width, unsigned i
   return image_buffer;
 }
 
-void zatura_image_buffer_free(zatura_image_buffer_t* image_buffer) {
+void zathura_image_buffer_free(zathura_image_buffer_t* image_buffer) {
   if (image_buffer == NULL) {
     return;
   }
@@ -73,21 +73,21 @@ void zatura_image_buffer_free(zatura_image_buffer_t* image_buffer) {
 }
 
 static void document_information_entry_free(void* data) {
-  zatura_document_information_entry_t* entry = data;
-  zatura_document_information_entry_free(entry);
+  zathura_document_information_entry_t* entry = data;
+  zathura_document_information_entry_free(entry);
 }
 
-girara_list_t* zatura_document_information_entry_list_new(void) {
+girara_list_t* zathura_document_information_entry_list_new(void) {
   return girara_list_new_with_free(document_information_entry_free);
 }
 
-zatura_document_information_entry_t* zatura_document_information_entry_new(zatura_document_information_type_t type,
+zathura_document_information_entry_t* zathura_document_information_entry_new(zathura_document_information_type_t type,
                                                                              const char* value) {
   if (value == NULL) {
     return NULL;
   }
 
-  zatura_document_information_entry_t* entry = g_try_malloc0(sizeof(zatura_document_information_entry_t));
+  zathura_document_information_entry_t* entry = g_try_malloc0(sizeof(zathura_document_information_entry_t));
   if (entry == NULL) {
     return NULL;
   }
@@ -98,21 +98,21 @@ zatura_document_information_entry_t* zatura_document_information_entry_new(zatur
   return entry;
 }
 
-void zatura_document_information_entry_free(void* data) {
+void zathura_document_information_entry_free(void* data) {
   if (!data) {
     return;
   }
 
-  zatura_document_information_entry_t* entry = data;
+  zathura_document_information_entry_t* entry = data;
   g_free(entry->value);
   g_free(entry);
 }
 
-zatura_signature_info_t* zatura_signature_info_new(void) {
-  return g_try_malloc0(sizeof(zatura_signature_info_t));
+zathura_signature_info_t* zathura_signature_info_new(void) {
+  return g_try_malloc0(sizeof(zathura_signature_info_t));
 }
 
-void zatura_signature_info_free(zatura_signature_info_t* signature) {
+void zathura_signature_info_free(zathura_signature_info_t* signature) {
   if (signature == NULL) {
     return;
   }

@@ -27,7 +27,7 @@
 static const char DBUS_XML_FILENAME[] = "/io/github/bortoq/zatura/DBus/io.github.bortoq.zatura.xml";
 
 static GBytes* load_xml_data(void) {
-  GResource* resource = zatura_resources_get_resource();
+  GResource* resource = zathura_resources_get_resource();
   if (resource != NULL) {
     return g_resource_lookup_data(resource, DBUS_XML_FILENAME, G_RESOURCE_LOOKUP_FLAGS_NONE, NULL);
   }
@@ -36,15 +36,15 @@ static GBytes* load_xml_data(void) {
 }
 
 typedef struct private_s {
-  zatura_t* zatura;
+  zathura_t* zathura;
   GDBusNodeInfo* introspection_data;
   GDBusConnection* connection;
   guint owner_id;
   guint registration_id;
   char* bus_name;
-} ZaturaDbusPrivate;
+} ZathuraDbusPrivate;
 
-G_DEFINE_TYPE_WITH_CODE(ZaturaDbus, zatura_dbus, G_TYPE_OBJECT, G_ADD_PRIVATE(ZaturaDbus))
+G_DEFINE_TYPE_WITH_CODE(ZathuraDbus, zathura_dbus, G_TYPE_OBJECT, G_ADD_PRIVATE(ZathuraDbus))
 
 /* template for bus name */
 static const char DBUS_NAME_TEMPLATE[] = "io.github.bortoq.zatura.PID-%d";
@@ -56,8 +56,8 @@ static const char DBUS_INTERFACE[] = "io.github.bortoq.zatura";
 static const GDBusInterfaceVTable interface_vtable;
 
 static void finalize(GObject* object) {
-  ZaturaDbus* dbus        = ZATURA_DBUS(object);
-  ZaturaDbusPrivate* priv = zatura_dbus_get_instance_private(dbus);
+  ZathuraDbus* dbus        = ZATHURA_DBUS(object);
+  ZathuraDbusPrivate* priv = zathura_dbus_get_instance_private(dbus);
 
   if (priv->connection != NULL && priv->registration_id > 0) {
     g_dbus_connection_unregister_object(priv->connection, priv->registration_id);
@@ -73,18 +73,18 @@ static void finalize(GObject* object) {
 
   g_free(priv->bus_name);
 
-  G_OBJECT_CLASS(zatura_dbus_parent_class)->finalize(object);
+  G_OBJECT_CLASS(zathura_dbus_parent_class)->finalize(object);
 }
 
-static void zatura_dbus_class_init(ZaturaDbusClass* class) {
+static void zathura_dbus_class_init(ZathuraDbusClass* class) {
   /* overwrite methods */
   GObjectClass* object_class = G_OBJECT_CLASS(class);
   object_class->finalize     = finalize;
 }
 
-static void zatura_dbus_init(ZaturaDbus* dbus) {
-  ZaturaDbusPrivate* priv = zatura_dbus_get_instance_private(dbus);
-  priv->zatura            = NULL;
+static void zathura_dbus_init(ZathuraDbus* dbus) {
+  ZathuraDbusPrivate* priv = zathura_dbus_get_instance_private(dbus);
+  priv->zathura            = NULL;
   priv->introspection_data = NULL;
   priv->connection         = NULL;
   priv->owner_id           = 0;
@@ -105,8 +105,8 @@ static void bus_acquired(GDBusConnection* connection, const gchar* name, void* d
   /* register callback for GDBusConnection's closed signal */
   g_signal_connect(G_OBJECT(connection), "closed", G_CALLBACK(gdbus_connection_closed), NULL);
 
-  ZaturaDbus* dbus        = data;
-  ZaturaDbusPrivate* priv = zatura_dbus_get_instance_private(dbus);
+  ZathuraDbus* dbus        = data;
+  ZathuraDbusPrivate* priv = zathura_dbus_get_instance_private(dbus);
 
   g_autoptr(GError) error = NULL;
   priv->registration_id   = g_dbus_connection_register_object(
@@ -127,15 +127,15 @@ static void name_lost(GDBusConnection* UNUSED(connection), const gchar* name, vo
   girara_debug("Lost connection or failed to acquire '%s' on session bus.", name);
 }
 
-ZaturaDbus* zatura_dbus_new(zatura_t* zatura) {
-  g_autoptr(GObject) obj = g_object_new(ZATURA_TYPE_DBUS, NULL);
+ZathuraDbus* zathura_dbus_new(zathura_t* zathura) {
+  g_autoptr(GObject) obj = g_object_new(ZATHURA_TYPE_DBUS, NULL);
   if (obj == NULL) {
     return NULL;
   }
 
-  ZaturaDbus* dbus        = ZATURA_DBUS(obj);
-  ZaturaDbusPrivate* priv = zatura_dbus_get_instance_private(dbus);
-  priv->zatura            = zatura;
+  ZathuraDbus* dbus        = ZATHURA_DBUS(obj);
+  ZathuraDbusPrivate* priv = zathura_dbus_get_instance_private(dbus);
+  priv->zathura            = zathura;
 
   g_autoptr(GBytes) xml_data = load_xml_data();
   if (xml_data == NULL) {
@@ -161,23 +161,23 @@ ZaturaDbus* zatura_dbus_new(zatura_t* zatura) {
   return dbus;
 }
 
-const char* zatura_dbus_get_name(zatura_t* zatura) {
-  ZaturaDbusPrivate* priv = zatura_dbus_get_instance_private(zatura->dbus);
+const char* zathura_dbus_get_name(zathura_t* zathura) {
+  ZathuraDbusPrivate* priv = zathura_dbus_get_instance_private(zathura->dbus);
 
   return priv->bus_name;
 }
 
-void zatura_dbus_edit(zatura_t* zatura, unsigned int page, unsigned int x, unsigned int y) {
-  ZaturaDbus* edit        = zatura->dbus;
-  ZaturaDbusPrivate* priv = zatura_dbus_get_instance_private(edit);
+void zathura_dbus_edit(zathura_t* zathura, unsigned int page, unsigned int x, unsigned int y) {
+  ZathuraDbus* edit        = zathura->dbus;
+  ZathuraDbusPrivate* priv = zathura_dbus_get_instance_private(edit);
 
-  const char* filename = zatura_document_get_path(zatura_get_document(priv->zatura));
+  const char* filename = zathura_document_get_path(zathura_get_document(priv->zathura));
 
   g_autofree char* input_file = NULL;
   unsigned int line           = 0;
   unsigned int column         = 0;
 
-  if (synctex_get_input_line_column(zatura, filename, page, x, y, &input_file, &line, &column) == false) {
+  if (synctex_get_input_line_column(zathura, filename, page, x, y, &input_file, &line, &column) == false) {
     return;
   }
 
@@ -192,28 +192,28 @@ void zatura_dbus_edit(zatura_t* zatura, unsigned int page, unsigned int x, unsig
 
 /* D-Bus handler */
 
-static void handle_open_document(zatura_t* zatura, GVariant* parameters, GDBusMethodInvocation* invocation) {
+static void handle_open_document(zathura_t* zathura, GVariant* parameters, GDBusMethodInvocation* invocation) {
   g_autofree gchar* filename = NULL;
   g_autofree gchar* password = NULL;
-  gint page                  = ZATURA_PAGE_NUMBER_UNSPECIFIED;
+  gint page                  = ZATHURA_PAGE_NUMBER_UNSPECIFIED;
   g_variant_get(parameters, "(ssi)", &filename, &password, &page);
 
-  document_close(zatura, false);
-  document_open_idle(zatura, filename, strlen(password) > 0 ? password : NULL, page, NULL, NULL, NULL, NULL);
+  document_close(zathura, false);
+  document_open_idle(zathura, filename, strlen(password) > 0 ? password : NULL, page, NULL, NULL, NULL, NULL);
 
   GVariant* result = g_variant_new("(b)", true);
   g_dbus_method_invocation_return_value(invocation, result);
 }
 
-static void handle_close_document(zatura_t* zatura, GVariant* UNUSED(parameters), GDBusMethodInvocation* invocation) {
-  const bool ret = document_close(zatura, false);
+static void handle_close_document(zathura_t* zathura, GVariant* UNUSED(parameters), GDBusMethodInvocation* invocation) {
+  const bool ret = document_close(zathura, false);
 
   GVariant* result = g_variant_new("(b)", ret);
   g_dbus_method_invocation_return_value(invocation, result);
 }
 
-static void handle_goto_page(zatura_t* zatura, GVariant* parameters, GDBusMethodInvocation* invocation) {
-  const unsigned int number_of_pages = zatura_document_get_number_of_pages(zatura_get_document(zatura));
+static void handle_goto_page(zathura_t* zathura, GVariant* parameters, GDBusMethodInvocation* invocation) {
+  const unsigned int number_of_pages = zathura_document_get_number_of_pages(zathura_get_document(zathura));
 
   guint page = 0;
   g_variant_get(parameters, "(u)", &page);
@@ -222,7 +222,7 @@ static void handle_goto_page(zatura_t* zatura, GVariant* parameters, GDBusMethod
   if (page >= number_of_pages) {
     ret = false;
   } else {
-    page_set(zatura, page);
+    page_set(zathura, page);
   }
 
   GVariant* result = g_variant_new("(b)", ret);
@@ -230,7 +230,7 @@ static void handle_goto_page(zatura_t* zatura, GVariant* parameters, GDBusMethod
 }
 
 typedef struct {
-  zatura_t* zatura;
+  zathura_t* zathura;
   girara_list_t** rectangles;
   unsigned int page;
   unsigned int number_of_pages;
@@ -241,14 +241,14 @@ static gboolean synctex_highlight_rects_impl(gpointer ptr) {
 
   /* synctex_highlight_rects transfers ownership of each rectangles[i] to the
    * page widget via g_object_set "search-results"; only free the array. */
-  synctex_highlight_rects(data->zatura, data->page, data->rectangles);
+  synctex_highlight_rects(data->zathura, data->page, data->rectangles);
 
   g_free(data->rectangles);
   g_free(data);
   return false;
 }
 
-static void synctex_highlight_rects_idle(zatura_t* zatura, girara_list_t** rectangles, unsigned int page,
+static void synctex_highlight_rects_idle(zathura_t* zathura, girara_list_t** rectangles, unsigned int page,
                                          unsigned number_of_pages) {
   highlights_rect_data_t* data = g_try_malloc0(sizeof(highlights_rect_data_t));
   if (data == NULL) {
@@ -258,7 +258,7 @@ static void synctex_highlight_rects_idle(zatura_t* zatura, girara_list_t** recta
     g_free(rectangles);
     return;
   }
-  data->zatura         = zatura;
+  data->zathura         = zathura;
   data->rectangles      = rectangles;
   data->page            = page;
   data->number_of_pages = number_of_pages;
@@ -266,8 +266,8 @@ static void synctex_highlight_rects_idle(zatura_t* zatura, girara_list_t** recta
   g_idle_add(synctex_highlight_rects_impl, data);
 }
 
-static void handle_highlight_rects(zatura_t* zatura, GVariant* parameters, GDBusMethodInvocation* invocation) {
-  const unsigned int number_of_pages = zatura_document_get_number_of_pages(zatura_get_document(zatura));
+static void handle_highlight_rects(zathura_t* zathura, GVariant* parameters, GDBusMethodInvocation* invocation) {
+  const unsigned int number_of_pages = zathura_document_get_number_of_pages(zathura_get_document(zathura));
 
   guint page                             = 0;
   g_autoptr(GVariantIter) iter           = NULL;
@@ -297,9 +297,9 @@ static void handle_highlight_rects(zatura_t* zatura, GVariant* parameters, GDBus
     return;
   }
 
-  zatura_rectangle_t temp_rect = {0, 0, 0, 0};
+  zathura_rectangle_t temp_rect = {0, 0, 0, 0};
   while (g_variant_iter_loop(iter, "(dddd)", &temp_rect.x1, &temp_rect.x2, &temp_rect.y1, &temp_rect.y2)) {
-    zatura_rectangle_t* rect = g_try_malloc0(sizeof(zatura_rectangle_t));
+    zathura_rectangle_t* rect = g_try_malloc0(sizeof(zathura_rectangle_t));
     if (rect == NULL) {
       girara_list_free(rectangles[page]);
       g_free(rectangles);
@@ -326,7 +326,7 @@ static void handle_highlight_rects(zatura_t* zatura, GVariant* parameters, GDBus
       rectangles[temp_page] = girara_list_new_with_free(g_free);
     }
 
-    zatura_rectangle_t* rect = g_try_malloc0(sizeof(zatura_rectangle_t));
+    zathura_rectangle_t* rect = g_try_malloc0(sizeof(zathura_rectangle_t));
     if (rect == NULL || rectangles[temp_page] == NULL) {
       for (unsigned int p = 0; p != number_of_pages; ++p) {
         girara_list_free(rectangles[p]);
@@ -343,14 +343,14 @@ static void handle_highlight_rects(zatura_t* zatura, GVariant* parameters, GDBus
   }
 
   /* run synctex_highlight_rects in main thread when idle */
-  synctex_highlight_rects_idle(zatura, rectangles, page, number_of_pages);
+  synctex_highlight_rects_idle(zathura, rectangles, page, number_of_pages);
 
   GVariant* result = g_variant_new("(b)", true);
   g_dbus_method_invocation_return_value(invocation, result);
 }
 
 typedef struct {
-  zatura_t* zatura;
+  zathura_t* zathura;
   gchar* input_file;
   unsigned int line;
   unsigned int column;
@@ -359,20 +359,20 @@ typedef struct {
 static gboolean synctex_view_impl(gpointer ptr) {
   view_data_t* data = ptr;
 
-  synctex_view(data->zatura, data->input_file, data->line, data->column);
+  synctex_view(data->zathura, data->input_file, data->line, data->column);
 
   g_free(data->input_file);
   g_free(data);
   return false;
 }
 
-static void synctex_view_idle(zatura_t* zatura, gchar* input_file, unsigned int line, unsigned int column) {
+static void synctex_view_idle(zathura_t* zathura, gchar* input_file, unsigned int line, unsigned int column) {
   view_data_t* data = g_try_malloc0(sizeof(view_data_t));
   if (data == NULL) {
     g_free(input_file);
     return;
   }
-  data->zatura    = zatura;
+  data->zathura    = zathura;
   data->input_file = input_file;
   data->line       = line;
   data->column     = column;
@@ -380,41 +380,41 @@ static void synctex_view_idle(zatura_t* zatura, gchar* input_file, unsigned int 
   g_idle_add(synctex_view_impl, data);
 }
 
-static void handle_synctex_view(zatura_t* zatura, GVariant* parameters, GDBusMethodInvocation* invocation) {
+static void handle_synctex_view(zathura_t* zathura, GVariant* parameters, GDBusMethodInvocation* invocation) {
   gchar* input_file = NULL;
   guint line        = 0;
   guint column      = 0;
   g_variant_get(parameters, "(suu)", &input_file, &line, &column);
 
-  synctex_view_idle(zatura, input_file, line, column);
+  synctex_view_idle(zathura, input_file, line, column);
 
   GVariant* result = g_variant_new("(b)", true);
   g_dbus_method_invocation_return_value(invocation, result);
 }
 
-static void handle_execute_command(zatura_t* zatura, GVariant* parameters, GDBusMethodInvocation* invocation) {
+static void handle_execute_command(zathura_t* zathura, GVariant* parameters, GDBusMethodInvocation* invocation) {
   g_autofree gchar* input = NULL;
   g_variant_get(parameters, "(s)", &input);
 
-  const bool ret   = girara_command_run(zatura->ui.session, input);
+  const bool ret   = girara_command_run(zathura->ui.session, input);
   GVariant* result = g_variant_new("(b)", ret);
   g_dbus_method_invocation_return_value(invocation, result);
 }
 
-static void handle_source_config(zatura_t* zatura, GVariant* GIRARA_UNUSED(parameters),
+static void handle_source_config(zathura_t* zathura, GVariant* GIRARA_UNUSED(parameters),
                                  GDBusMethodInvocation* invocation) {
-  config_load_files(zatura);
+  config_load_files(zathura);
 
   GVariant* result = g_variant_new("(b)", true);
   g_dbus_method_invocation_return_value(invocation, result);
 }
 
-static void handle_source_config_from_dir(zatura_t* zatura, GVariant* parameters, GDBusMethodInvocation* invocation) {
+static void handle_source_config_from_dir(zathura_t* zathura, GVariant* parameters, GDBusMethodInvocation* invocation) {
   g_autofree gchar* input = NULL;
   g_variant_get(parameters, "(s)", &input);
 
-  zatura_set_config_dir(zatura, input);
-  config_load_files(zatura);
+  zathura_set_config_dir(zathura, input);
+  config_load_files(zathura);
 
   GVariant* result = g_variant_new("(b)", true);
   g_dbus_method_invocation_return_value(invocation, result);
@@ -423,14 +423,14 @@ static void handle_source_config_from_dir(zatura_t* zatura, GVariant* parameters
 static void handle_method_call(GDBusConnection* UNUSED(connection), const gchar* UNUSED(sender),
                                const gchar* object_path, const gchar* interface_name, const gchar* method_name,
                                GVariant* parameters, GDBusMethodInvocation* invocation, void* data) {
-  ZaturaDbus* dbus        = data;
-  ZaturaDbusPrivate* priv = zatura_dbus_get_instance_private(dbus);
+  ZathuraDbus* dbus        = data;
+  ZathuraDbusPrivate* priv = zathura_dbus_get_instance_private(dbus);
 
   girara_debug("Handling call '%s.%s' on '%s'.", interface_name, method_name, object_path);
 
   static const struct {
     const char* method;
-    void (*handler)(zatura_t*, GVariant*, GDBusMethodInvocation*);
+    void (*handler)(zathura_t*, GVariant*, GDBusMethodInvocation*);
     bool needs_document;
     bool present_window;
   } handlers[] = {
@@ -449,19 +449,19 @@ static void handle_method_call(GDBusConnection* UNUSED(connection), const gchar*
       continue;
     }
 
-    if (handlers[idx].needs_document == true && zatura_has_document(priv->zatura) == false) {
+    if (handlers[idx].needs_document == true && zathura_has_document(priv->zathura) == false) {
       g_dbus_method_invocation_return_dbus_error(invocation, "io.github.bortoq.zatura.NoOpenDocument",
                                                  "No document has been opened.");
       return;
     }
 
-    (*handlers[idx].handler)(priv->zatura, parameters, invocation);
+    (*handlers[idx].handler)(priv->zathura, parameters, invocation);
 
     if (handlers[idx].present_window == true) {
       bool present_window = true;
-      girara_setting_get(priv->zatura->ui.session, "dbus-raise-window", &present_window);
+      girara_setting_get(priv->zathura->ui.session, "dbus-raise-window", &present_window);
       if (present_window == true) {
-        gtk_window_present(GTK_WINDOW(priv->zatura->ui.session->gtk.window));
+        gtk_window_present(GTK_WINDOW(priv->zathura->ui.session->gtk.window));
       }
     }
 
@@ -473,15 +473,15 @@ static void json_document_info_add_node(JsonBuilder* builder, girara_tree_node_t
   girara_list_t* list = girara_node_get_children(index);
   for (size_t idx = 0; idx != girara_list_size(list); ++idx) {
     girara_tree_node_t* node               = girara_list_nth(list, idx);
-    zatura_index_element_t* index_element = girara_node_get_data(node);
+    zathura_index_element_t* index_element = girara_node_get_data(node);
 
     json_builder_begin_object(builder);
     json_builder_set_member_name(builder, "title");
     json_builder_add_string_value(builder, index_element->title);
 
-    zatura_link_type_t type     = zatura_link_get_type(index_element->link);
-    zatura_link_target_t target = zatura_link_get_target(index_element->link);
-    if (type == ZATURA_LINK_GOTO_DEST) {
+    zathura_link_type_t type     = zathura_link_get_type(index_element->link);
+    zathura_link_target_t target = zathura_link_get_target(index_element->link);
+    if (type == ZATHURA_LINK_GOTO_DEST) {
       json_builder_set_member_name(builder, "page");
       json_builder_add_int_value(builder, target.page_number + 1);
     } else {
@@ -499,12 +499,12 @@ static void json_document_info_add_node(JsonBuilder* builder, girara_tree_node_t
   }
 }
 
-static void emit_document_signal(zatura_t* zatura, const char* signal, const char* file_path) {
-  if (zatura->dbus == NULL) {
+static void emit_document_signal(zathura_t* zathura, const char* signal, const char* file_path) {
+  if (zathura->dbus == NULL) {
     return;
   }
 
-  ZaturaDbusPrivate* priv = zatura_dbus_get_instance_private(zatura->dbus);
+  ZathuraDbusPrivate* priv = zathura_dbus_get_instance_private(zathura->dbus);
   if (priv->connection == NULL || g_dbus_connection_is_closed(priv->connection)) {
     return;
   }
@@ -517,36 +517,36 @@ static void emit_document_signal(zatura_t* zatura, const char* signal, const cha
   }
 }
 
-void zatura_dbus_document_open(zatura_t* zatura, const char* file_path) {
-  emit_document_signal(zatura, "DocumentOpen", file_path);
+void zathura_dbus_document_open(zathura_t* zathura, const char* file_path) {
+  emit_document_signal(zathura, "DocumentOpen", file_path);
 }
 
-void zatura_dbus_document_close(zatura_t* zatura, const char* file_path) {
-  emit_document_signal(zatura, "DocumentClose", file_path);
+void zathura_dbus_document_close(zathura_t* zathura, const char* file_path) {
+  emit_document_signal(zathura, "DocumentClose", file_path);
 }
 
-static void json_document_metadata(JsonBuilder* builder, zatura_document_t* document) {
+static void json_document_metadata(JsonBuilder* builder, zathura_document_t* document) {
   static const struct {
-    zatura_document_information_type_t type;
+    zathura_document_information_type_t type;
     const char* name;
   } fields[] = {
-      {ZATURA_DOCUMENT_INFORMATION_TITLE, "title"},
-      {ZATURA_DOCUMENT_INFORMATION_AUTHOR, "author"},
-      {ZATURA_DOCUMENT_INFORMATION_SUBJECT, "subject"},
-      {ZATURA_DOCUMENT_INFORMATION_KEYWORDS, "keywords"},
-      {ZATURA_DOCUMENT_INFORMATION_CREATOR, "creator"},
-      {ZATURA_DOCUMENT_INFORMATION_PRODUCER, "producer"},
-      {ZATURA_DOCUMENT_INFORMATION_CREATION_DATE, "creation_date"},
-      {ZATURA_DOCUMENT_INFORMATION_MODIFICATION_DATE, "modification_date"},
-      {ZATURA_DOCUMENT_INFORMATION_OTHER, "other"},
-      {ZATURA_DOCUMENT_INFORMATION_FORMAT, "format"},
+      {ZATHURA_DOCUMENT_INFORMATION_TITLE, "title"},
+      {ZATHURA_DOCUMENT_INFORMATION_AUTHOR, "author"},
+      {ZATHURA_DOCUMENT_INFORMATION_SUBJECT, "subject"},
+      {ZATHURA_DOCUMENT_INFORMATION_KEYWORDS, "keywords"},
+      {ZATHURA_DOCUMENT_INFORMATION_CREATOR, "creator"},
+      {ZATHURA_DOCUMENT_INFORMATION_PRODUCER, "producer"},
+      {ZATHURA_DOCUMENT_INFORMATION_CREATION_DATE, "creation_date"},
+      {ZATHURA_DOCUMENT_INFORMATION_MODIFICATION_DATE, "modification_date"},
+      {ZATHURA_DOCUMENT_INFORMATION_OTHER, "other"},
+      {ZATHURA_DOCUMENT_INFORMATION_FORMAT, "format"},
   };
 
   json_builder_begin_object(builder);
-  g_autoptr(girara_list_t) information = zatura_document_get_information(document, NULL);
+  g_autoptr(girara_list_t) information = zathura_document_get_information(document, NULL);
   if (information != NULL) {
     for (size_t i = 0; i < girara_list_size(information); ++i) {
-      const zatura_document_information_entry_t* entry = girara_list_nth(information, i);
+      const zathura_document_information_entry_t* entry = girara_list_nth(information, i);
       if (entry == NULL || entry->value == NULL) {
         continue;
       }
@@ -562,22 +562,22 @@ static void json_document_metadata(JsonBuilder* builder, zatura_document_t* docu
   json_builder_end_object(builder);
 }
 
-static GVariant* json_document_info(zatura_t* zatura) {
-  zatura_document_t* document = zatura_get_document(zatura);
+static GVariant* json_document_info(zathura_t* zathura) {
+  zathura_document_t* document = zathura_get_document(zathura);
 
   g_autoptr(JsonBuilder) builder = json_builder_new();
   json_builder_begin_object(builder);
   json_builder_set_member_name(builder, "filename");
-  json_builder_add_string_value(builder, zatura_document_get_path(document));
+  json_builder_add_string_value(builder, zathura_document_get_path(document));
   json_builder_set_member_name(builder, "number-of-pages");
-  json_builder_add_int_value(builder, zatura_document_get_number_of_pages(document));
+  json_builder_add_int_value(builder, zathura_document_get_number_of_pages(document));
 
   json_builder_set_member_name(builder, "metadata");
   json_document_metadata(builder, document);
 
   json_builder_set_member_name(builder, "index");
   json_builder_begin_array(builder);
-  g_autoptr(girara_tree_node_t) index = zatura_document_index_generate(document, NULL);
+  g_autoptr(girara_tree_node_t) index = zathura_document_index_generate(document, NULL);
   if (index != NULL) {
     json_document_info_add_node(builder, index);
   }
@@ -594,9 +594,9 @@ static GVariant* json_document_info(zatura_t* zatura) {
 static GVariant* handle_get_property(GDBusConnection* UNUSED(connection), const gchar* UNUSED(sender),
                                      const gchar* UNUSED(object_path), const gchar* UNUSED(interface_name),
                                      const gchar* property_name, GError** error, void* data) {
-  ZaturaDbus* dbus            = data;
-  ZaturaDbusPrivate* priv     = zatura_dbus_get_instance_private(dbus);
-  zatura_document_t* document = zatura_get_document(priv->zatura);
+  ZathuraDbus* dbus            = data;
+  ZathuraDbusPrivate* priv     = zathura_dbus_get_instance_private(dbus);
+  zathura_document_t* document = zathura_get_document(priv->zathura);
 
   if (document == NULL) {
     g_set_error(error, G_IO_ERROR, G_IO_ERROR_FAILED, "No document open.");
@@ -604,13 +604,13 @@ static GVariant* handle_get_property(GDBusConnection* UNUSED(connection), const 
   }
 
   if (g_strcmp0(property_name, "filename") == 0) {
-    return g_variant_new_string(zatura_document_get_path(document));
+    return g_variant_new_string(zathura_document_get_path(document));
   } else if (g_strcmp0(property_name, "pagenumber") == 0) {
-    return g_variant_new_uint32(zatura_document_get_current_page_number(document));
+    return g_variant_new_uint32(zathura_document_get_current_page_number(document));
   } else if (g_strcmp0(property_name, "numberofpages") == 0) {
-    return g_variant_new_uint32(zatura_document_get_number_of_pages(document));
+    return g_variant_new_uint32(zathura_document_get_number_of_pages(document));
   } else if (g_strcmp0(property_name, "documentinfo") == 0) {
-    return json_document_info(priv->zatura);
+    return json_document_info(priv->zathura);
   }
 
   return NULL;
@@ -699,7 +699,7 @@ static int iterate_instances_call_synctex_view(const char* filename, const char*
   return found_one ? 1 : 0;
 }
 
-int zatura_dbus_synctex_position(const char* filename, const char* input_file, int line, int column, pid_t hint) {
+int zathura_dbus_synctex_position(const char* filename, const char* input_file, int line, int column, pid_t hint) {
   if (filename == NULL || input_file == NULL || line < 0 || column < 0) {
     return -1;
   }

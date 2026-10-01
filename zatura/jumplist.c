@@ -10,105 +10,105 @@
 #include "document.h"
 #include "database.h"
 
-static void zatura_jumplist_reset_current(zatura_t* zatura) {
-  g_return_if_fail(zatura != NULL && zatura->jumplist.cur != NULL);
+static void zathura_jumplist_reset_current(zathura_t* zathura) {
+  g_return_if_fail(zathura != NULL && zathura->jumplist.cur != NULL);
 
-  while (girara_list_iterator_has_next(zatura->jumplist.cur) == true) {
-    girara_list_iterator_next(zatura->jumplist.cur);
+  while (girara_list_iterator_has_next(zathura->jumplist.cur) == true) {
+    girara_list_iterator_next(zathura->jumplist.cur);
   }
 }
 
-static void zatura_jumplist_append_jump(zatura_t* zatura) {
-  g_return_if_fail(zatura != NULL && zatura->jumplist.list != NULL);
+static void zathura_jumplist_append_jump(zathura_t* zathura) {
+  g_return_if_fail(zathura != NULL && zathura->jumplist.list != NULL);
 
-  zatura_jump_t* jump = g_try_malloc0(sizeof(zatura_jump_t));
+  zathura_jump_t* jump = g_try_malloc0(sizeof(zathura_jump_t));
   if (jump == NULL) {
     return;
   }
 
-  girara_list_append(zatura->jumplist.list, jump);
+  girara_list_append(zathura->jumplist.list, jump);
 
-  if (zatura->jumplist.size == 0) {
-    zatura->jumplist.cur = girara_list_iterator(zatura->jumplist.list);
+  if (zathura->jumplist.size == 0) {
+    zathura->jumplist.cur = girara_list_iterator(zathura->jumplist.list);
   }
 
-  ++zatura->jumplist.size;
-  zatura_jumplist_trim(zatura);
+  ++zathura->jumplist.size;
+  zathura_jumplist_trim(zathura);
 }
 
-static void zatura_jumplist_save(zatura_t* zatura) {
-  g_return_if_fail(zatura_has_document(zatura) == true);
+static void zathura_jumplist_save(zathura_t* zathura) {
+  g_return_if_fail(zathura_has_document(zathura) == true);
 
-  zatura_jump_t* cur = zatura_jumplist_current(zatura);
+  zathura_jump_t* cur = zathura_jumplist_current(zathura);
   if (cur != NULL) {
-    zatura_document_t* document = zatura_get_document(zatura);
-    cur->x                       = zatura_document_get_position_x(document);
-    cur->y                       = zatura_document_get_position_y(document);
-    cur->page                    = zatura_document_get_current_page_number(document);
+    zathura_document_t* document = zathura_get_document(zathura);
+    cur->x                       = zathura_document_get_position_x(document);
+    cur->y                       = zathura_document_get_position_y(document);
+    cur->page                    = zathura_document_get_current_page_number(document);
   }
 }
 
-bool zatura_jumplist_has_previous(zatura_t* zatura) {
-  return girara_list_iterator_has_previous(zatura->jumplist.cur);
+bool zathura_jumplist_has_previous(zathura_t* zathura) {
+  return girara_list_iterator_has_previous(zathura->jumplist.cur);
 }
 
-bool zatura_jumplist_has_next(zatura_t* zatura) {
-  return girara_list_iterator_has_next(zatura->jumplist.cur);
+bool zathura_jumplist_has_next(zathura_t* zathura) {
+  return girara_list_iterator_has_next(zathura->jumplist.cur);
 }
 
-zatura_jump_t* zatura_jumplist_current(zatura_t* zatura) {
-  if (zatura->jumplist.cur != NULL) {
-    return girara_list_iterator_data(zatura->jumplist.cur);
+zathura_jump_t* zathura_jumplist_current(zathura_t* zathura) {
+  if (zathura->jumplist.cur != NULL) {
+    return girara_list_iterator_data(zathura->jumplist.cur);
   } else {
     return NULL;
   }
 }
 
-void zatura_jumplist_forward(zatura_t* zatura) {
-  if (girara_list_iterator_has_next(zatura->jumplist.cur)) {
-    girara_list_iterator_next(zatura->jumplist.cur);
+void zathura_jumplist_forward(zathura_t* zathura) {
+  if (girara_list_iterator_has_next(zathura->jumplist.cur)) {
+    girara_list_iterator_next(zathura->jumplist.cur);
   }
 }
 
-void zatura_jumplist_backward(zatura_t* zatura) {
-  if (girara_list_iterator_has_previous(zatura->jumplist.cur)) {
-    girara_list_iterator_previous(zatura->jumplist.cur);
+void zathura_jumplist_backward(zathura_t* zathura) {
+  if (girara_list_iterator_has_previous(zathura->jumplist.cur)) {
+    girara_list_iterator_previous(zathura->jumplist.cur);
   }
 }
 
-void zatura_jumplist_trim(zatura_t* zatura) {
-  g_return_if_fail(zatura != NULL && zatura->jumplist.list != NULL && zatura->jumplist.size != 0);
+void zathura_jumplist_trim(zathura_t* zathura) {
+  g_return_if_fail(zathura != NULL && zathura->jumplist.list != NULL && zathura->jumplist.size != 0);
 
-  girara_list_iterator_t* cur = girara_list_iterator(zatura->jumplist.list);
+  girara_list_iterator_t* cur = girara_list_iterator(zathura->jumplist.list);
 
-  while (zatura->jumplist.size > zatura->jumplist.max_size) {
-    if (girara_list_iterator_data(cur) == girara_list_iterator_data(zatura->jumplist.cur)) {
-      girara_list_iterator_free(zatura->jumplist.cur);
-      zatura->jumplist.cur = NULL;
+  while (zathura->jumplist.size > zathura->jumplist.max_size) {
+    if (girara_list_iterator_data(cur) == girara_list_iterator_data(zathura->jumplist.cur)) {
+      girara_list_iterator_free(zathura->jumplist.cur);
+      zathura->jumplist.cur = NULL;
     }
 
     girara_list_iterator_remove(cur);
-    --zatura->jumplist.size;
+    --zathura->jumplist.size;
   }
 
-  if (zatura->jumplist.size == 0 || zatura->jumplist.cur != NULL) {
+  if (zathura->jumplist.size == 0 || zathura->jumplist.cur != NULL) {
     girara_list_iterator_free(cur);
   } else {
-    zatura->jumplist.cur = cur;
+    zathura->jumplist.cur = cur;
   }
 }
 
-void zatura_jumplist_add(zatura_t* zatura) {
-  g_return_if_fail(zatura_has_document(zatura) == true && zatura->jumplist.list != NULL);
+void zathura_jumplist_add(zathura_t* zathura) {
+  g_return_if_fail(zathura_has_document(zathura) == true && zathura->jumplist.list != NULL);
 
-  zatura_document_t* document = zatura_get_document(zatura);
-  double x                     = zatura_document_get_position_x(document);
-  double y                     = zatura_document_get_position_y(document);
+  zathura_document_t* document = zathura_get_document(zathura);
+  double x                     = zathura_document_get_position_x(document);
+  double y                     = zathura_document_get_position_y(document);
 
-  if (zatura->jumplist.size != 0) {
-    zatura_jumplist_reset_current(zatura);
+  if (zathura->jumplist.size != 0) {
+    zathura_jumplist_reset_current(zathura);
 
-    zatura_jump_t* cur = zatura_jumplist_current(zatura);
+    zathura_jump_t* cur = zathura_jumplist_current(zathura);
     if (cur != NULL) {
       if (fabs(cur->x - x) <= DBL_EPSILON && fabs(cur->y - y) <= DBL_EPSILON) {
         return;
@@ -116,39 +116,39 @@ void zatura_jumplist_add(zatura_t* zatura) {
     }
   }
 
-  zatura_jumplist_append_jump(zatura);
-  zatura_jumplist_reset_current(zatura);
-  zatura_jumplist_save(zatura);
+  zathura_jumplist_append_jump(zathura);
+  zathura_jumplist_reset_current(zathura);
+  zathura_jumplist_save(zathura);
 }
 
-void zatura_jumplist_set_max_size(zatura_t* zatura, size_t max_size) {
-  zatura->jumplist.max_size = max_size;
-  if (zatura->jumplist.list != NULL && zatura->jumplist.size != 0) {
-    zatura_jumplist_trim(zatura);
+void zathura_jumplist_set_max_size(zathura_t* zathura, size_t max_size) {
+  zathura->jumplist.max_size = max_size;
+  if (zathura->jumplist.list != NULL && zathura->jumplist.size != 0) {
+    zathura_jumplist_trim(zathura);
   }
 }
 
-bool zatura_jumplist_load(zatura_t* zatura, const char* file) {
-  g_return_val_if_fail(zatura != NULL && file != NULL, false);
+bool zathura_jumplist_load(zathura_t* zathura, const char* file) {
+  g_return_val_if_fail(zathura != NULL && file != NULL, false);
 
-  if (zatura->database == NULL) {
+  if (zathura->database == NULL) {
     return false;
   }
 
-  girara_list_t* list = zatura_db_load_jumplist(zatura->database, file);
+  girara_list_t* list = zathura_db_load_jumplist(zathura->database, file);
   if (list == NULL) {
     girara_error("Failed to load the jumplist from the database");
     return false;
   }
 
-  girara_list_free(zatura->jumplist.list);
-  zatura->jumplist.list = list;
-  zatura->jumplist.size = girara_list_size(zatura->jumplist.list);
+  girara_list_free(zathura->jumplist.list);
+  zathura->jumplist.list = list;
+  zathura->jumplist.size = girara_list_size(zathura->jumplist.list);
 
-  if (zatura->jumplist.size != 0) {
-    zatura->jumplist.cur = girara_list_iterator(zatura->jumplist.list);
-    zatura_jumplist_reset_current(zatura);
-    zatura_jumplist_trim(zatura);
+  if (zathura->jumplist.size != 0) {
+    zathura->jumplist.cur = girara_list_iterator(zathura->jumplist.list);
+    zathura_jumplist_reset_current(zathura);
+    zathura_jumplist_trim(zathura);
     girara_debug("Loaded the jumplist from the database");
   } else {
     girara_debug("No jumplist for this file in the database yet");
@@ -157,36 +157,36 @@ bool zatura_jumplist_load(zatura_t* zatura, const char* file) {
   return true;
 }
 
-void zatura_jumplist_init(zatura_t* zatura, size_t max_size) {
-  zatura->jumplist.max_size = max_size;
-  zatura->jumplist.list     = girara_list_new_with_free(g_free);
-  zatura->jumplist.size     = 0;
-  zatura->jumplist.cur      = NULL;
+void zathura_jumplist_init(zathura_t* zathura, size_t max_size) {
+  zathura->jumplist.max_size = max_size;
+  zathura->jumplist.list     = girara_list_new_with_free(g_free);
+  zathura->jumplist.size     = 0;
+  zathura->jumplist.cur      = NULL;
 }
 
-bool zatura_jumplist_is_initialized(zatura_t* zatura) {
-  return zatura->jumplist.list != NULL;
+bool zathura_jumplist_is_initialized(zathura_t* zathura) {
+  return zathura->jumplist.list != NULL;
 }
 
-void zatura_jumplist_clear(zatura_t* zatura) {
-  if (zatura == NULL) {
+void zathura_jumplist_clear(zathura_t* zathura) {
+  if (zathura == NULL) {
     return;
   }
 
   /* remove jump list */
-  girara_list_iterator_free(zatura->jumplist.cur);
-  zatura->jumplist.cur = NULL;
-  girara_list_clear(zatura->jumplist.list);
-  zatura->jumplist.size = 0;
+  girara_list_iterator_free(zathura->jumplist.cur);
+  zathura->jumplist.cur = NULL;
+  girara_list_clear(zathura->jumplist.list);
+  zathura->jumplist.size = 0;
 }
 
-void zatura_jumplist_free(zatura_t* zatura) {
-  if (zatura == NULL) {
+void zathura_jumplist_free(zathura_t* zathura) {
+  if (zathura == NULL) {
     return;
   }
 
   /* remove jump list */
-  zatura_jumplist_clear(zatura);
-  girara_list_free(zatura->jumplist.list);
-  zatura->jumplist.list = NULL;
+  zathura_jumplist_clear(zathura);
+  girara_list_free(zathura->jumplist.list);
+  zathura->jumplist.list = NULL;
 }

@@ -18,15 +18,15 @@
 
 typedef struct synctex_page_rect_s {
   unsigned int page;
-  zatura_rectangle_t rect;
+  zathura_rectangle_t rect;
 } synctex_page_rect_t;
 
 #ifdef WITH_SYNCTEX
 // Create scanner from given PDF file name.
 // Returns zatura->synctex.scanner. (May be NULL on error.)
-static synctex_scanner_p synctex_make_scanner(zatura_t* zatura, const char* pdf_filename) {
-  if (zatura->synctex.scanner) {
-    return zatura->synctex.scanner;
+static synctex_scanner_p synctex_make_scanner(zathura_t* zathura, const char* pdf_filename) {
+  if (zathura->synctex.scanner) {
+    return zathura->synctex.scanner;
   }
 
   synctex_scanner_p scanner = synctex_scanner_new_with_output_file(pdf_filename, NULL, 1);
@@ -42,17 +42,17 @@ static synctex_scanner_p synctex_make_scanner(zatura_t* zatura, const char* pdf_
     return NULL;
   }
 
-  zatura->synctex.scanner = scanner;
+  zathura->synctex.scanner = scanner;
   return scanner;
 }
 
-bool synctex_get_input_line_column(zatura_t* zatura, const char* filename, unsigned int page, int x, int y,
+bool synctex_get_input_line_column(zathura_t* zathura, const char* filename, unsigned int page, int x, int y,
                                    char** input_file, unsigned int* line, unsigned int* column) {
   if (filename == NULL) {
     return false;
   }
 
-  synctex_scanner_p scanner = synctex_make_scanner(zatura, filename);
+  synctex_scanner_p scanner = synctex_make_scanner(zathura, filename);
   if (!scanner) {
     return false;
   }
@@ -78,17 +78,17 @@ bool synctex_get_input_line_column(zatura_t* zatura, const char* filename, unsig
   return false;
 }
 
-void synctex_edit(zatura_t* zatura, const char* editor, zatura_page_t* page, int x, int y) {
+void synctex_edit(zathura_t* zathura, const char* editor, zathura_page_t* page, int x, int y) {
   if (!editor || !page) {
     return;
   }
 
-  zatura_document_t* document = zatura_page_get_document(page);
+  zathura_document_t* document = zathura_page_get_document(page);
   if (!document) {
     return;
   }
 
-  const char* filename = zatura_document_get_path(document);
+  const char* filename = zathura_document_get_path(document);
   if (!filename) {
     return;
   }
@@ -97,7 +97,7 @@ void synctex_edit(zatura_t* zatura, const char* editor, zatura_page_t* page, int
   unsigned int column         = 0;
   g_autofree char* input_file = NULL;
 
-  if (synctex_get_input_line_column(zatura, filename, zatura_page_get_index(page), x, y, &input_file, &line,
+  if (synctex_get_input_line_column(zathura, filename, zathura_page_get_index(page), x, y, &input_file, &line,
                                     &column) &&
       input_file) {
     g_autofree char* linestr   = g_strdup_printf("%d", line);
@@ -136,7 +136,7 @@ void synctex_edit(zatura_t* zatura, const char* editor, zatura_page_t* page, int
   }
 }
 
-girara_list_t* synctex_rectangles_from_position(zatura_t* zatura, const char* filename, const char* input_file,
+girara_list_t* synctex_rectangles_from_position(zathura_t* zathura, const char* filename, const char* input_file,
                                                 int line, int column, unsigned int* page,
                                                 girara_list_t** secondary_rects) {
   if (!filename || !input_file || !page) {
@@ -147,12 +147,12 @@ girara_list_t* synctex_rectangles_from_position(zatura_t* zatura, const char* fi
   ++line;
   ++column;
 
-  synctex_scanner_p scanner = synctex_make_scanner(zatura, filename);
+  synctex_scanner_p scanner = synctex_make_scanner(zathura, filename);
   if (!scanner) {
     return NULL;
   }
 
-  const unsigned int number_of_pages = zatura_document_get_number_of_pages(zatura_get_document(zatura));
+  const unsigned int number_of_pages = zathura_document_get_number_of_pages(zathura_get_document(zathura));
 
   g_autoptr(girara_list_t) hitlist     = girara_list_new_with_free(g_free);
   g_autoptr(girara_list_t) other_rects = girara_list_new_with_free(g_free);
@@ -172,14 +172,14 @@ girara_list_t* synctex_rectangles_from_position(zatura_t* zatura, const char* fi
         *page    = current_page;
       }
 
-      zatura_rectangle_t rect = {0, 0, 0, 0};
+      zathura_rectangle_t rect = {0, 0, 0, 0};
       rect.x1                  = synctex_node_box_visible_h(node);
       rect.y1                  = synctex_node_box_visible_v(node) - synctex_node_box_visible_height(node);
       rect.x2                  = rect.x1 + synctex_node_box_visible_width(node);
       rect.y2                  = synctex_node_box_visible_depth(node) + synctex_node_box_visible_height(node) + rect.y1;
 
       if (*page == current_page) {
-        zatura_rectangle_t* real_rect = g_try_malloc(sizeof(zatura_rectangle_t));
+        zathura_rectangle_t* real_rect = g_try_malloc(sizeof(zathura_rectangle_t));
         if (real_rect == NULL) {
           continue;
         }
@@ -207,16 +207,16 @@ girara_list_t* synctex_rectangles_from_position(zatura_t* zatura, const char* fi
   return flatten_rectangles(hitlist);
 }
 #else
-bool synctex_get_input_line_column(zatura_t* UNUSED(zatura), const char* UNUSED(filename), unsigned int UNUSED(page),
+bool synctex_get_input_line_column(zathura_t* UNUSED(zathura), const char* UNUSED(filename), unsigned int UNUSED(page),
                                    int UNUSED(x), int UNUSED(y), char** UNUSED(input_file), unsigned int* UNUSED(line),
                                    unsigned int* UNUSED(column)) {
   return false;
 }
 
-void synctex_edit(zatura_t* UNUSED(zatura), const char* UNUSED(editor), zatura_page_t* UNUSED(page), int UNUSED(x),
+void synctex_edit(zathura_t* UNUSED(zathura), const char* UNUSED(editor), zathura_page_t* UNUSED(page), int UNUSED(x),
                   int UNUSED(y)) {}
 
-girara_list_t* synctex_rectangles_from_position(zatura_t* UNUSED(zatura), const char* UNUSED(filename),
+girara_list_t* synctex_rectangles_from_position(zathura_t* UNUSED(zathura), const char* UNUSED(filename),
                                                 const char* UNUSED(input_file), int UNUSED(line), int UNUSED(column),
                                                 unsigned int* UNUSED(page), girara_list_t** UNUSED(secondary_rects)) {
   return NULL;
@@ -250,18 +250,18 @@ bool synctex_parse_input(const char* synctex, char** input_file, int* line, int*
   return true;
 }
 
-void synctex_highlight_rects(zatura_t* zatura, unsigned int page, girara_list_t** rectangles) {
-  zatura_document_t* document       = zatura_get_document(zatura);
-  const unsigned int number_of_pages = zatura_document_get_number_of_pages(document);
+void synctex_highlight_rects(zathura_t* zathura, unsigned int page, girara_list_t** rectangles) {
+  zathura_document_t* document       = zathura_get_document(zathura);
+  const unsigned int number_of_pages = zathura_document_get_number_of_pages(document);
 
   /* the highlight needs every page widget so do nothing until the preload is done */
-  if (!zatura_document_widget_page_widgets_loaded(zatura->ui.document_widget)) {
+  if (!zathura_document_widget_page_widgets_loaded(zathura->ui.document_widget)) {
     return;
   }
 
-  zatura_document_widget_hide_links(zatura->ui.document_widget);
+  zathura_document_widget_hide_links(zathura->ui.document_widget);
   for (unsigned int p = 0; p != number_of_pages; ++p) {
-    GObject* widget = G_OBJECT(zatura_page_get_widget_by_number(zatura, p));
+    GObject* widget = G_OBJECT(zathura_page_get_widget_by_number(zathura, p));
 
     g_object_set(widget, "search-results", rectangles[p], NULL);
     if (p == page) {
@@ -269,45 +269,45 @@ void synctex_highlight_rects(zatura_t* zatura, unsigned int page, girara_list_t*
     }
   }
 
-  document_draw_search_results(zatura, true);
+  document_draw_search_results(zathura, true);
 
   girara_list_t* rect_list = rectangles[page];
   if (!rect_list || !girara_list_size(rect_list)) {
     girara_debug("No rectangles for the given page. Jumping to page %u.", page);
-    page_set(zatura, page);
+    page_set(zathura, page);
     return;
   }
 
   bool search_hadjust = true;
-  girara_setting_get(zatura->ui.session, "search-hadjust", &search_hadjust);
+  girara_setting_get(zathura->ui.session, "search-hadjust", &search_hadjust);
 
   /* compute the position of the center of the page */
   double pos_x = 0;
   double pos_y = 0;
-  page_number_to_position(zatura, page, 0.5, 0.5, &pos_x, &pos_y);
+  page_number_to_position(zathura, page, 0.5, 0.5, &pos_x, &pos_y);
 
   /* correction to center the current result                          */
   /* NOTE: rectangle is in viewport units, already scaled and rotated */
   unsigned int cell_height = 0;
   unsigned int cell_width  = 0;
-  zatura_document_widget_get_cell_size(ZATURA_DOCUMENT_WIDGET(zatura->ui.document_widget), page, &cell_height,
+  zathura_document_widget_get_cell_size(ZATHURA_DOCUMENT_WIDGET(zathura->ui.document_widget), page, &cell_height,
                                         &cell_width);
 
   unsigned int doc_height = 0;
   unsigned int doc_width  = 0;
-  zatura_document_widget_get_document_size(ZATURA_DOCUMENT_WIDGET(zatura->ui.document_widget), &doc_height,
+  zathura_document_widget_get_document_size(ZATHURA_DOCUMENT_WIDGET(zathura->ui.document_widget), &doc_height,
                                             &doc_width);
 
   /* Need to adjust rectangle to page scale and orientation */
-  zatura_page_t* doc_page  = zatura_document_get_page(document, page);
-  zatura_rectangle_t* rect = girara_list_nth(rect_list, 0);
+  zathura_page_t* doc_page  = zathura_document_get_page(document, page);
+  zathura_rectangle_t* rect = girara_list_nth(rect_list, 0);
   if (!rect) {
     girara_debug("List of rectangles is broken. Jumping to page %u.", page);
-    page_set(zatura, page);
+    page_set(zathura, page);
     return;
   }
 
-  zatura_rectangle_t rectangle = recalc_rectangle(doc_page, *rect);
+  zathura_rectangle_t rectangle = recalc_rectangle(doc_page, *rect);
 
   /* compute the center of the rectangle, which will be aligned to the center
      of the viewport */
@@ -321,34 +321,34 @@ void synctex_highlight_rects(zatura_t* zatura, unsigned int page, girara_list_t*
 
   /* move to position */
   girara_debug("Jumping to page %u position (%0.2f, %0.2f).", page, pos_x, pos_y);
-  zatura_jumplist_add(zatura);
-  position_set(zatura, pos_x, pos_y);
-  zatura_jumplist_add(zatura);
+  zathura_jumplist_add(zathura);
+  position_set(zathura, pos_x, pos_y);
+  zathura_jumplist_add(zathura);
 }
 
 static void dup_and_append_rect(void* data, void* userdata) {
   const synctex_page_rect_t* rect = data;
   girara_list_t** all_rectangles  = userdata;
 
-  zatura_rectangle_t* newrect = g_try_malloc0(sizeof(zatura_rectangle_t));
+  zathura_rectangle_t* newrect = g_try_malloc0(sizeof(zathura_rectangle_t));
   if (newrect) {
     *newrect = rect->rect;
     girara_list_append(all_rectangles[rect->page], newrect);
   }
 }
 
-bool synctex_view(zatura_t* zatura, const char* input_file, unsigned int line, unsigned int column) {
-  if (!zatura || !input_file) {
+bool synctex_view(zathura_t* zathura, const char* input_file, unsigned int line, unsigned int column) {
+  if (!zathura || !input_file) {
     return false;
   }
 
-  zatura_document_t* document       = zatura_get_document(zatura);
-  const unsigned int number_of_pages = zatura_document_get_number_of_pages(document);
+  zathura_document_t* document       = zathura_get_document(zathura);
+  const unsigned int number_of_pages = zathura_document_get_number_of_pages(document);
 
   unsigned int page                        = 0;
   g_autoptr(girara_list_t) secondary_rects = NULL;
   g_autoptr(girara_list_t) rectangles      = synctex_rectangles_from_position(
-      zatura, zatura_document_get_path(document), input_file, line, column, &page, &secondary_rects);
+      zathura, zathura_document_get_path(document), input_file, line, column, &page, &secondary_rects);
 
   if (!rectangles) {
     return false;
@@ -371,7 +371,7 @@ bool synctex_view(zatura_t* zatura, const char* input_file, unsigned int line, u
     girara_list_foreach(secondary_rects, dup_and_append_rect, all_rectangles);
   }
 
-  synctex_highlight_rects(zatura, page, all_rectangles);
+  synctex_highlight_rects(zathura, page, all_rectangles);
 
   return true;
 }

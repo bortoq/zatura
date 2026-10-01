@@ -5,23 +5,23 @@
 
 #include "file-monitor.h"
 
-#define ZATURA_TYPE_SIGNALFILEMONITOR (zatura_signalfilemonitor_get_type())
-#define ZATURA_SIGNALFILEMONITOR(obj)                                                                                 \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj), ZATURA_TYPE_SIGNALFILEMONITOR, ZaturaSignalFileMonitor))
-#define ZATURA_SIGNALFILEMONITOR_CLASS(obj)                                                                           \
-  (G_TYPE_CHECK_CLASS_CAST((obj), ZATURA_TYPE_SIGNALFILEMONITOR, ZaturaSignalFileMonitorClass))
-#define ZATURA_IS_SIGNALFILEMONITOR(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj), ZATURA_TYPE_SIGNALFILEMONITOR))
-#define ZATURA_IS_SIGNALFILEMONITOR_CLASS(obj) (G_TYPE_CHECK_CLASS_TYPE((obj), ZATURA_TYPE_SIGNALFILEMONITOR))
-#define ZATURA_SIGNALFILEMONITOR_GET_CLASS(obj)                                                                       \
-  (G_TYPE_INSTANCE_GET_CLASS((obj), ZATURA_TYPE_SIGNALFILEMONITOR, ZaturaSignalFileMonitorClass))
+#define ZATHURA_TYPE_SIGNALFILEMONITOR (zathura_signalfilemonitor_get_type())
+#define ZATHURA_SIGNALFILEMONITOR(obj)                                                                                 \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj), ZATHURA_TYPE_SIGNALFILEMONITOR, ZathuraSignalFileMonitor))
+#define ZATHURA_SIGNALFILEMONITOR_CLASS(obj)                                                                           \
+  (G_TYPE_CHECK_CLASS_CAST((obj), ZATHURA_TYPE_SIGNALFILEMONITOR, ZathuraSignalFileMonitorClass))
+#define ZATHURA_IS_SIGNALFILEMONITOR(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj), ZATHURA_TYPE_SIGNALFILEMONITOR))
+#define ZATHURA_IS_SIGNALFILEMONITOR_CLASS(obj) (G_TYPE_CHECK_CLASS_TYPE((obj), ZATHURA_TYPE_SIGNALFILEMONITOR))
+#define ZATHURA_SIGNALFILEMONITOR_GET_CLASS(obj)                                                                       \
+  (G_TYPE_INSTANCE_GET_CLASS((obj), ZATHURA_TYPE_SIGNALFILEMONITOR, ZathuraSignalFileMonitorClass))
 
-typedef struct zatura_signalfilemonitor_s ZaturaSignalFileMonitor;
-typedef struct zatura_signalfilemonitor_class_s ZaturaSignalFileMonitorClass;
+typedef struct zathura_signalfilemonitor_s ZathuraSignalFileMonitor;
+typedef struct zathura_signalfilemonitor_class_s ZathuraSignalFileMonitorClass;
 
-struct zatura_signalfilemonitor_class_s {
-  ZaturaFileMonitorClass parent_class;
+struct zathura_signalfilemonitor_class_s {
+  ZathuraFileMonitorClass parent_class;
 };
 
-GType zatura_signalfilemonitor_get_type(void);
+GType zathura_signalfilemonitor_get_type(void);
 
 #endif

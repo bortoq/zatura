@@ -23,7 +23,7 @@ typedef struct page_offset_s {
  * @param path The path to the file
  * @return true if the extension is valid, otherwise false
  */
-bool file_valid_extension(zatura_t* zatura, const char* path);
+bool file_valid_extension(zathura_t* zathura, const char* path);
 
 /**
  * build a tree of index elements from the document outline
@@ -39,7 +39,7 @@ GListModel* document_index_build_model(girara_session_t* session, girara_tree_no
  *
  * @param zatura The zatura instance
  */
-void index_scroll_to_current_page(zatura_t* zatura);
+void index_scroll_to_current_page(zathura_t* zathura);
 
 /**
  * Calculates the new coordinates based on the rotation and scale level of the
@@ -49,7 +49,7 @@ void index_scroll_to_current_page(zatura_t* zatura);
  * @param rectangle The rectangle
  * @return New rectangle
  */
-zatura_rectangle_t recalc_rectangle(zatura_page_t* page, zatura_rectangle_t rectangle);
+zathura_rectangle_t recalc_rectangle(zathura_page_t* page, zathura_rectangle_t rectangle);
 
 /**
  * Returns the page widget of the page
@@ -59,9 +59,9 @@ zatura_rectangle_t recalc_rectangle(zatura_page_t* page, zatura_rectangle_t rect
  * @return The page widget of the page
  * @return NULL if an error occurred
  */
-GtkWidget* zatura_page_get_widget(zatura_t* zatura, zatura_page_t* page);
+GtkWidget* zathura_page_get_widget(zathura_t* zathura, zathura_page_t* page);
 
-GtkWidget* zatura_page_get_widget_by_number(zatura_t* zatura, unsigned int page_number);
+GtkWidget* zathura_page_get_widget_by_number(zathura_t* zathura, unsigned int page_number);
 
 /**
  * Set if the search results should be drawn or not
@@ -69,7 +69,7 @@ GtkWidget* zatura_page_get_widget_by_number(zatura_t* zatura, unsigned int page_
  * @param zatura Zatura instance
  * @param value true if they should be drawn, otherwise false
  */
-void document_draw_search_results(zatura_t* zatura, bool value);
+void document_draw_search_results(zathura_t* zathura, bool value);
 
 /**
  * Create zatura version string
@@ -78,7 +78,7 @@ void document_draw_search_results(zatura_t* zatura, bool value);
  * @param markup Enable markup
  * @return Version string
  */
-char* zatura_get_version_string(const zatura_plugin_manager_t* plugin_manager, bool markup);
+char* zathura_get_version_string(const zathura_plugin_manager_t* plugin_manager, bool markup);
 
 /**
  * Get a pointer to the GdkClipboard of the current clipboard.
@@ -87,7 +87,7 @@ char* zatura_get_version_string(const zatura_plugin_manager_t* plugin_manager, b
  *
  * @return the current GdkClipboard, or NULL
  */
-GdkClipboard* get_selection(zatura_t* zatura);
+GdkClipboard* get_selection(zathura_t* zathura);
 
 /**
  * Returns the valid zoom value which needs to lie in the interval of zoom_min
@@ -98,7 +98,7 @@ GdkClipboard* get_selection(zatura_t* zatura);
  *
  * @return The corrected zoom value
  */
-double zatura_correct_zoom_value(girara_session_t* session, const double zoom);
+double zathura_correct_zoom_value(girara_session_t* session, const double zoom);
 
 /**
  * Write a list of 'pages per row to first column' values as a colon separated string.
@@ -174,6 +174,6 @@ girara_list_t* flatten_rectangles(girara_list_t* rectangles);
  *
  * @return true if no error occurred otherwise false
  */
-bool search_document(zatura_t* zatura, girara_argument_t* argument, bool disable_notify);
+bool search_document(zathura_t* zathura, girara_argument_t* argument, bool disable_notify);
 
 #endif // UTILS_H

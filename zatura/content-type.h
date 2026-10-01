@@ -1,25 +1,25 @@
 /* SPDX-License-Identifier: Zlib */
 
-#ifndef ZATURA_CONTENT_TYPE_H
-#define ZATURA_CONTENT_TYPE_H
+#ifndef ZATHURA_CONTENT_TYPE_H
+#define ZATHURA_CONTENT_TYPE_H
 
 #include <girara/datastructures.h>
 
-typedef struct zatura_content_type_context_s zatura_content_type_context_t;
+typedef struct zathura_content_type_context_s zathura_content_type_context_t;
 
 /**
  * Create new context for content type detection.
  *
  * @return new context
  */
-zatura_content_type_context_t* zatura_content_type_new(void);
+zathura_content_type_context_t* zathura_content_type_new(void);
 
 /**
  * Free content type detection context.
  *
  * @param context The context.
  */
-void zatura_content_type_free(zatura_content_type_context_t* context);
+void zathura_content_type_free(zathura_content_type_context_t* context);
 
 /**
  * "Guess" the content type of a file. Various methods are tried depending on
@@ -28,7 +28,7 @@ void zatura_content_type_free(zatura_content_type_context_t* context);
  * @param path file name
  * @return content type of path, needs to freeed with g_free.
  */
-char* zatura_content_type_guess(zatura_content_type_context_t* context, const char* path,
+char* zathura_content_type_guess(zathura_content_type_context_t* context, const char* path,
                                  const girara_list_t* supported_content_types);
 
 #endif

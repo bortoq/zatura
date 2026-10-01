@@ -20,7 +20,7 @@
  * @param zatura Correspondending zatura session
  * @return true if no error occurred and the event has been handled
  */
-gboolean cb_destroy(GtkWidget* widget, zatura_t* zatura);
+gboolean cb_destroy(GtkWidget* widget, zathura_t* zathura);
 
 /**
  * This function gets called when the buffer of girara changes
@@ -170,7 +170,7 @@ gboolean cb_sc_copy_link(GiraraDialog* inputbar, const char* input, void* sessio
  * @param monitor The file monitor
  * @param session The girara session
  */
-void cb_file_monitor(ZaturaFileMonitor* monitor, girara_session_t* session);
+void cb_file_monitor(ZathuraFileMonitor* monitor, girara_session_t* session);
 
 /**
  * Callback to read new password for file that should be opened
@@ -236,13 +236,13 @@ bool cb_unknown_command(girara_session_t* session, const char* input);
  * @param text selected text
  * @param data user data
  */
-void cb_page_widget_text_selected(ZaturaPageWidget* page, const char* text, void* data);
+void cb_page_widget_text_selected(ZathuraPageWidget* page, const char* text, void* data);
 
-void cb_page_widget_image_selected(ZaturaPageWidget* page, GdkTexture* texture, void* data);
+void cb_page_widget_image_selected(ZathuraPageWidget* page, GdkTexture* texture, void* data);
 
-void cb_page_widget_scaled_button_release(ZaturaPageWidget* page, scaled_button_release_event_t* event, void* data);
+void cb_page_widget_scaled_button_release(ZathuraPageWidget* page, scaled_button_release_event_t* event, void* data);
 
-void cb_page_widget_link(ZaturaPageWidget* page, void* data);
+void cb_page_widget_link(ZathuraPageWidget* page, void* data);
 
 void cb_gesture_zoom_begin(GtkGesture* self, GdkEventSequence* sequence, void* data);
 

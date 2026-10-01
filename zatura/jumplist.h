@@ -1,17 +1,17 @@
 /* SPDX-License-Identifier: Zlib */
 
-#ifndef ZATURA_JUMPLIST_H
-#define ZATURA_JUMPLIST_H
+#ifndef ZATHURA_JUMPLIST_H
+#define ZATHURA_JUMPLIST_H
 
 #include <girara/datastructures.h>
 #include "types.h"
 
-typedef struct zatura_jumplist_s {
+typedef struct zathura_jumplist_s {
   girara_list_t* list;
   girara_list_iterator_t* cur;
   unsigned int size;
   unsigned int max_size;
-} zatura_jumplist_t;
+} zathura_jumplist_t;
 
 /**
  * Checks whether current jump has a previous jump
@@ -19,7 +19,7 @@ typedef struct zatura_jumplist_s {
  * @param zatura The zatura session
  * @return true if current jump has a previous jump
  */
-bool zatura_jumplist_has_previous(zatura_t* zatura);
+bool zathura_jumplist_has_previous(zathura_t* zathura);
 
 /**
  * Checks whether current jump has a next jump
@@ -27,7 +27,7 @@ bool zatura_jumplist_has_previous(zatura_t* zatura);
  * @param zatura The zatura session
  * @return true if current jump has a next jump
  */
-bool zatura_jumplist_has_next(zatura_t* zatura);
+bool zathura_jumplist_has_next(zathura_t* zathura);
 
 /**
  * Return current jump in the jumplist
@@ -35,35 +35,35 @@ bool zatura_jumplist_has_next(zatura_t* zatura);
  * @param zatura The zatura session
  * @return current jump
  */
-zatura_jump_t* zatura_jumplist_current(zatura_t* zatura);
+zathura_jump_t* zathura_jumplist_current(zathura_t* zathura);
 
 /**
  * Move forward in the jumplist
  *
  * @param zatura The zatura session
  */
-void zatura_jumplist_forward(zatura_t* zatura);
+void zathura_jumplist_forward(zathura_t* zathura);
 
 /**
  * Move backward in the jumplist
  *
  * @param zatura The zatura session
  */
-void zatura_jumplist_backward(zatura_t* zatura);
+void zathura_jumplist_backward(zathura_t* zathura);
 
 /**
  * Add current page as a new item to the jumplist after current position
  *
  * @param zatura The zatura session
  */
-void zatura_jumplist_add(zatura_t* zatura);
+void zathura_jumplist_add(zathura_t* zathura);
 
 /**
  * Trim entries from the beginning of the jumplist to maintain it's maximum size constraint.
  *
  * @param zatura The zatura session
  */
-void zatura_jumplist_trim(zatura_t* zatura);
+void zathura_jumplist_trim(zathura_t* zathura);
 
 /**
  * Set maximum jump list size (and trim if necessary)
@@ -71,7 +71,7 @@ void zatura_jumplist_trim(zatura_t* zatura);
  * @param zatura The zatura session
  * @param max_size New maximum size
  */
-void zatura_jumplist_set_max_size(zatura_t* zatura, size_t max_size);
+void zathura_jumplist_set_max_size(zathura_t* zathura, size_t max_size);
 
 /**
  * Load the jumplist of the specified file
@@ -81,7 +81,7 @@ void zatura_jumplist_set_max_size(zatura_t* zatura, size_t max_size);
  *
  * return A linked list of zatura_jump_t structures constituting the jumplist of the specified file, or NULL.
  */
-bool zatura_jumplist_load(zatura_t* zatura, const char* file);
+bool zathura_jumplist_load(zathura_t* zathura, const char* file);
 
 /**
  * Init jumplist with a maximum size
@@ -89,14 +89,14 @@ bool zatura_jumplist_load(zatura_t* zatura, const char* file);
  * @param zatura The zatura session
  * @param max_size maximum jumplist size (or 0 for unbounded lists)
  */
-void zatura_jumplist_init(zatura_t* zatura, size_t max_size);
+void zathura_jumplist_init(zathura_t* zathura, size_t max_size);
 
 /**
  * Check if the jumplist is initialized
  *
  * @param zatura The zatura session
  */
-bool zatura_jumplist_is_initialized(zatura_t* zatura);
+bool zathura_jumplist_is_initialized(zathura_t* zathura);
 
 /**
  * Clear jumplist
@@ -105,13 +105,13 @@ bool zatura_jumplist_is_initialized(zatura_t* zatura);
  *
  * @param zatura The zatura session
  */
-void zatura_jumplist_clear(zatura_t* zatura);
+void zathura_jumplist_clear(zathura_t* zathura);
 
 /**
  * Free jumplist
  *
  * @param zatura The zatura session
  */
-void zatura_jumplist_free(zatura_t* zatura);
+void zathura_jumplist_free(zathura_t* zathura);
 
 #endif
