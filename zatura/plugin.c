@@ -71,13 +71,21 @@ static void set_plugin_dir(zathura_plugin_manager_t* plugin_manager, const char*
 }
 
 static void set_default_dirs(zathura_plugin_manager_t* plugin_manager) {
+  /* Bundles resolve engines relative to their private runtime, never the build prefix. */
+  const char* runtime = g_getenv("ZATURA_RUNTIME_DIR");
+  if (runtime != NULL && runtime[0] != '\0') {
+    g_autofree char* current = g_build_filename(runtime, "lib", "zatura", NULL);
+    g_autofree char* legacy = g_build_filename(runtime, "lib", "zathura", NULL);
+    set_plugin_dir(plugin_manager, current);
+    set_plugin_dir(plugin_manager, legacy);
+  } else {
 #ifdef ZATHURA_PLUGINDIR
-  set_plugin_dir(plugin_manager, ZATHURA_PLUGINDIR);
+    set_plugin_dir(plugin_manager, ZATHURA_PLUGINDIR);
 #endif
-
 #ifdef ZATHURA_LEGACY_PLUGINDIR
-  set_plugin_dir(plugin_manager, ZATHURA_LEGACY_PLUGINDIR);
+    set_plugin_dir(plugin_manager, ZATHURA_LEGACY_PLUGINDIR);
 #endif
+  }
 
   const char* env_paths = g_getenv("ZATURA_PLUGINS_PATH");
   if (env_paths != NULL) {

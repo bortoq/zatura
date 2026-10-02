@@ -1047,9 +1047,10 @@ The settings described here can be changed with ``set``.
 
 *selection-notification*
   Defines if a notification should be displayed after selecting text.
+  Selection copying is quiet by default.
 
   * Value type: Boolean
-  * Default value: true
+  * Default value: false
 
 *signature-error-color*
   Defines the background color when displaying additional information for

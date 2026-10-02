@@ -19,7 +19,7 @@ Differences from Zathura
   books, PDF, DjVu, PostScript, images and comic archives.
 
 Configuration is `~/.config/zatura/zaturarc`. See the [complete annotated example](doc/zaturarc.example),
-[reading guide](doc/READING.md), [plugin/format details](doc/PLUGINS.md) and
+[English reading guide](doc/READING.md), [русское руководство](doc/READING.ru.md), [plugin/format details](doc/PLUGINS.md) and
 [refactoring notes](doc/REFACTORING.md).
 
 Requirements
@@ -35,6 +35,7 @@ The following dependencies are required:
 * `json-glib`
 * `sqlite3` (>= 3.35.0): sqlite3 database backend
 * `libxxhash`: file hashing
+* `libarchive`: archive detection and FB2 ZIP handling
 
 The following dependencies are optional:
 * `libsynctex` from TeXLive (>= 2): SyncTeX support
@@ -48,7 +49,7 @@ For building zatura, the following dependencies are also required:
 
 The following dependencies are optional build-time only dependencies:
 
-* `librvsg-bin`: PNG icons
+* `librsvg-bin`: PNG icons
 * `Sphinx`: manpages and HTML documentation
 * `doxygen`: HTML documentation
 * `breathe`: for HTML documentation
@@ -68,17 +69,30 @@ document viewer.
 Installation
 ------------
 
-To build and install zatura using meson's ninja backend:
+Download the AppImage or portable Linux x86_64 archive from
+[Releases](https://github.com/bortoq/zatura/releases). Both include the document
+engines. See [packaging instructions](doc/PACKAGING.md) and [changelog](CHANGELOG.md).
 
-    meson build
-    cd build
-    ninja
-    ninja install
+With a C23 compiler and the dependencies above, build through the Makefile:
 
-> **Note:** The default backend for meson might vary based on the platform. Please
-refer to the meson documentation for platform specific dependencies.
+```sh
+make configure PREFIX=/usr/local
+make build
+make test
+make install
+```
+
+Meson remains the build system; `MESON_ARGS` passes its configuration options.
+`make plugins RUNTIME=/your/private/prefix` builds bundled engines after installing
+Zatura into that prefix. Keep a separate prefix when installing alongside Zathura:
+compatibility headers and pkg-config files share upstream names.
+`DESTDIR=/tmp/package-root make install` stages files for distribution packages.
+A complete musl runtime can be packed with `make portable` or `make appimage`;
+these packaging targets do not construct that runtime from a native glibc build.
+
 
 Bugs
 ----
 
-Please report bugs at https://github.com/bortoq/zatura/issues.
+Please report bugs in [Issues](https://github.com/bortoq/zatura/issues).
+Questions and feature ideas are welcome in [Discussions](https://github.com/bortoq/zatura/discussions).

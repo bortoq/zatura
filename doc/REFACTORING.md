@@ -1,5 +1,63 @@
 # Zatura refactoring plan
 
+## Priorities for the first public release (2026-10-02)
+
+Estimates below are rough effort for one developer, excluding distribution review
+and time spent reproducing bugs on other desktops.
+
+| Priority | Work | Status / next step | Effort remaining |
+| --- | --- | --- | --- |
+| High | Packaging and Makefile | Makefile delegates build/test/install to Meson; portable musl archive and AppImage share a relocatable launcher | Cross-distribution testing: 1–2 days |
+| High | Issues and Discussions | Enabled on GitHub; README links both | Done |
+| High | Release and changelog | First release 2026.10.02 with versioned binaries, source and checksums | Repeatable CI publishing: 1–2 days |
+| High | English documentation | Full English reading guide; Russian guide retained separately; packaging guide added | Done |
+| Medium | Content bookmarks and jump history | Design stable content anchors, persistence and migration; numeric fallback for fixed-layout engines | 3–6 days |
+| Medium | Quiet notifications | Selection notices default off; effect range clamping only logs at debug level | Audit other repeated actions: 0.5–1 day |
+| Technical | Extract recolor | Pixel operations now live in page-effects; render.c adapts image rectangles and settings | Done |
+| Technical | Cache and memory measurement | Raw cache is 128 MiB, processed surfaces separate; measure before changing limits | Profiling: 0.5–1 day; shared budget: 2–4 days |
+| Convenience | Configuration editing | :set completes all options changeable at runtime, including new settings | Optional settings editor: 2–4 days |
+
+### Next packaging steps
+
+The portable release contains a private dynamically linked musl runtime, not a
+fully static binary. Its original build environment uses Alpine 3.24, GTK 4.22,
+GLib 2.88 and GCC 15. A native build still needs the documented C23/GTK/GLib
+versions. The Makefile cannot safely upgrade an old host toolchain automatically.
+
+1. Check AppImage and archive on clean glibc and musl systems, X11 and Wayland;
+   verify fonts, file dialogs, image loaders and Ghostscript resources.
+2. Add a pinned container recipe and CI that creates the runtime, checks dependency
+   licenses/source availability and publishes artifacts only after tests pass.
+3. Add a deb recipe with declared GTK/GLib minimum versions (1–2 days). Older
+   Debian/Ubuntu versions need a private runtime package or newer distribution.
+4. Add an AUR PKGBUILD with pinned Girara and the bundled plugin build (1 day),
+   avoiding collisions with upstream Zathura's compatibility headers.
+5. Add a Flatpak manifest and desktop/portal checks (2–4 days). Build Girara and
+   all engines in a supported GNOME runtime; evaluate Ghostscript sandbox access.
+
+### Stable anchors for bookmarks and jumps
+
+Reuse the MuPDF content location behind the live reflow bookmark, but serialize
+an engine-defined stable anchor rather than its process-local token. Add an
+optional extension symbol to preserve API 8 / ABI 9. Store the anchor and a
+fallback page/position for each bookmark and jump; migrate existing numeric
+entries lazily after opening their document. Resolve anchors after each reflow,
+then update the displayed page. Fixed-layout plugins retain numeric navigation.
+Tests must cover font, margins and column changes, reopening, database migration,
+missing/changed documents, chapter boundaries and old plugins without the extension.
+Do not call current-position preservation a solution for saved bookmarks.
+
+### Measure memory before sharing a budget
+
+Measure peak RSS plus raw/processed/cache-in-flight byte counts on large scanned
+PDF/DjVu pages at 100%, 200% and HiDPI, one/two columns, with recolor and held
+adjustment keys. Include pages larger than 128 MiB and rapid navigation. Record
+filter latency and visible frame intervals alongside memory, since evicting raw
+pixels may trade memory for repeated expensive document rendering. Then consider
+one renderer-owned budget with separate accounting, eviction priorities and
+pinned visible/in-flight surfaces. Include textures and shared surface ownership
+so the same buffer is not charged twice. This release changes no cache limits.
+
 ## Fullscreen and normal mode cleanup
 
 Fullscreen is now a GTK window state. F11 and `toggle_fullscreen` change the
@@ -31,10 +89,10 @@ with recolor enabled or disabled and in normal/fullscreen and presentation.
 | `page-saturation` | −100…100 | 0 | `7` / `8` |
 
 The key pairs and step of 1 follow [mpv's default input bindings](https://github.com/mpv-player/mpv/blob/master/etc/input.conf).
-Values are integers; out-of-range values are clamped with a warning. Zero for
+Values are integers; out-of-range values are clamped quietly (debug logging). Zero for
 all four controls preserves pixels exactly. For example,
 `:set page-gamma 20` lifts midtones; `:set page-saturation -100` produces grayscale.
-Defaults can be stored in `zaturarc`; interactive changes last for the session.
+Defaults can be stored in `zaturarc`; interactive changes are saved per document when view history is enabled.
 
 The number-row bindings take priority over the old numeric command prefixes.
 Unmap the individual number keys to restore their prefix behavior. Text entry
@@ -100,15 +158,17 @@ also bypass the display filter. The plugin API and ABI are unchanged.
 
 ### Remaining refactoring
 
-1. Extract the existing recolor implementation from `render.c` into the local
-   effects module; both rendering paths already share postprocessing.
+1. Completed: recolor pixel algorithms moved from `render.c` into `page-effects.c`;
+   the renderer retains only settings and image-rectangle adaptation. Fast/slow paths,
+   hue, alpha, image exclusions and lightness behavior are preserved; cancellation
+   now checks recolor rows as well as adjustments.
 2. Add a compact panel with four sliders, values, and reset; debounce slider
    changes. Estimate: 2–4 engineer-days.
 3. Measure adjustment latency and total cache memory on large vector and scanned
    pages, including zoom/HiDPI and recolor. The bounded original-pixel cache is
    implemented; consider a shared budget with processed surfaces if measured
    memory consumption warrants it.
-4. Consider per-document persistence and later GPU acceleration after moving
+4. Per-document persistence is implemented. Consider GPU acceleration after moving
    page drawing to textures, retaining the CPU path for compatibility.
 5. Migrate the settings adapter when removing Girara; the effect model already
    belongs to Zatura.

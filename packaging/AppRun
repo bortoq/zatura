@@ -1,0 +1,42 @@
+#!/bin/sh
+# SPDX-License-Identifier: Zlib
+set -eu
+bundle_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+runtime_dir="$bundle_dir/runtime"
+loader="$runtime_dir/lib/ld-musl-x86_64.so.1"
+export GSETTINGS_SCHEMA_DIR="$runtime_dir/share/glib-2.0/schemas"
+export GIO_MODULE_DIR="$runtime_dir/lib/gio/modules"
+export XDG_DATA_DIRS="$runtime_dir/share:${XDG_DATA_DIRS:-/usr/local/share:/usr/share}"
+export ZATURA_RUNTIME_DIR="$runtime_dir"
+# Spawned document windows need their own launcher/cache and AppImage lifetime.
+export ZATURA_LAUNCHER="${APPIMAGE:-$bundle_dir/AppRun}"
+export GS_LIB="$runtime_dir/share/ghostscript/Resource/Init:$runtime_dir/share/ghostscript/lib:$runtime_dir/share/ghostscript/Resource"
+export GS_FONTPATH="$runtime_dir/share/ghostscript/Resource/Font"
+export MAGIC="$runtime_dir/share/misc/magic.mgc"
+export GSK_RENDERER="${GSK_RENDERER:-cairo}"
+# Regenerate absolute loader paths outside the read-only AppImage mount.
+# A temporary private file also supports concurrent launches and paths with spaces.
+module_cache=$(mktemp "${TMPDIR:-/tmp}/zatura-pixbuf-XXXXXX")
+child_pid=
+trap 'rm -f "$module_cache"' EXIT
+terminate() {
+  trap '' HUP INT TERM
+  if [ -n "$child_pid" ]; then
+    kill -TERM "$child_pid" 2>/dev/null || true
+    wait "$child_pid" 2>/dev/null || true
+  fi
+  exit "$1"
+}
+trap 'terminate 129' HUP
+trap 'terminate 130' INT
+trap 'terminate 143' TERM
+export GDK_PIXBUF_MODULEDIR="$runtime_dir/lib/gdk-pixbuf-2.0/2.10.0/loaders"
+"$loader" --library-path "$runtime_dir/lib" "$runtime_dir/bin/gdk-pixbuf-query-loaders" > "$module_cache"
+export GDK_PIXBUF_MODULE_FILE="$module_cache"
+# Keep a parent shell to remove the generated cache after the application exits.
+"$loader" --library-path "$runtime_dir/lib" "$runtime_dir/bin/zatura" "$@" <&0 &
+child_pid=$!
+set +e
+wait "$child_pid"
+result=$?
+exit "$result"

@@ -63,7 +63,10 @@ static int run_synctex_forward(const char* synctex_fwd, const char* filename, in
 
 static void init_locale(void) {
   setlocale(LC_ALL, "");
-  bindtextdomain(GETTEXT_PACKAGE, LOCALEDIR);
+  const char* runtime = g_getenv("ZATURA_RUNTIME_DIR");
+  g_autofree char* locale_dir = runtime && runtime[0] != '\0'
+      ? g_build_filename(runtime, "share", "locale", NULL) : NULL;
+  bindtextdomain(GETTEXT_PACKAGE, locale_dir ? locale_dir : LOCALEDIR);
   bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
   textdomain(GETTEXT_PACKAGE);
 }
@@ -205,7 +208,8 @@ static void cb_app_shutdown(GApplication* UNUSED(app), gpointer data) {
 
 static GStrv build_argv_for_child(int idx, char** argv, int argc, char** orig_argv, int orig_argc, int file_idx_base) {
   GPtrArray* arr = g_ptr_array_new();
-  g_ptr_array_add(arr, g_strdup(orig_argv[0]));
+  const char* launcher = g_getenv("ZATURA_LAUNCHER");
+  g_ptr_array_add(arr, g_strdup(launcher && launcher[0] != '\0' ? launcher : orig_argv[0]));
   for (int i = 1; i < orig_argc; i++) {
     if (!g_strcmp0(orig_argv[i], "--fork")) {
       continue;

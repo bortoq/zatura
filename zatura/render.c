@@ -572,297 +572,25 @@ static gboolean emit_completed_signal(void* data) {
   return FALSE;
 }
 
-static bool pixel_inside_rectangles(girara_list_t* rectangles, unsigned int x, unsigned int y) {
-  for (size_t idx = 0; idx != girara_list_size(rectangles); ++idx) {
-    zathura_rectangle_t* rect_it = girara_list_nth(rectangles, idx);
-    if (rect_it->x1 <= x && rect_it->x2 >= x && rect_it->y1 <= y && rect_it->y2 >= y) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
-/* Returns the maximum possible saturation for given h and l.
-   Assumes that l is in the interval l1, l2 and corrects the value to
-   force u=0 on l1 and l2 */
-static double colorumax(const double h[3], double l, double l1, double l2) {
-  if (fabs(h[0]) <= DBL_EPSILON && fabs(h[1]) <= DBL_EPSILON && fabs(h[2]) <= DBL_EPSILON) {
-    return 0;
-  }
-
-  const double lv = (l - l1) / (l2 - l1); /* Remap l to the whole interval [0,1] */
-  double u        = DBL_MAX;
-  double v        = DBL_MAX;
-  for (unsigned int k = 0; k < 3; ++k) {
-    if (h[k] > DBL_EPSILON) {
-      u = fmin(fabs((1 - l) / h[k]), u);
-      v = fmin(fabs((1 - lv) / h[k]), v);
-    } else if (h[k] < -DBL_EPSILON) {
-      u = fmin(fabs(l / h[k]), u);
-      v = fmin(fabs(lv / h[k]), v);
-    }
-  }
-
-  /* rescale v according to the length of the interval [l1, l2] */
-  v = fabs(l2 - l1) * v;
-
-  /* forces the returned value to be 0 on l1 and l2, trying not to distort colors too much */
-  return fmin(u, v);
-}
-
-/* RGB weights for computing lightness. Must sum to one */
-static const double weights[] = {0.30, 0.59, 0.11};
-
-static void recolor_slow(ZathuraRendererPrivate* priv, unsigned int page_width, unsigned int page_height,
-                         cairo_surface_t* surface, girara_list_t* rectangles, bool found_images) {
-  const GdkRGBA rgb1 = priv->recolor.dark;
-  const GdkRGBA rgb2 = priv->recolor.light;
-
-  const double l1       = weights[0] * rgb1.red + weights[1] * rgb1.green + weights[2] * rgb1.blue;
-  const double l2       = weights[0] * rgb2.red + weights[1] * rgb2.green + weights[2] * rgb2.blue;
-  const double negalph1 = 1. - rgb1.alpha;
-  const double negalph2 = 1. - rgb2.alpha;
-
-  const double rgb_diff[] = {rgb2.red - rgb1.red, rgb2.green - rgb1.green, rgb2.blue - rgb1.blue};
-
-  const double h1[3] = {
-      rgb1.red * rgb1.alpha - l1,
-      rgb1.green * rgb1.alpha - l1,
-      rgb1.blue * rgb1.alpha - l1,
-  };
-
-  const double h2[3] = {
-      rgb2.red * rgb2.alpha - l2,
-      rgb2.green * rgb2.alpha - l2,
-      rgb2.blue * rgb2.alpha - l2,
-  };
-
-  bool adjust_lightness = priv->recolor.adjust_lightness;
-
-  const int rowstride  = cairo_image_surface_get_stride(surface);
-  unsigned char* image = cairo_image_surface_get_data(surface);
-
-  for (unsigned int y = 0; y < page_height; y++) {
-    unsigned char* data = image + y * rowstride;
-
-    for (unsigned int x = 0; x < page_width; x++, data += 4) {
-      /* Check if the pixel belongs to an image when in reverse video mode*/
-      if (priv->recolor.reverse_video == true && found_images == true) {
-        const bool inside_image = pixel_inside_rectangles(rectangles, x, y);
-        /* If it's inside and image don't recolor */
-        if (inside_image == true) {
-          /* It is not guaranteed that the pixel is already opaque. */
-          data[3] = 255;
-          continue;
-        }
-      }
-
-      /* Careful. data color components blue, green, red. */
-      const double rgb[3] = {data[2] / 255., data[1] / 255., data[0] / 255.};
-
-      /* compute h, s, l data   */
-      double l = weights[0] * rgb[0] + weights[1] * rgb[1] + weights[2] * rgb[2];
-
-      if (priv->recolor.hue == true) {
-        /* adjusting lightness keeping hue of current color. white and black
-         * go to grays of same ligtness as light and dark colors. */
-        const double h[3] = {rgb[0] - l, rgb[1] - l, rgb[2] - l};
-
-        /* u is the maximum possible saturation for given h and l. s is a
-         * rescaled saturation between 0 and 1 */
-        const double u = colorumax(h, l, 0, 1);
-        const double s = fabs(u) > DBL_EPSILON ? 1.0 / u : 0.0;
-
-        /* adjust according to quartic curve, then average with original weighed
-         * by half saturation. */
-        if (adjust_lightness) {
-          /* l = l * s/2 + l^4 * (1 - s/2) */
-          double adj = l * l * l * l;
-          l          = (l - adj) * (s * 0.5) + adj;
-        }
-
-        /* Interpolates lightness between light and dark colors. white goes to
-         * light, and black goes to dark. */
-        l = l * (l2 - l1) + l1;
-
-        const double su = s * colorumax(h, l, l1, l2);
-
-        /* Mix lightcolor, darkcolor and the original color, according to the
-         * minimal and maximal channel of the original color */
-        const double tr1 = (1. - fmax(fmax(rgb[0], rgb[1]), rgb[2]));
-        const double tr2 = fmin(fmin(rgb[0], rgb[1]), rgb[2]);
-        data[3]          = (unsigned char)round(255. * (1. - tr1 * negalph1 - tr2 * negalph2));
-        data[2]          = (unsigned char)round(255. * fmin(1, fmax(0, tr1 * h1[0] + tr2 * h2[0] + (l + su * h[0]))));
-        data[1]          = (unsigned char)round(255. * fmin(1, fmax(0, tr1 * h1[1] + tr2 * h2[1] + (l + su * h[1]))));
-        data[0]          = (unsigned char)round(255. * fmin(1, fmax(0, tr1 * h1[2] + tr2 * h2[2] + (l + su * h[2]))));
-      } else {
-        if (adjust_lightness) {
-          l = l * l;
-        }
-
-        /* linear interpolation between dark and light with color ligtness as
-         * a parameter */
-        const double f1 = 1. - (1. - fmax(fmax(rgb[0], rgb[1]), rgb[2])) * negalph1;
-        const double f2 = fmin(fmin(rgb[0], rgb[1]), rgb[2]) * negalph2;
-        data[3]         = (unsigned char)round(255. * (f1 - f2));
-        data[2]         = (unsigned char)round(255. * (l * rgb_diff[0] - f2 * rgb2.red + f1 * rgb1.red));
-        data[1]         = (unsigned char)round(255. * (l * rgb_diff[1] - f2 * rgb2.green + f1 * rgb1.green));
-        data[0]         = (unsigned char)round(255. * (l * rgb_diff[2] - f2 * rgb2.blue + f1 * rgb1.blue));
-      }
-    }
-  }
-}
-
-static void recolor_fast(ZathuraRendererPrivate* priv, unsigned int page_width, unsigned int page_height,
-                         cairo_surface_t* surface, girara_list_t* rectangles, bool found_images) {
-  const GdkRGBA rgb1 = priv->recolor.dark;
-  const GdkRGBA rgb2 = priv->recolor.light;
-
-  const double l1 = weights[0] * rgb1.red + weights[1] * rgb1.green + weights[2] * rgb1.blue;
-  const double l2 = weights[0] * rgb2.red + weights[1] * rgb2.green + weights[2] * rgb2.blue;
-
-  const double rgb_diff[] = {rgb2.red - rgb1.red, rgb2.green - rgb1.green, rgb2.blue - rgb1.blue};
-
-  bool adjust_lightness = priv->recolor.adjust_lightness;
-
-  const int rowstride  = cairo_image_surface_get_stride(surface);
-  unsigned char* image = cairo_image_surface_get_data(surface);
-
-  for (unsigned int y = 0; y < page_height; y++) {
-    unsigned char* data = image + y * rowstride;
-
-    for (unsigned int x = 0; x < page_width; x++, data += 4) {
-      /* Check if the pixel belongs to an image when in reverse video mode*/
-      if (priv->recolor.reverse_video == true && found_images == true) {
-        const bool inside_image = pixel_inside_rectangles(rectangles, x, y);
-        /* If it's inside and image don't recolor */
-        if (inside_image == true) {
-          /* It is not guaranteed that the pixel is already opaque. */
-          data[3] = 255;
-          continue;
-        }
-      }
-
-      /* Careful. data color components blue, green, red. */
-      const double rgb[3] = {data[2] / 255., data[1] / 255., data[0] / 255.};
-
-      /* compute h, s, l data   */
-      double l = weights[0] * rgb[0] + weights[1] * rgb[1] + weights[2] * rgb[2];
-
-      if (priv->recolor.hue == true) {
-        /* adjusting lightness keeping hue of current color. white and black
-         * go to grays of same ligtness as light and dark colors. */
-        const double h[3] = {rgb[0] - l, rgb[1] - l, rgb[2] - l};
-
-        /* u is the maximum possible saturation for given h and l. s is a
-         * rescaled saturation between 0 and 1 */
-        const double u = colorumax(h, l, 0, 1);
-        const double s = fabs(u) > DBL_EPSILON ? 1.0 / u : 0.0;
-
-        /* adjust according to quartic curve, then average with original weighed
-         * by half saturation. */
-        if (adjust_lightness) {
-          /* l = l * s/2 + l^4 * (1 - s/2) */
-          double adj = l * l * l * l;
-          l          = (l - adj) * (s * 0.5) + adj;
-        }
-
-        /* Interpolates lightness between light and dark colors. white goes to
-         * light, and black goes to dark. */
-        l = l * (l2 - l1) + l1;
-
-        const double su = s * colorumax(h, l, l1, l2);
-
-        /* Mix lightcolor, darkcolor and the original color, according to the
-         * minimal and maximal channel of the original color */
-        data[3] = 255;
-        data[2] = (unsigned char)round(255. * (l + su * h[0]));
-        data[1] = (unsigned char)round(255. * (l + su * h[1]));
-        data[0] = (unsigned char)round(255. * (l + su * h[2]));
-      } else {
-        if (adjust_lightness) {
-          l = l * l;
-        }
-
-        /* linear interpolation between dark and light with color ligtness as
-         * a parameter */
-        data[3] = 255;
-        data[2] = (unsigned char)round(255. * (l * rgb_diff[0] + rgb1.red));
-        data[1] = (unsigned char)round(255. * (l * rgb_diff[1] + rgb1.green));
-        data[0] = (unsigned char)round(255. * (l * rgb_diff[2] + rgb1.blue));
-      }
-    }
-  }
-}
-
-static void recolor(ZathuraRendererPrivate* priv, zathura_page_t* page, unsigned int page_width,
-                    unsigned int page_height, cairo_surface_t* surface, zathura_device_factors_t device_factors) {
-  /* uses a representation of a rgb color as follows:
-     - a lightness scalar (between 0,1), which is a weighted average of r, g, b,
-     - a hue vector, which indicates a radian direction from the grey axis,
-       inside the equal lightness plane.
-     - a saturation scalar between 0,1. It is 0 when grey, 1 when the color is
-       in the boundary of the rgb cube.
-  */
-
-  /* TODO: split handling of image handling off
-   * Ideally we would create a mask surface for the location of the images and
-   * we would blit the recolored and unmodified surfaces together to get the
-   * same effect.
-   */
-
-  cairo_surface_flush(surface);
-
-  const GdkRGBA rgb1 = priv->recolor.dark;
-  const GdkRGBA rgb2 = priv->recolor.light;
-
-  /* Decide if we can use the older, faster formulas */
-  const bool fast_formula =
-      (!priv->recolor.hue || (fabs(rgb1.red - rgb1.blue) < DBL_EPSILON && fabs(rgb1.red - rgb1.green) < DBL_EPSILON &&
-                              fabs(rgb2.red - rgb2.blue) < DBL_EPSILON && fabs(rgb2.red - rgb2.green) < DBL_EPSILON)) &&
-      (rgb1.alpha >= 1. - DBL_EPSILON && rgb2.alpha >= 1. - DBL_EPSILON);
-
-  g_autoptr(girara_list_t) rectangles = NULL;
-  bool found_images                   = false;
-
-  /* If in reverse video mode retrieve images */
-  if (priv->recolor.reverse_video == true) {
+static bool recolor(ZathuraRendererPrivate* priv, zathura_page_t* page,
+                     cairo_surface_t* surface, zathura_device_factors_t factors,
+                     bool (*cancelled)(void*), void* context) {
+  const GdkRGBA a = priv->recolor.dark, b = priv->recolor.light;
+  const PageRecolor options = {.dark = {a.red, a.green, a.blue, a.alpha},
+      .light = {b.red, b.green, b.blue, b.alpha}, .hue = priv->recolor.hue,
+      .reverse_video = priv->recolor.reverse_video, .adjust_lightness = priv->recolor.adjust_lightness};
+  g_autoptr(GArray) rectangles = g_array_new(FALSE, FALSE, sizeof(PageRecolorRect));
+  if (options.reverse_video) {
     g_autoptr(girara_list_t) images = zathura_page_images_get(page, NULL);
-    found_images                    = (images != NULL);
-
-    rectangles = girara_list_new_with_free(g_free);
-    if (rectangles == NULL) {
-      found_images = false;
-      girara_warning("Failed to retrieve images.");
-    }
-
-    if (found_images == true) {
-      /* Get images bounding boxes */
-      for (size_t idx = 0; idx != girara_list_size(images); ++idx) {
-        zathura_image_t* image_it = girara_list_nth(images, idx);
-        zathura_rectangle_t* rect = g_try_malloc(sizeof(zathura_rectangle_t));
-        if (rect == NULL) {
-          break;
-        }
-        *rect = recalc_rectangle(page, image_it->position);
-        /* Scale rectangle coordinates by device factors to match surface pixel coordinates */
-        rect->x1 *= device_factors.x;
-        rect->x2 *= device_factors.x;
-        rect->y1 *= device_factors.y;
-        rect->y2 *= device_factors.y;
-        girara_list_append(rectangles, rect);
-      }
+    for (size_t i = 0; images && i < girara_list_size(images); ++i) {
+      const zathura_image_t* image = girara_list_nth(images, i);
+      const zathura_rectangle_t r = recalc_rectangle(page, image->position);
+      const PageRecolorRect rect = {r.x1 * factors.x, r.y1 * factors.y, r.x2 * factors.x, r.y2 * factors.y};
+      g_array_append_val(rectangles, rect);
     }
   }
-
-  if (fast_formula == true) {
-    recolor_fast(priv, page_width, page_height, surface, rectangles, found_images);
-  } else {
-    recolor_slow(priv, page_width, page_height, surface, rectangles, found_images);
-  }
-
-  cairo_surface_mark_dirty(surface);
+  return page_recolor_apply_cancellable(surface, &options, (const PageRecolorRect*)rectangles->data,
+                                         rectangles->len, cancelled, context);
 }
 
 static bool effect_job_cancelled(void* data) {
@@ -872,11 +600,11 @@ static bool effect_job_cancelled(void* data) {
   return priv->about_to_close || render_job_is_stale(job);
 }
 
-static bool postprocess_surface(ZathuraRendererPrivate* priv, zathura_page_t* page, unsigned int width,
-                                unsigned int height, cairo_surface_t* surface, zathura_device_factors_t factors,
+static bool postprocess_surface(ZathuraRendererPrivate* priv, zathura_page_t* page, unsigned int UNUSED(width),
+                                unsigned int UNUSED(height), cairo_surface_t* surface, zathura_device_factors_t factors,
                                 const PageEffects* effects, render_job_t* job) {
   if (priv->recolor.enabled) {
-    recolor(priv, page, width, height, surface, factors);
+    if (!recolor(priv, page, surface, factors, job ? effect_job_cancelled : NULL, job)) { return false; }
   }
   return page_effects_apply_cancellable(surface, effects, job ? effect_job_cancelled : NULL, job);
 }

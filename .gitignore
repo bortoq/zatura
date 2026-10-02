@@ -35,3 +35,8 @@ compile_commands.json
 *.log
 .ycm_extra_conf.py
 _*/
+
+# Generated portable packages and AppImages
+dist/
+
+/subprojects/.wraplock

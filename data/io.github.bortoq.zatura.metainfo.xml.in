@@ -34,7 +34,7 @@
   <url type="homepage">https://github.com/bortoq/zatura</url>
   <url type="bugtracker">https://github.com/bortoq/zatura/issues</url>
   <url type="vcs-browser">https://github.com/bortoq/zatura</url>
-  <url type="help">https://pwmt.org/projects/zathura/documentation/</url>
+  <url type="help">https://github.com/bortoq/zatura/blob/develop/doc/READING.md</url>
   <screenshots>
     <screenshot type="default">
       <image>https://pwmt.org/static/img/zathura-cover.png</image>
@@ -64,6 +64,13 @@
     <control>touch</control>
   </recommends>
   <releases>
+    <release version="2026.10.02" date="2026-10-02">
+      <description>
+        <p>First Zatura release based on Zathura, retaining plugin API 8 and ABI 9.</p>
+        <p>Physical shortcuts, EPUB/FB2 reflow, image controls and per-document viewing preferences.</p>
+        <p>Portable Linux bundles, English documentation and quieter selection notifications.</p>
+      </description>
+    </release>
     <release version="2026.07.18" date="2026-07-18">
       <description>
         <p>Fix crash on error (#992)</p>

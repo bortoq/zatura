@@ -1031,15 +1031,16 @@ set selection-clipboard "primary"
 set selection-keep-highlight false
 
 # selection-notification
-# Показывать уведомление о копировании выделенного текста.
-# Тип: boolean; стандартное значение: True.
+# Показывать уведомление о копировании выделенного текста. false по умолчанию: копирование проходит тихо.
+# Тип: boolean; стандартное значение: False.
 # Можно изменять командой :set без перезапуска.
 # Полное описание из документации (англ., включая допустимые значения):
 # Defines if a notification should be displayed after selecting text.
+#   Selection copying is quiet by default.
 #
 #   * Value type: Boolean
-#   * Default value: true
-set selection-notification true
+#   * Default value: false
+set selection-notification false
 
 # show-directories
 # Показывать каталоги при автодополнении путей.

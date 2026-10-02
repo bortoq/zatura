@@ -36,7 +36,7 @@ static void cb_page_effect_changed(girara_session_t* session, const char* name, 
   const int supplied = *(const int*)value;
   const int bounded = CLAMP(supplied, -100, 100);
   if (bounded != supplied) {
-    girara_notify(session, GIRARA_WARNING, "%s: clamped to %d", name, bounded);
+    girara_debug("%s: clamped to %d", name, bounded);
     girara_setting_set(session, name, &bounded);
     return;
   }
@@ -656,7 +656,7 @@ void config_load_default(zathura_t* zathura) {
   bool_value = false;
   girara_setting_add(gsession, "continuous-hist-save",       &bool_value,  BOOLEAN, false, _("Save history at each page change"), NULL, NULL);
   girara_setting_add(gsession, "selection-clipboard",        "primary",    STRING,  false, _("The clipboard into which mouse-selected data will be written"), NULL, NULL);
-  bool_value = true;
+  bool_value = false;
   girara_setting_add(gsession, "selection-notification",     &bool_value,  BOOLEAN, false, _("Enable notification after selecting text"), NULL, NULL);
   bool_value = false;
   girara_setting_add(gsession, "selection-keep-highlight",   &bool_value,  BOOLEAN, false, _("Keep selection highlighted after mouse release"), NULL, NULL);

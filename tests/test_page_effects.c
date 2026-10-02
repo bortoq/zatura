@@ -80,6 +80,60 @@ static void test_cancellation(void) {
   cairo_surface_destroy(surface);
 }
 
+static uint32_t recolored(uint32_t pixel, PageRecolor options) {
+  cairo_surface_t* surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, 1, 1);
+  *(uint32_t*)cairo_image_surface_get_data(surface) = pixel;
+  cairo_surface_mark_dirty(surface);
+  g_assert_true(page_recolor_apply_cancellable(surface, &options, NULL, 0, NULL, NULL));
+  const uint32_t result = *(uint32_t*)cairo_image_surface_get_data(surface);
+  cairo_surface_destroy(surface);
+  return result;
+}
+
+static void test_recolor_paths(void) {
+  PageRecolor options = {.dark = {1, 1, 1, 1}, .light = {0, 0, 0, 1}};
+  /* Opaque colors without hue take the fast path. */
+  g_assert_cmphex(recolored(0xff000000, options), ==, 0xffffffff);
+  g_assert_cmphex(recolored(0xffffffff, options), ==, 0xff000000);
+  g_assert_cmphex(recolored(0xff808080, options), ==, 0xff7f7f7f);
+  options.adjust_lightness = true;
+  g_assert_cmphex(recolored(0xff808080, options), ==, 0xffbfbfbf);
+  options.adjust_lightness = false;
+  options.hue = true;
+  /* Gray endpoints with hue still use the fast path and retain color. */
+  g_assert_cmphex(recolored(0xffff0000, options), ==, 0xffff9292);
+  /* Colored endpoints with hue use the slow path. */
+  options.dark = (PageColor){0, 0, 1, 1};
+  options.light = (PageColor){1, 0, 0, 1};
+  g_assert_cmphex(recolored(0xff000000, options), ==, 0xff0000ff);
+  g_assert_cmphex(recolored(0xffffffff, options), ==, 0xffff0000);
+  /* Translucent endpoints also use the slow path, preserving legacy alpha. */
+  options.hue = false;
+  options.dark = (PageColor){0, 0, 0, 0.5};
+  options.light = (PageColor){1, 1, 1, 0.25};
+  g_assert_cmphex(recolored(0xff000000, options), ==, 0x80000000);
+  g_assert_cmphex(recolored(0xffffffff, options), ==, 0x40404040);
+}
+
+static void test_recolor_images_and_cancel(void) {
+  cairo_surface_t* surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, 8, 256);
+  cairo_t* cr = cairo_create(surface);
+  cairo_set_source_rgb(cr, 1, 1, 1);
+  cairo_paint(cr);
+  cairo_destroy(cr);
+  PageRecolor options = {.dark = {1, 1, 1, 1}, .light = {0, 0, 0, 1}, .reverse_video = true};
+  const PageRecolorRect image = {0, 0, 2, 2};
+  unsigned calls = 0;
+  g_assert_false(page_recolor_apply_cancellable(surface, &options, &image, 1, cancel_filter, &calls));
+  g_assert_cmpuint(calls, ==, 2);
+  const int stride = cairo_image_surface_get_stride(surface);
+  const unsigned char* pixels = cairo_image_surface_get_data(surface);
+  g_assert_cmphex(*(const uint32_t*)pixels, ==, 0xffffffff); /* Image excluded. */
+  g_assert_cmphex(((const uint32_t*)pixels)[4], ==, 0xff000000);
+  g_assert_cmphex(*(const uint32_t*)(pixels + 200 * stride), ==, 0xffffffff); /* Cancelled rows. */
+  cairo_surface_destroy(surface);
+}
+
 int main(int argc, char* argv[]) {
   g_test_init(&argc, &argv, NULL);
   g_test_add_func("/page-effects/identity", test_identity);
@@ -87,5 +141,7 @@ int main(int argc, char* argv[]) {
   g_test_add_func("/page-effects/alpha-stride", test_alpha_and_stride);
   g_test_add_func("/page-effects/bounds", test_bounds);
   g_test_add_func("/page-effects/cancellation", test_cancellation);
+  g_test_add_func("/page-effects/recolor-paths", test_recolor_paths);
+  g_test_add_func("/page-effects/recolor-images-cancel", test_recolor_images_and_cancel);
   return g_test_run();
 }
