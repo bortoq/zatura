@@ -9,6 +9,7 @@
 #include <girara/types.h>
 
 #include "types.h"
+#include "reflow.h"
 
 #define DOCUMENT_DIGEST_SIZE 16
 
@@ -356,5 +357,13 @@ ZATHURA_PLUGIN_API girara_list_t* zathura_document_get_information(zathura_docum
                                                                    zathura_error_t* error);
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(zathura_document_t, zathura_document_free)
+
+bool zathura_document_is_reflowable(zathura_document_t* document);
+bool zathura_document_reflow(zathura_document_t* document, float width, float height, float font_size,
+                               const zatura_reflow_margins_t* margins);
+bool zathura_document_get_reflow_layout(zathura_document_t* document, float* width, float* height,
+                                        float* font, zatura_reflow_margins_t* margins);
+bool zathura_document_reflow_matches(zathura_document_t* document, float width, float height, float font_size,
+                               const zatura_reflow_margins_t* margins);
 
 #endif // DOCUMENT_H

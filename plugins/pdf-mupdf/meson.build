@@ -1,0 +1,102 @@
+project('zathura-pdf-mupdf', 'c',
+  version: '2026.07.18',
+  meson_version: '>=1',
+  default_options: ['c_std=c23', 'warning_level=3']
+)
+
+version = meson.project_version()
+
+cc = meson.get_compiler('c')
+
+datadir = get_option('datadir')
+prefix = get_option('prefix')
+datadir = get_option('datadir')
+metainfodir = join_paths(datadir, 'metainfo')
+desktopdir = join_paths(datadir, 'applications')
+
+# required dependencies
+
+zathura = dependency('zathura', version: '>=2026.07.18')
+girara = dependency('girara')
+glib = dependency('glib-2.0')
+cairo = dependency('cairo')
+
+build_dependencies = [
+  zathura,
+  girara,
+  glib,
+  cairo,
+]
+
+mupdf_required_version_major = 1
+mupdf_required_version_minor = 26
+mupdf = dependency('mupdf', required: false, version: '>=@0@.@1@'.format(mupdf_required_version_major, mupdf_required_version_minor))
+if not mupdf.found()
+  # normal build of mupdf
+  mupdf = cc.find_library('mupdf', has_headers: ['mupdf/fitz/version.h', 'mupdf/fitz.h', 'mupdf/pdf.h'], required: true)
+  mupdfthird = cc.find_library('mupdf-third')
+  version_check = '''
+#include <mupdf/fitz/version.h>
+
+#if FZ_VERSION_MAJOR < @0@ || (FZ_VERSION_MAJOR == @0@ && FZ_VERSION_MINOR < @1@)
+#error "mupdf @0@.@1@ or newer is requried"
+#endif
+'''.format(mupdf_required_version_major, mupdf_required_version_minor)
+  if not cc.compiles(version_check, dependencies: [mupdf])
+    error('mupdf @0@.@1@ or newer is required'.format(mupdf_required_version_major, mupdf_required_version_minor))
+  endif
+
+  build_dependencies += [mupdf, mupdfthird]
+else
+  # build from Debian's libmupdf-dev
+  build_dependencies += [mupdf]
+endif
+
+if get_option('plugindir') == ''
+  plugindir = zathura.get_variable(pkgconfig: 'plugindir')
+else
+  plugindir = get_option('plugindir')
+endif
+
+# defines
+defines = [
+  '-DVERSION="@0@"'.format(version),
+  '-D_DEFAULT_SOURCE',
+]
+if get_option('pdf').allowed()
+  defines += ['-DHAVE_PDF']
+endif
+
+# compile flags
+flags = [
+  '-Werror=implicit-function-declaration',
+  '-Werror=vla',
+  '-Werror=int-conversion',
+  '-Werror=maybe-uninitialized'
+]
+flags = cc.get_supported_arguments(flags)
+
+sources = files(
+  'zathura-pdf-mupdf/document.c',
+  'zathura-pdf-mupdf/image.c',
+  'zathura-pdf-mupdf/attachment.c',
+  'zathura-pdf-mupdf/index.c',
+  'zathura-pdf-mupdf/links.c',
+  'zathura-pdf-mupdf/page.c',
+  'zathura-pdf-mupdf/plugin.c',
+  'zathura-pdf-mupdf/render.c',
+  'zathura-pdf-mupdf/search.c',
+  'zathura-pdf-mupdf/select.c',
+  'zathura-pdf-mupdf/utils.c'
+)
+
+pdf = shared_module('pdf-mupdf',
+  sources,
+  dependencies: build_dependencies,
+  c_args: defines + flags,
+  install: true,
+  install_dir: plugindir,
+  gnu_symbol_visibility: 'hidden'
+)
+
+subdir('data')

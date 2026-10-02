@@ -96,12 +96,17 @@ void girara_shortcut_free(girara_shortcut_t* shortcut) {
   }
 }
 
+void girara_inputbar_shortcut_free(girara_inputbar_shortcut_t* shortcut) {
+  g_free(shortcut->argument.data);
+  g_free(shortcut);
+}
+
 bool girara_inputbar_shortcut_add(girara_session_t* session, guint modifier, guint key,
                                   girara_shortcut_function_t function, int argument_n, void* argument_data) {
   g_return_val_if_fail(session != NULL, false);
   g_return_val_if_fail(function != NULL, false);
 
-  girara_argument_t argument   = {.n = argument_n, .data = argument_data};
+  girara_argument_t argument   = {.n = argument_n, .data = g_strdup(argument_data)};
   guint implicit_modifiers     = 0;
   const guint physical_keycode = girara_keyval_to_keycode(key, &implicit_modifiers);
   const guint physical_mask    = modifier | implicit_modifiers;
@@ -112,6 +117,7 @@ bool girara_inputbar_shortcut_add(girara_session_t* session, guint modifier, gui
     if ((inp_sh_it->mask == modifier && inp_sh_it->key == key) ||
         (physical_keycode != 0 && inp_sh_it->physical_keycode == physical_keycode &&
          inp_sh_it->physical_mask == physical_mask)) {
+      g_free(inp_sh_it->argument.data);
       inp_sh_it->function         = function;
       inp_sh_it->argument         = argument;
       inp_sh_it->mask             = modifier;

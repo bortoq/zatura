@@ -1,0 +1,2327 @@
+# ZATURA — полный пользовательский конфигурационный файл.
+# Путь: ~/.config/zatura/zaturarc (или $XDG_CONFIG_HOME/zatura/zaturarc).
+# Эта версия соответствует установленной сборке 2026-10-02.
+# Все 113 зарегистрированных параметров перечислены явно.
+# Строки set/map активны; строки с # — комментарии. Приоритет у последних строк.
+# Перезапуск применяет все настройки; :source ~/.config/zatura/zaturarc обновляет
+# изменяемые параметры, но параметры «только при запуске» требуют перезапуска.
+# true/false — логическое значение; строки заключены в кавычки.
+# Координаты окна — логические пиксели GTK; шрифт книги — пункты.
+# Названия клавиш обозначают физические позиции US; раскладка текста не меняется.
+# C — Ctrl, A — Alt, S — Shift; заглавная буква/знак + уже подразумевают Shift.
+# [normal] — чтение, включая полноэкранное окно; [presentation] — презентация;
+# [index] — оглавление; [insert] — режим вставки; [inputbar] — строка команд.
+# Для выхода из полноэкранного окна используется F11; отдельного fullscreen-режима нет.
+# Если книга смещается, Space/Shift+Space и Ctrl+f/Ctrl+b теперь переходят точно
+# между разворотами. Колесо и j/k по-прежнему прокручивают мелкими шагами.
+
+# =================== ВСЕ НАСТРОЙКИ ===================
+
+# abort-clear-search
+# При Esc/abort скрывать подсветку поиска. Сам запрос не удаляется.
+# Тип: boolean; стандартное значение: True.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Defines if the search results should be cleared on abort.
+#
+#   * Value type: Boolean
+#   * Default value: true
+set abort-clear-search true
+
+# adjust-open
+# Подгонка при открытии: best-fit — целая страница, width — ширина, none — без подгонки. История файла может иметь приоритет. Книги автоматически переразмечаются.
+# Тип: string; стандартное значение: 'best-fit'.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Defines which auto adjustment mode should be used if a document is loaded.
+#   Possible options are "best-fit" and "width".
+#
+#   * Value type: String
+#   * Default value: best-fit
+set adjust-open "best-fit"
+
+# advance-pages-per-row
+# Переход next/previous на число страниц в строке; true перелистывает разворот. Числовой префикс задаёт явное количество страниц.
+# Тип: boolean; стандартное значение: True.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Defines if the number of pages per row should be honored when advancing a page.
+#
+#   * Value type: Boolean
+#   * Default value: false
+set advance-pages-per-row true
+
+# completion-bg
+# Цвет фона списка автодополнения. Форматы: #RRGGBB, rgb(), rgba(); альфа 0…1. Не меняет цвет страниц.
+# Тип: string; стандартное значение: '#232323'.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Defines the background color that is used for command line completion
+#   entries
+#
+#   * Value type: String
+#   * Default value: #232323
+set completion-bg "#232323"
+
+# completion-fg
+# Цвет текста/элемента списка автодополнения. Форматы: #RRGGBB, rgb(), rgba(); альфа 0…1. Не меняет цвет страниц.
+# Тип: string; стандартное значение: '#DDDDDD'.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Defines the foreground color that is used for command line completion
+#   entries
+#
+#   * Value type: String
+#   * Default value: #DDDDDD
+set completion-fg "#DDDDDD"
+
+# completion-group-bg
+# Цвет фона заголовков групп автодополнения. Форматы: #RRGGBB, rgb(), rgba(); альфа 0…1. Не меняет цвет страниц.
+# Тип: string; стандартное значение: '#000000'.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Defines the background color that is used for command line completion
+#   group elements
+#
+#   * Value type: String
+#   * Default value: #000000
+set completion-group-bg "#000000"
+
+# completion-group-fg
+# Цвет текста/элемента заголовков групп автодополнения. Форматы: #RRGGBB, rgb(), rgba(); альфа 0…1. Не меняет цвет страниц.
+# Тип: string; стандартное значение: '#DEDEDE'.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Defines the foreground color that is used for command line completion
+#   group elements
+#
+#   * Value type: String
+#   * Default value: #DEDEDE
+set completion-group-fg "#DEDEDE"
+
+# completion-highlight-bg
+# Цвет фона выбранной строки автодополнения. Форматы: #RRGGBB, rgb(), rgba(); альфа 0…1. Не меняет цвет страниц.
+# Тип: string; стандартное значение: '#9FBC00'.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Defines the background color that is used for the current command line
+#   completion element
+#
+#   * Value type: String
+#   * Default value: #9FBC00
+set completion-highlight-bg "#9FBC00"
+
+# completion-highlight-fg
+# Цвет текста/элемента выбранной строки автодополнения. Форматы: #RRGGBB, rgb(), rgba(); альфа 0…1. Не меняет цвет страниц.
+# Тип: string; стандартное значение: '#232323'.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Defines the foreground color that is used for the current command line
+#   completion element
+#
+#   * Value type: String
+#   * Default value: #232323
+set completion-highlight-fg "#232323"
+
+# continuous-hist-save
+# Сохранять позицию в базе при каждом переходе, а не только при закрытии.
+# Тип: boolean; стандартное значение: False.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Tells zatura whether to save document history at each page change or only when
+#   closing a document.
+#
+#   * Value type: Boolean
+#   * Default value: false
+set continuous-hist-save false
+
+# database
+# База истории и закладок: sqlite — постоянное хранение, null — без базы. Выбирается при запуске.
+# Тип: string; стандартное значение: 'sqlite'.
+# Только при запуске (перезапустите программу).
+# Полное описание из документации (англ., включая допустимые значения):
+# Defines the database backend to use for bookmarks and input history. Possible
+#   values are "sqlite" and "null". If "null" is used, bookmarks and
+#   input history will not be stored.
+#
+#   * Value type: String
+#   * Default value: sqlite
+set database "sqlite"
+
+# dbus-raise-window
+# Разрешать поднимать окно по обращению через D-Bus.
+# Тип: boolean; стандартное значение: True.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Defines whether zatura's window should be raised when receiving certain
+#   commands via D-Bus.
+#
+#   * Value type: Boolean
+#   * Default value: true
+set dbus-raise-window true
+
+# dbus-service
+# Включить интерфейс D-Bus для внешнего управления экземпляром.
+# Тип: boolean; стандартное значение: True.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# En/Disables the D-Bus service. If the services is disabled, SyncTeX forward
+#   synchronization is not available.
+#
+#   * Value type: Boolean
+#   * Default value: true
+set dbus-service true
+
+# default-bg
+# Цвет фона интерфейса по умолчанию. Форматы: #RRGGBB, rgb(), rgba(); альфа 0…1. Не меняет цвет страниц.
+# Тип: string; стандартное значение: '#000000'.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Defines the default background color
+#
+#   * Value type: String
+#   * Default value: #000000
+set default-bg "#000000"
+
+# default-fg
+# Цвет текста/элемента интерфейса по умолчанию. Форматы: #RRGGBB, rgb(), rgba(); альфа 0…1. Не меняет цвет страниц.
+# Тип: string; стандартное значение: '#DDDDDD'.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Defines the default foreground color
+#
+#   * Value type: String
+#   * Default value: #DDDDDD
+set default-fg "#DDDDDD"
+
+# double-click-follow
+# Для перехода по ссылке мышью требовать двойной щелчок; false — один щелчок.
+# Тип: boolean; стандартное значение: True.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Defines whether double or single click on a link should trigger follow.
+#
+#   * Value type: Boolean
+#   * Default value: true
+set double-click-follow true
+
+# exec-command
+# Команда внешнего редактора, выполняемая exec. Пустая строка не задаёт программу. Команда запускается в оболочке; подстановки перечислены ниже.
+# Тип: string; стандартное значение: ''.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Defines a command the should be prepended to any command run with exec.
+#
+#   * Value type: String
+#   * Default value:
+set exec-command ""
+
+# filemonitor
+# Наблюдение за изменением файла: glib; доступные альтернативы зависят от сборки. none — без наблюдения. Выбирается при запуске.
+# Тип: string; стандартное значение: 'glib'.
+# Только при запуске (перезапустите программу).
+# Полное описание из документации (англ., включая допустимые значения):
+# Defines the file monitor backend used to check for changes in files. Possible
+#   values are "glib", "signal" (if signal handling is supported), and "noop". The
+#   "noop" file monitor does not trigger reloads.
+#
+#   * Value type: String
+#   * Default value: glib
+set filemonitor "glib"
+
+# first-page-column
+# Колонка первой страницы для каждого числа колонок. 1:2: первая страница слева при одной колонке, справа при двух. Для разворота с двумя страницами с самого начала задайте 1:1.
+# Тип: string; стандартное значение: '1:2'.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Defines the column in which the first page will be displayed.
+#   This setting is stored separately for every value of pages-per-row according to
+#   the following pattern <1 page per row>:[<2 pages per row>[: ...]]. The last
+#   value in the list will be used for all other number of pages per row if not set
+#   explicitly.
+#
+#   Per default, the first column is set to 2 for double-page layout, i.e. the value
+#   is set to 1:2. A value of 1:1:3 would put the first page in dual-page layout in
+#   the first column, and for layouts with more columns the first page would be put
+#   in the 3rd column.
+#
+#   * Value type: String
+#   * Default value: 1:2
+set first-page-column "1:2"
+
+# font
+# Шрифт интерфейса, строки команд, уведомлений и списка. Формат Pango: семейство стиль размер. На текст EPUB/FB2 не влияет.
+# Тип: string; стандартное значение: 'monospace normal 9'.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Defines the font that will be used
+#
+#   * Value type: String
+#   * Default value: monospace normal 9
+set font "monospace normal 9"
+
+# guioptions
+# Видимые панели: s — строка состояния; h — горизонтальная прокрутка; v — вертикальная; пустая строка — без этих панелей.
+# Тип: string; стандартное значение: 's'.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Shows or hides GUI elements.
+#   If it contains 'c', the command line is displayed.
+#   If it contains 's', the statusbar is displayed.
+#   If it contains 'h', the horizontal scrollbar is displayed.
+#   If it contains 'v', the vertical scrollbar is displayed.
+#
+#   * Value type: String
+#   * Default value: s
+set guioptions "s"
+
+# highlight-active-color
+# Цвет активного совпадения поиска/выбранной ссылки, с альфа-каналом.
+# Тип: string; стандартное значение: 'rgba(0,188,0,0.5)'.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Defines the color that is used to show the current selected highlighted element
+#   (e.g: current search result)
+#
+#   * Value type: String
+#   * Default value: rgba(0,188,0,0.5)
+set highlight-active-color "rgba(0,188,0,0.5)"
+
+# highlight-color
+# Цвет подсветки найденных совпадений и номеров ссылок, с альфа-каналом.
+# Тип: string; стандартное значение: 'rgba(159,251,0,0.5)'.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Defines the color that is used for highlighting parts of the document (e.g.:
+#   show search results)
+#
+#   * Value type: String
+#   * Default value: rgba(159,251,0,0.5)
+set highlight-color "rgba(159,251,0,0.5)"
+
+# highlight-fg
+# Цвет текста поверх подсветки ссылок.
+# Тип: string; стандартное значение: 'rgba(0,0,0,0.5)'.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Defines the color that is used for text when highlighting parts of the
+#   document (e.g.: number for links).
+#
+#   * Value type: String
+#   * Default value: rgba(0,0,0,0.5)
+set highlight-fg "rgba(0,0,0,0.5)"
+
+# highlighter-modifier
+# Модификатор выделения прямоугольной области: shift, ctrl, alt или super. Текстовое выделение выполняется обычным перетаскиванием.
+# Тип: string; стандартное значение: 'shift'.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Defines the modifier that needs to be pressed together with the left mouse button
+#   to draw the highlighter. Possible values are "shift", "ctrl" and "alt".
+#
+#   * Value type: String
+#   * Default value: shift
+set highlighter-modifier "shift"
+
+# incremental-search
+# Обновлять поиск во время ввода запроса. false — после подтверждения; большой документ может замедлять интерактивный поиск.
+# Тип: boolean; стандартное значение: False.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# En/Disables incremental search (search while typing).
+#
+#   * Value type: Boolean
+#   * Default value: true
+set incremental-search false
+
+# index-active-bg
+# Цвет фона выбранного пункта оглавления. Форматы: #RRGGBB, rgb(), rgba(); альфа 0…1. Не меняет цвет страниц.
+# Тип: string; стандартное значение: '#9FBC00'.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Define the background color of the selected element in index mode.
+#
+#   * Value type: String
+#   * Default value: #9FBC00
+set index-active-bg "#9FBC00"
+
+# index-active-fg
+# Цвет текста/элемента выбранного пункта оглавления. Форматы: #RRGGBB, rgb(), rgba(); альфа 0…1. Не меняет цвет страниц.
+# Тип: string; стандартное значение: '#232323'.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Defines the foreground color of the selected element in index mode.
+#
+#   * Value type: String
+#   * Default value: #232323
+set index-active-fg "#232323"
+
+# index-bg
+# Цвет фона оглавления. Форматы: #RRGGBB, rgb(), rgba(); альфа 0…1. Не меняет цвет страниц.
+# Тип: string; стандартное значение: '#232323'.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Define the background color of the index mode.
+#
+#   * Value type: String
+#   * Default value: #232323
+set index-bg "#232323"
+
+# index-fg
+# Цвет текста/элемента оглавления. Форматы: #RRGGBB, rgb(), rgba(); альфа 0…1. Не меняет цвет страниц.
+# Тип: string; стандартное значение: '#DDDDDD'.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Defines the foreground color of the index mode.
+#
+#   * Value type: String
+#   * Default value: #DDDDDD
+set index-fg "#DDDDDD"
+
+# inputbar-bg
+# Цвет фона строки команд. Форматы: #RRGGBB, rgb(), rgba(); альфа 0…1. Не меняет цвет страниц.
+# Тип: string; стандартное значение: '#131313'.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Defines the background color for the inputbar
+#
+#   * Value type: String
+#   * Default value: #131313
+set inputbar-bg "#131313"
+
+# inputbar-fg
+# Цвет текста/элемента строки команд. Форматы: #RRGGBB, rgb(), rgba(); альфа 0…1. Не меняет цвет страниц.
+# Тип: string; стандартное значение: '#9FBC00'.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Defines the foreground color for the inputbar
+#
+#   * Value type: String
+#   * Default value: #9FBC00
+set inputbar-fg "#9FBC00"
+
+# jumplist-size
+# Число позиций в истории переходов; неотрицательное целое. 0 отключает хранение переходов.
+# Тип: uint; стандартное значение: 2000.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Maximum number of positions to remember in the jumplist.
+#
+#   * Value type: Integer
+#   * Default value: 2000
+set jumplist-size 2000
+
+# link-hadjust
+# Выравнивать цель внутренней ссылки по горизонтали, а не оставлять прежний сдвиг.
+# Тип: boolean; стандартное значение: True.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# En/Disables aligning to the left internal link targets, for example from the
+#   index.
+#
+#   * Value type: Boolean
+#   * Default value: true
+set link-hadjust true
+
+# link-zoom
+# При переходе по ссылке разрешать указанный в документе масштаб.
+# Тип: boolean; стандартное значение: True.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# En/Disables the ability of changing zoom when following links.
+#
+#   * Value type: Boolean
+#   * Default value: true
+set link-zoom true
+
+# n-completion-items
+# Максимальное число видимых строк автодополнения. Значение применяется при запуске.
+# Тип: uint; стандартное значение: 15.
+# Только при запуске (перезапустите программу).
+# Полное описание из документации (англ., включая допустимые значения):
+# Defines the maximum number of displayed completion entries.
+#
+#   * Value type: Integer
+#   * Default value: 15
+set n-completion-items 15
+
+# nohlsearch
+# Отключить подсветку найденных совпадений по умолчанию; команды hlsearch/nohlsearch переключают её.
+# Тип: boolean; стандартное значение: False.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Dis/Enables the highlighting of search results.
+#
+#   * Value type: Boolean
+#   * Default value: false
+set nohlsearch false
+
+# notification-bg
+# Цвет фона информационного уведомления. Форматы: #RRGGBB, rgb(), rgba(); альфа 0…1. Не меняет цвет страниц.
+# Тип: string; стандартное значение: '#FFFFFF'.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Defines the background color for a notification
+#
+#   * Value type: String
+#   * Default value: #FFFFFF
+set notification-bg "#FFFFFF"
+
+# notification-error-bg
+# Цвет фона уведомления об ошибке. Форматы: #RRGGBB, rgb(), rgba(); альфа 0…1. Не меняет цвет страниц.
+# Тип: string; стандартное значение: '#FF1212'.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Defines the background color for an error notification
+#
+#   * Value type: String
+#   * Default value: #FF1212
+set notification-error-bg "#FF1212"
+
+# notification-error-fg
+# Цвет текста/элемента уведомления об ошибке. Форматы: #RRGGBB, rgb(), rgba(); альфа 0…1. Не меняет цвет страниц.
+# Тип: string; стандартное значение: '#FFFFFF'.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Defines the foreground color for an error notification
+#
+#   * Value type: String
+#   * Default value: #FFFFFF
+set notification-error-fg "#FFFFFF"
+
+# notification-fg
+# Цвет текста/элемента информационного уведомления. Форматы: #RRGGBB, rgb(), rgba(); альфа 0…1. Не меняет цвет страниц.
+# Тип: string; стандартное значение: '#000000'.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Defines the foreground color for a notification
+#
+#   * Value type: String
+#   * Default value: #000000
+set notification-fg "#000000"
+
+# notification-warning-bg
+# Цвет фона предупреждения. Форматы: #RRGGBB, rgb(), rgba(); альфа 0…1. Не меняет цвет страниц.
+# Тип: string; стандартное значение: '#F3F000'.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Defines the background color for a warning notification
+#
+#   * Value type: String
+#   * Default value: #FFF712
+set notification-warning-bg "#F3F000"
+
+# notification-warning-fg
+# Цвет текста/элемента предупреждения. Форматы: #RRGGBB, rgb(), rgba(); альфа 0…1. Не меняет цвет страниц.
+# Тип: string; стандартное значение: '#000000'.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Defines the foreground color for a warning notification
+#
+#   * Value type: String
+#   * Default value: #FFFFFF
+set notification-warning-fg "#000000"
+
+# open-first-page
+# При открытии всегда начинать с первой страницы, игнорируя сохранённую страницу истории.
+# Тип: boolean; стандартное значение: False.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Always open documents on the first page. If disabled, zatura will jump to the
+#   last remembered position.
+#
+#   * Value type: Boolean
+#   * Default value: false
+set open-first-page false
+
+# open-link-confirm
+# Спрашивать подтверждение перед открытием внешней ссылки.
+# Тип: boolean; стандартное значение: True.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Show a confirmation dialog when opening external links.
+#
+#   * Value type: Boolean
+#   * Default value: true
+set open-link-confirm true
+
+# page-brightness
+# Яркость изображения страницы: целое -100…100, 0 — исходная. 3 уменьшает, 4 увеличивает. Печать и экспорт оригинала не меняются.
+# Тип: int; стандартное значение: 0.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Display-only page adjustments, independently of recolor. Each setting is an
+#   integer from -100 to 100, with default 0. Out-of-range values are clamped.
+#   Positive brightness lightens the page; positive contrast increases contrast;
+#   positive gamma lifts midtones; saturation -100 makes the page grayscale.
+#   Printing and original image/attachment export retain original colors.
+#
+#   The default physical number-row bindings follow mpv: 1/2 decrease/increase
+#   contrast, 3/4 brightness, 5/6 gamma, and 7/8 saturation, by one unit per press.
+#   They work in normal and fullscreen windows and in presentation. Command-bar
+#   text input is unaffected. These bindings take priority over numeric command
+#   prefixes; use ``unmap 1`` through ``unmap 8`` to restore prefix behavior.
+#
+#   Available mapping functions are ``adjust_brightness``, ``adjust_contrast``,
+#   ``adjust_gamma``, and ``adjust_saturation`` with ``up`` or ``down`` arguments.
+#   ``reset_page_effects`` restores all four values to 0 without changing recolor.
+#   Example configuration::
+#
+#     set page-gamma 20
+#     set page-saturation -100
+#     map <C-0> reset_page_effects
+#     map <C-b> adjust_brightness down
+set page-brightness 0
+
+# page-cache-size
+# Количество обработанных страниц в кэше. 0 заменяется стандартным значением. Дополнительно есть отдельный кэш исходных пикселей до 128 МиБ; это не общий предел памяти программы.
+# Тип: uint; стандартное значение: 16.
+# Только при запуске (перезапустите программу).
+# Полное описание из документации (англ., включая допустимые значения):
+# Defines the maximum number of pages that could be kept in the page cache. When
+#   the cache is full and a new page that isn't cached becomes visible, the least
+#   recently viewed page in the cache will be evicted to make room for the new one.
+#   Large values for this variable are NOT recommended, because this will lead to
+#   consuming a significant portion of the system memory.
+#
+#   * Value type: Integer
+#   * Default value: 15
+set page-cache-size 16
+
+# page-contrast
+# Контраст изображения: целое -100…100, 0 — исходный. 1 уменьшает, 2 увеличивает. Печать и экспорт оригинала не меняются.
+# Тип: int; стандартное значение: 0.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Display-only page adjustments, independently of recolor. Each setting is an
+#   integer from -100 to 100, with default 0. Out-of-range values are clamped.
+#   Positive brightness lightens the page; positive contrast increases contrast;
+#   positive gamma lifts midtones; saturation -100 makes the page grayscale.
+#   Printing and original image/attachment export retain original colors.
+#
+#   The default physical number-row bindings follow mpv: 1/2 decrease/increase
+#   contrast, 3/4 brightness, 5/6 gamma, and 7/8 saturation, by one unit per press.
+#   They work in normal and fullscreen windows and in presentation. Command-bar
+#   text input is unaffected. These bindings take priority over numeric command
+#   prefixes; use ``unmap 1`` through ``unmap 8`` to restore prefix behavior.
+#
+#   Available mapping functions are ``adjust_brightness``, ``adjust_contrast``,
+#   ``adjust_gamma``, and ``adjust_saturation`` with ``up`` or ``down`` arguments.
+#   ``reset_page_effects`` restores all four values to 0 without changing recolor.
+#   Example configuration::
+#
+#     set page-gamma 20
+#     set page-saturation -100
+#     map <C-0> reset_page_effects
+#     map <C-b> adjust_brightness down
+set page-contrast 0
+
+# page-gamma
+# Гамма: целое -100…100, 0 — исходная. 5 уменьшает, 6 увеличивает. Положительное значение осветляет полутона.
+# Тип: int; стандартное значение: 0.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Display-only page adjustments, independently of recolor. Each setting is an
+#   integer from -100 to 100, with default 0. Out-of-range values are clamped.
+#   Positive brightness lightens the page; positive contrast increases contrast;
+#   positive gamma lifts midtones; saturation -100 makes the page grayscale.
+#   Printing and original image/attachment export retain original colors.
+#
+#   The default physical number-row bindings follow mpv: 1/2 decrease/increase
+#   contrast, 3/4 brightness, 5/6 gamma, and 7/8 saturation, by one unit per press.
+#   They work in normal and fullscreen windows and in presentation. Command-bar
+#   text input is unaffected. These bindings take priority over numeric command
+#   prefixes; use ``unmap 1`` through ``unmap 8`` to restore prefix behavior.
+#
+#   Available mapping functions are ``adjust_brightness``, ``adjust_contrast``,
+#   ``adjust_gamma``, and ``adjust_saturation`` with ``up`` or ``down`` arguments.
+#   ``reset_page_effects`` restores all four values to 0 without changing recolor.
+#   Example configuration::
+#
+#     set page-gamma 20
+#     set page-saturation -100
+#     map <C-0> reset_page_effects
+#     map <C-b> adjust_brightness down
+set page-gamma 0
+
+# page-h-padding
+# Горизонтальный промежуток между страницами в логических пикселях; задавайте неотрицательное целое.
+# Тип: int; стандартное значение: 1.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Horizontal page padding defines the horizontal gap in pixels between each rendered page.
+#
+#   * Value type: Integer
+#   * Default value: 1
+set page-h-padding 1
+
+# page-mode
+# Выравнивание размеров фиксированных страниц: none, equal_width или equal_height. Это не число колонок.
+# Тип: string; стандартное значение: 'none'.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Defines the default page sizing mode when opening a document. Possible options
+#   are "none", "equal_width", and "equal_height". When set to "equal_width", all
+#   pages are scaled to match the width of the current page. When set to
+#   "equal_height", all pages are scaled to match the height of the current page.
+#
+#   * Value type: String
+#   * Default value: none
+set page-mode "none"
+
+# page-right-to-left
+# Располагать страницы в строке справа налево; для книг с таким направлением чтения.
+# Тип: boolean; стандартное значение: False.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Defines whether pages in multi-column view should start from the right side.
+#
+#   * Value type: Boolean
+#   * Default value: false
+set page-right-to-left false
+
+# page-saturation
+# Насыщенность: целое -100…100; -100 — серый, 0 — исходный. 7 уменьшает, 8 увеличивает.
+# Тип: int; стандартное значение: 0.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Display-only page adjustments, independently of recolor. Each setting is an
+#   integer from -100 to 100, with default 0. Out-of-range values are clamped.
+#   Positive brightness lightens the page; positive contrast increases contrast;
+#   positive gamma lifts midtones; saturation -100 makes the page grayscale.
+#   Printing and original image/attachment export retain original colors.
+#
+#   The default physical number-row bindings follow mpv: 1/2 decrease/increase
+#   contrast, 3/4 brightness, 5/6 gamma, and 7/8 saturation, by one unit per press.
+#   They work in normal and fullscreen windows and in presentation. Command-bar
+#   text input is unaffected. These bindings take priority over numeric command
+#   prefixes; use ``unmap 1`` through ``unmap 8`` to restore prefix behavior.
+#
+#   Available mapping functions are ``adjust_brightness``, ``adjust_contrast``,
+#   ``adjust_gamma``, and ``adjust_saturation`` with ``up`` or ``down`` arguments.
+#   ``reset_page_effects`` restores all four values to 0 without changing recolor.
+#   Example configuration::
+#
+#     set page-gamma 20
+#     set page-saturation -100
+#     map <C-0> reset_page_effects
+#     map <C-b> adjust_brightness down
+set page-saturation 0
+
+# page-thumbnail-size
+# Максимальная площадь миниатюры в пикселях (ширина × высота), а не длина стороны и не байты. 4194304 пикселя ARGB занимают примерно 16 МиБ. 0 включает стандартный размер.
+# Тип: uint; стандартное значение: 4194304.
+# Только при запуске (перезапустите программу).
+# Полное описание из документации (англ., включая допустимые значения):
+# Defines the maximum size in pixels of the thumbnail that could be kept in the
+#   thumbnail cache per page. The thumbnail is scaled for a quick preview during
+#   zooming before the page is rendered. When the page is rendered, the result is
+#   saved as the thumbnail only if the size is no more than this value. A larger
+#   value increases quality but introduces longer delay in zooming and uses more
+#   system memory.
+#
+#   * Value type: Integer
+#   * Default value: 4194304 (4M)
+set page-thumbnail-size 4194304
+
+# page-v-padding
+# Вертикальный промежуток между строками страниц в логических пикселях; задавайте неотрицательное целое.
+# Тип: int; стандартное значение: 1.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Vertical page padding defines the vertical gap in pixels between each rendered page.
+#
+#   * Value type: Integer
+#   * Default value: 1
+set page-v-padding 1
+
+# pages-per-row
+# Число страниц в строке, минимум 1. 2 — разворот. d переключает 1/2. Книги без фиксированной верстки переразмечаются под окно.
+# Тип: uint; стандартное значение: 1.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Defines the number of pages that are rendered next to each other in a row.
+#
+#   * Value type: Integer
+#   * Default value: 1
+set pages-per-row 1
+
+# recolor
+# Перекрашивание страниц в заданные светлый/тёмный цвета. Ctrl+r переключает. Работает вместе с регулировками изображения.
+# Тип: boolean; стандартное значение: False.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# En/Disables recoloring
+#
+#   * Value type: Boolean
+#   * Default value: false
+set recolor false
+
+# recolor-adjust-lightness
+# При перекрашивании дополнительно корректировать светлоту; особенно полезно вместе с сохранением оттенка.
+# Тип: boolean; стандартное значение: False.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# En/Disables adjusting lightness when recoloring.
+#
+#   * Value type: Boolean
+#   * Default value: false
+set recolor-adjust-lightness false
+
+# recolor-darkcolor
+# Цвет, которым заменяются тёмные области исходной страницы при recolor=true.
+# Тип: string; стандартное значение: '#FFFFFF'.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Defines the color value that is used to represent dark colors in recoloring mode
+#
+#   * Value type: String
+#   * Default value: #FFFFFF
+set recolor-darkcolor "#FFFFFF"
+
+# recolor-keephue
+# При перекрашивании сохранять исходный цветовой тон, меняя светлоту.
+# Тип: boolean; стандартное значение: False.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# En/Disables keeping original hue when recoloring
+#
+#   * Value type: Boolean
+#   * Default value: false
+set recolor-keephue false
+
+# recolor-lightcolor
+# Цвет, которым заменяются светлые области исходной страницы при recolor=true.
+# Тип: string; стандартное значение: '#000000'.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Defines the color value that is used to represent light colors in recoloring mode
+#
+#   * Value type: String
+#   * Default value: #000000
+set recolor-lightcolor "#000000"
+
+# recolor-reverse-video
+# При перекрашивании сохранять цвета обнаруженных изображений, меняя остальные области страницы.
+# Тип: boolean; стандартное значение: False.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Defines if original image colors should be kept while recoloring.
+#
+#   * Value type: Boolean
+#   * Default value: false
+set recolor-reverse-video false
+
+# reflow-font-size
+# Базовый размер текста EPUB/FB2/XHTML в пунктах: 6…72, по умолчанию 12. Ctrl+- уменьшает, Ctrl++/Ctrl+= увеличивает. Меняется разбиение на страницы, сохраняется текущая текстовая позиция. На PDF/DjVu не влияет; фиксированные размеры в CSS издателя могут иметь приоритет.
+# Тип: int; стандартное значение: 12.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Default text font size in points for reflowable documents such as FB2,
+#   EPUB and XHTML. The default is 12; values are clamped to 6 through 72.
+#   ``Ctrl+-`` decreases it by one point; ``Ctrl++`` or ``Ctrl+=`` increases
+#   it. Numeric keypad plus/minus work too. Physical-key matching remains
+#   independent of the active keyboard layout. Fixed-layout documents are
+#   unaffected.
+#
+#   Reflowable pages are repaginated to fit the viewport and current number
+#   of columns. Switching to two columns fits both pages automatically;
+#   window resizing and font changes trigger another layout. The current
+#   text location is mapped through the new pagination.
+#
+#   Example configuration::
+#
+#     set reflow-font-size 14
+#     map <C-minus> adjust_book_font down
+#     map <C-plus> adjust_book_font up
+set reflow-font-size 12
+
+# reflow-margin-bottom
+# Нижнее поле текста книги в логических пикселях GTK: 0…1000, по умолчанию 4. Меняет верстку без перезапуска. Размер поля не обязан совпадать с верхним. Слишком большие поля автоматически уменьшаются, чтобы осталось место для текста.
+# Тип: int; стандартное значение: 4.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Bottom book page margin, in logical GTK pixels. Default: 4. Range: 0 through
+#   1000. Independent of the top margin, with the same repagination and size
+#   limits as ``reflow-margin-top``.
+set reflow-margin-bottom 4
+
+# reflow-margin-inner
+# Боковое поле со стороны середины разворота, логические пиксели GTK: 0…1000, по умолчанию 4. На левой странице это правое поле, на правой — левое. Промежуток между текстами двух страниц равен 2 × это поле + page-h-padding. В одной колонке боковые поля задает reflow-margin-outer.
+# Тип: int; стандартное значение: 4.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Inside margin towards the middle of a two-page spread, in logical GTK
+#   pixels. Default: 4. Range: 0 through 1000. The distance between texts in
+#   a spread is twice this margin plus ``page-h-padding``. One-column layouts
+#   use ``reflow-margin-outer`` for both sides. Page spacing does not change.
+set reflow-margin-inner 4
+
+# reflow-margin-outer
+# Боковое поле со стороны внешнего края разворота, логические пиксели GTK: 0…1000, по умолчанию 4. На левой странице это левое поле, на правой — правое. В одной колонке задает оба боковых поля. Учитываются first-page-column и направление RTL.
+# Тип: int; стандартное значение: 4.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Outside margin of a two-page spread, in logical GTK pixels. Default: 4.
+#   Range: 0 through 1000. Applies to the left edge of the left page and the
+#   right edge of the right page. In one column it applies to both sides.
+#   Mirroring follows ``first-page-column`` and ``page-right-to-left``.
+set reflow-margin-outer 4
+
+# reflow-margin-top
+# Верхнее поле текста книги в логических пикселях GTK: 0…1000, по умолчанию 4. Меняет верстку EPUB/FB2/XHTML; на фиксированные PDF/DjVu не влияет. Значения, оставляющие менее 72 пунктов для текста, автоматически уменьшаются.
+# Тип: int; стандартное значение: 4.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Top page margin for reflowable EPUB, FB2 (including ZIP), and XHTML books,
+#   in logical GTK pixels. Default: 4. Range: 0 through 1000. Changes repaginate
+#   the open book without a restart and preserve the current reading location.
+#   Fixed-layout PDF, DjVu, and images are unaffected. Publisher/user CSS page
+#   margins and root body padding are replaced; paragraph spacing, indentation,
+#   and the rest of the book styling remain in effect. Oversized margins are
+#   reduced proportionally to retain at least 72 points of text area per axis.
+set reflow-margin-top 4
+
+# render-loading
+# Показывать надпись Loading до готовности изображения страницы.
+# Тип: boolean; стандартное значение: True.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Defines if the "Loading..." text should be displayed if a page is rendered.
+#
+#   * Value type: Boolean
+#   * Default value: true
+set render-loading true
+
+# render-loading-bg
+# Цвет фона надписи загрузки. Форматы: #RRGGBB, rgb(), rgba(); альфа 0…1.
+# Тип: string; стандартное значение: '#FFFFFF'.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Defines the background color that is used for the "Loading..." text.
+#
+#   * Value type: String
+#   * Default value: #FFFFFF
+set render-loading-bg "#FFFFFF"
+
+# render-loading-fg
+# Цвет текста/элемента надписи загрузки. Форматы: #RRGGBB, rgb(), rgba(); альфа 0…1.
+# Тип: string; стандартное значение: '#000000'.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Defines the foreground color that is used for the "Loading..." text.
+#
+#   * Value type: String
+#   * Default value: #000000
+set render-loading-fg "#000000"
+
+# save-view-settings
+# Сохранять дополнительные настройки просмотра отдельно для каждого документа при закрытии/выходе: эффекты изображения, перекрашивание, размер шрифта и поля книг, режим одной страницы, промежутки, панели и часы. true — включено по умолчанию. Работает с database=sqlite; null отключает историю. Сохраненные значения имеют приоритет над конфигурацией; новые файлы используют конфигурацию. false оставляет только базовую историю страницы/масштаба/поворота/колонок. Принудительное завершение процесса не выполняет сохранение.
+# Тип: boolean; стандартное значение: True.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Save and restore additional viewing preferences for each document in the
+#   SQLite history database. Default: true. Includes image effects, recoloring,
+#   text size, margins, single-page mode, page spacing, panel visibility and clock
+#   state. Saved preferences override configuration defaults for known files;
+#   new files use the configuration. Base page/zoom/rotation history is retained
+#   when false. ``database=null`` disables persistent history altogether. Normal
+#   closure and exit save preferences; forced process termination cannot do so.
+set save-view-settings true
+
+# scroll-full-overlap
+# Доля перекрытия при полной прокрутке фиксированных страниц: 0…1, 0 — полный экран. Для подогнанных книг Space/Ctrl+f перелистывают точный разворот.
+# Тип: float; стандартное значение: 0.0.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Defines the proportion of the current viewing area that should be
+#   visible after scrolling a full page.
+#
+#   * Value type: Float
+#   * Default value: 0
+set scroll-full-overlap 0.0
+
+# scroll-hstep
+# Шаг горизонтальной прокрутки в логических пикселях. Отрицательное значение использует scroll-step.
+# Тип: float; стандартное значение: 40.0.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Defines the horizontal step size of scrolling by calling the scroll command once
+#
+#   * Value type: Float
+#   * Default value: -1
+set scroll-hstep 40.0
+
+# scroll-page-aware
+# При обычной прокрутке привязывать переход к границе страницы. Полное перелистывание подогнанных книг уже привязано к развороту.
+# Тип: boolean; стандартное значение: False.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Defines if scrolling by half or full pages stops at page boundaries.
+#
+#   * Value type: Boolean
+#   * Default value: false
+set scroll-page-aware false
+
+# scroll-step
+# Шаг обычной вертикальной прокрутки в логических пикселях; положительное число.
+# Тип: float; стандартное значение: 40.0.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Defines the step size of scrolling by calling the scroll command once
+#
+#   * Value type: Float
+#   * Default value: 40
+set scroll-step 40.0
+
+# scroll-wrap
+# За последней страницей переходить к началу, перед первой — к концу. false останавливает движение на границе.
+# Тип: boolean; стандартное значение: False.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Defines if the last/first page should be wrapped
+#
+#   * Value type: Boolean
+#   * Default value: false
+set scroll-wrap false
+
+# scrollbar-bg
+# Цвет фона полосы прокрутки. Форматы: #RRGGBB, rgb(), rgba(); альфа 0…1. Не меняет цвет страниц.
+# Тип: string; стандартное значение: '#000000'.
+# Можно изменять командой :set без перезапуска.
+set scrollbar-bg "#000000"
+
+# scrollbar-fg
+# Цвет текста/элемента полосы прокрутки. Форматы: #RRGGBB, rgb(), rgba(); альфа 0…1. Не меняет цвет страниц.
+# Тип: string; стандартное значение: '#DDDDDD'.
+# Можно изменять командой :set без перезапуска.
+set scrollbar-fg "#DDDDDD"
+
+# search-hadjust
+# Центрировать найденное совпадение по горизонтали.
+# Тип: boolean; стандартное значение: True.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# En/Disables horizontally centered search results.
+#
+#   * Value type: Boolean
+#   * Default value: true
+set search-hadjust true
+
+# selection-clipboard
+# Куда копировать выделенный текст: primary (выделение X11), clipboard (обычный буфер), или доступное в сборке значение. Поддержка primary в Wayland зависит от среды.
+# Тип: string; стандартное значение: 'primary'.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Defines the X clipboard into which mouse-selected data will be written.  When
+#   it is "clipboard", selected data will be written to the CLIPBOARD clipboard,
+#   and can be pasted using the Ctrl+v key combination.  When it is "primary",
+#   selected data will be written to the PRIMARY clipboard, and can be pasted
+#   using the middle mouse button, or the Shift-Insert key combination. The value
+#   "false" can be used to disable copying to the clipboard.
+#
+#   * Value type: String
+#   * Default value: primary
+set selection-clipboard "primary"
+
+# selection-keep-highlight
+# После копирования оставлять видимым выделение текста.
+# Тип: boolean; стандартное значение: False.
+# Можно изменять командой :set без перезапуска.
+set selection-keep-highlight false
+
+# selection-notification
+# Показывать уведомление о копировании выделенного текста.
+# Тип: boolean; стандартное значение: True.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Defines if a notification should be displayed after selecting text.
+#
+#   * Value type: Boolean
+#   * Default value: true
+set selection-notification true
+
+# show-directories
+# Показывать каталоги при автодополнении путей.
+# Тип: boolean; стандартное значение: True.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Defines if the directories should be displayed in completion.
+#
+#   * Value type: Boolean
+#   * Default value: true
+set show-directories true
+
+# show-hidden
+# Показывать скрытые файлы и каталоги при автодополнении.
+# Тип: boolean; стандартное значение: False.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Defines if hidden files and directories should be displayed in completion.
+#
+#   * Value type: Boolean
+#   * Default value: false
+set show-hidden false
+
+# show-recent
+# Сколько недавних файлов показывать при открытии; целое не меньше 0.
+# Тип: int; стандартное значение: 10.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Defines the number of recent files that should be displayed in completion.
+#   If the value is negative, all recent files are shown. If the value is 0, no
+#   recent files are shown.
+#
+#   * Value type: Integer
+#   * Default value: 10
+set show-recent 10
+
+# show-signature-information
+# Отображать сведения о цифровых подписях, если плагин их поддерживает.
+# Тип: boolean; стандартное значение: False.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Defines whether additional information on signatures embedded in documents
+#   should be displayed.
+#
+#   * value type: Boolean
+#   * Default value false
+set show-signature-information false
+
+# signature-error-color
+# Цвет области недействительной цифровой подписи.
+# Тип: string; стандартное значение: 'rgba(92%,11%,14%,0.9)'.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Defines the background color when displaying additional information for
+#   signatures with errors.
+#
+#   * Value type: String
+#   * Default value: rgba(92%,11%,14%,0.9)
+set signature-error-color "rgba(92%,11%,14%,0.9)"
+
+# signature-success-color
+# Цвет области действительной цифровой подписи.
+# Тип: string; стандартное значение: 'rgba(18%,80%,33%,0.9)'.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Defines the background color when displaying additional information for valid
+#   signatures.
+#
+#   * Value type: String
+#   * Default value: rgba(18%,80%,33%,0.9)
+set signature-success-color "rgba(18%,80%,33%,0.9)"
+
+# signature-warning-color
+# Цвет области подписи с предупреждением о проверке.
+# Тип: string; стандартное значение: 'rgba(100%,84%,0%,0.9)'.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Defines the background color when displaying additional information for
+#   signatures with warnings.
+#
+#   * Value type: String
+#   * Default value: rgba(100%,84%,0%,0.9)
+set signature-warning-color "rgba(100%,84%,0%,0.9)"
+
+# single-page-mode
+# При запуске показывать одну выбранную страницу вместо непрерывной сетки. w переключает режим. Отличается от pages-per-row=1.
+# Тип: boolean; стандартное значение: False.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Defines if documents should be opened in single-page view mode.
+#
+#   * Value type: Boolean
+#   * Default value: false
+set single-page-mode false
+
+# statusbar-basename
+# В строке состояния показывать только имя файла вместо полного пути.
+# Тип: boolean; стандартное значение: False.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Use basename of the file in the statusbar.
+#
+#   * Value type: Boolean
+#   * Default value: false
+set statusbar-basename false
+
+# statusbar-bg
+# Цвет фона строки состояния. Форматы: #RRGGBB, rgb(), rgba(); альфа 0…1. Не меняет цвет страниц.
+# Тип: string; стандартное значение: '#000000'.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Defines the background color of the statusbar
+#
+#   * Value type: String
+#   * Default value: #000000
+set statusbar-bg "#000000"
+
+# statusbar-fg
+# Цвет текста/элемента строки состояния. Форматы: #RRGGBB, rgb(), rgba(); альфа 0…1. Не меняет цвет страниц.
+# Тип: string; стандартное значение: '#FFFFFF'.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Defines the foreground color of the statusbar
+#
+#   * Value type: String
+#   * Default value: #FFFFFF
+set statusbar-fg "#FFFFFF"
+
+# statusbar-h-padding
+# Суммарный горизонтальный отступ нижних панелей в логических пикселях, при запуске.
+# Тип: int; стандартное значение: 8.
+# Только при запуске (перезапустите программу).
+# Полное описание из документации (англ., включая допустимые значения):
+# Defines the horizontal padding of the statusbar and notificationbar
+#
+#   * Value type: Integer
+#   * Default value: 8
+set statusbar-h-padding 8
+
+# statusbar-home-tilde
+# В строке состояния сокращать домашнюю часть пути до ~.
+# Тип: boolean; стандартное значение: False.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Display a short version of the file path, which replaces $HOME with ~, in the statusbar.
+#
+#   * Value type: Boolean
+#   * Default value: false
+set statusbar-home-tilde false
+
+# statusbar-page-percent
+# Добавлять процент прохождения документа к номеру страницы.
+# Тип: boolean; стандартное значение: False.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Display (current page / total pages) as a percent in the statusbar.
+#
+#   * Value type: Boolean
+#   * Default value: false
+set statusbar-page-percent false
+
+# statusbar-show-time
+# Показывать местное время HH:MM перед номером страницы. false по умолчанию; t включает/выключает в normal/presentation. Обновляется автоматически. Строка состояния должна быть видима: guioptions содержит s. Состояние сохраняется для документа при save-view-settings=true.
+# Тип: boolean; стандартное значение: False.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Show local time in 24-hour HH:MM form immediately before the page number.
+#   Default: false. ``t`` toggles it in normal and presentation modes. Time updates
+#   automatically, even while the document is idle. The statusbar must be visible
+#   (``guioptions`` contains ``s``). The state is saved with document preferences.
+#   A custom binding uses ``map t toggle_time``.
+set statusbar-show-time false
+
+# statusbar-v-padding
+# Суммарный вертикальный отступ нижних панелей в логических пикселях, при запуске. Влияет на доступную высоту книги.
+# Тип: int; стандартное значение: 2.
+# Только при запуске (перезапустите программу).
+# Полное описание из документации (англ., включая допустимые значения):
+# Defines the vertical padding of the statusbar and notificationbar
+#
+#   * Value type: Integer
+#   * Default value: 2
+set statusbar-v-padding 2
+
+# synctex
+# Включать синхронизацию PDF с исходным TeX, если программа собрана с поддержкой SyncTeX.
+# Тип: boolean; стандартное значение: True.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# En/Disables SyncTeX backward synchronization support.
+#
+#   * Value type: Boolean
+#   * Default value: true
+set synctex true
+
+# synctex-edit-modifier
+# Модификатор щелчка для обратного поиска SyncTeX: ctrl, shift, alt или super.
+# Тип: string; стандартное значение: 'ctrl'.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Defines the modifier that needs to be pressed together with the left mouse button
+#   to trigger the SyncTeX backward synchronization. Possible values are "shift",
+#   "ctrl" and "alt".
+#
+#   * Value type: String
+#   * Default value: ctrl
+set synctex-edit-modifier "ctrl"
+
+# synctex-editor-command
+# Команда редактора для обратного поиска SyncTeX. Пустая строка не задаёт редактор. %f — файл, %l — строка, %c — колонка.
+# Тип: string; стандартное значение: ''.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Defines the command executed for SyncTeX backward synchronization.
+#
+#   * Value type: String
+#   * Default value:
+set synctex-editor-command ""
+
+# vertical-center
+# Центрировать страницу по вертикали при переходе. false ставит начало страницы к верху окна; рекомендуется для книг.
+# Тип: boolean; стандартное значение: False.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Center the screen at the vertical midpoint of the page by default.
+#
+#   * Value type: Boolean
+#   * Default value: false
+set vertical-center false
+
+# window-decoration
+# Показывать рамку и заголовок окна; применяется при запуске, поддержка зависит от оконного менеджера.
+# Тип: boolean; стандартное значение: True.
+# Только при запуске (перезапустите программу).
+# Полное описание из документации (англ., включая допустимые значения):
+# Show window decorations.
+#
+#   * Value type: Boolean
+#   * Default value: true
+set window-decoration true
+
+# window-height
+# Начальная высота окна в логических пикселях. Оконный менеджер и развёрнутый режим могут её изменить.
+# Тип: uint; стандартное значение: 600.
+# Только при запуске (перезапустите программу).
+# Полное описание из документации (англ., включая допустимые значения):
+# Defines the window height on startup
+#
+#   * Value type: Integer
+#   * Default value: 600
+set window-height 600
+
+# window-title-basename
+# В заголовке окна показывать имя файла вместо полного пути.
+# Тип: boolean; стандартное значение: False.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Use basename of the file in the window title.
+#
+#   * Value type: Boolean
+#   * Default value: false
+set window-title-basename false
+
+# window-title-home-tilde
+# Сокращать домашний каталог до ~ в заголовке окна.
+# Тип: boolean; стандартное значение: False.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Display a short version of the file path, which replaces $HOME with ~, in the window title.
+#
+#   * Value type: Boolean
+#   * Default value: false
+set window-title-home-tilde false
+
+# window-title-page
+# Добавлять текущий номер страницы к заголовку окна.
+# Тип: boolean; стандартное значение: False.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Display the page number in the window title.
+#
+#   * Value type: Boolean
+#   * Default value: false
+set window-title-page false
+
+# window-width
+# Начальная ширина окна в логических пикселях. Оконный менеджер и развёрнутый режим могут её изменить.
+# Тип: uint; стандартное значение: 800.
+# Только при запуске (перезапустите программу).
+# Полное описание из документации (англ., включая допустимые значения):
+# Defines the window width on startup
+#
+#   * Value type: Integer
+#   * Default value: 800
+set window-width 800
+
+# word-separator
+# Символы границы слова для команд редактирования строки; задаётся строкой при запуске.
+# Тип: string; стандартное значение: ' /.-=&#?'.
+# Только при запуске (перезапустите программу).
+set word-separator " /.-=&#?"
+
+# zoom-center
+# При изменении масштаба центрировать страницу по горизонтали.
+# Тип: boolean; стандартное значение: False.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# En/Disables horizontally centered zooming.
+#
+#   * Value type: Boolean
+#   * Default value: false
+set zoom-center false
+
+# zoom-max
+# Верхний предел масштаба в процентах, 100 — исходный размер.
+# Тип: uint; стандартное значение: 1000.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Defines the maximum percentage that the zoom level can be.
+#
+#   * Value type: Integer
+#   * Default value: 1000
+set zoom-max 1000
+
+# zoom-min
+# Нижний предел масштаба в процентах; должен быть положительным и не превышать zoom-max.
+# Тип: uint; стандартное значение: 10.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Defines the minimum percentage that the zoom level can be.
+#
+#   * Value type: Integer
+#   * Default value: 10
+set zoom-min 10
+
+# zoom-step
+# Шаг обычного масштабирования в процентах: 10 означает увеличение в 1.1 раза; уменьшение использует обратный множитель.
+# Тип: uint; стандартное значение: 10.
+# Можно изменять командой :set без перезапуска.
+# Полное описание из документации (англ., включая допустимые значения):
+# Defines the amount of percent that is zoomed in or out on each command.
+#
+#   * Value type: Integer
+#   * Default value: 10
+#
+# SEE ALSO
+# ========
+#
+# zatura(1)
+set zoom-step 10
+
+# =================== ВСЕ КЛАВИШИ ===================
+# Аргументы функции идут после её имени. См. описание непосредственно над map.
+# В режиме inputbar обычные буквенные клавиши вводят текст текущей раскладки.
+
+# Режим [normal]
+
+# a: Подогнать страницу/разворот под окно.
+map [normal] a adjust_window best-fit
+
+# s: Подогнать страницу/разворот под окно.
+map [normal] s adjust_window width
+
+# F: Показать адрес выбранной ссылки.
+map [normal] F display_link
+
+# c: Копировать адрес ссылки.
+map [normal] c copy_link
+
+# /: Открыть строку команд/поиск с заданным текстом; append-filepath добавляет путь.
+map [normal] / focus_inputbar "/"
+
+# <S-/>: Открыть строку команд/поиск с заданным текстом; append-filepath добавляет путь.
+map [normal] '<S-/>' focus_inputbar "/"
+
+# ?: Открыть строку команд/поиск с заданным текстом; append-filepath добавляет путь.
+map [normal] '?' focus_inputbar "?"
+
+# :: Открыть строку команд/поиск с заданным текстом; append-filepath добавляет путь.
+map [normal] : focus_inputbar ":"
+
+# o: Открыть строку команд/поиск с заданным текстом; append-filepath добавляет путь.
+map [normal] o focus_inputbar ":open "
+
+# O: Открыть строку команд/поиск с заданным текстом; append-filepath добавляет путь.
+map [normal] O focus_inputbar append-filepath ":open "
+
+# f: Открыть ссылку по её номеру.
+map [normal] f follow
+
+# gg: Перейти к указанной странице, началу или концу.
+map [normal] gg goto top
+
+# <Home>: Перейти к указанной странице, началу или концу.
+map [normal] '<Home>' goto top
+
+# <KPHome>: Перейти к указанной странице, началу или концу.
+map [normal] '<KPHome>' goto top
+
+# G: Перейти к указанной странице, началу или концу.
+map [normal] G goto bottom
+
+# <End>: Перейти к указанной странице, началу или концу.
+map [normal] '<End>' goto bottom
+
+# <KPEnd>: Перейти к указанной странице, началу или концу.
+map [normal] '<KPEnd>' goto bottom
+
+# m: Поставить буквенную быструю метку.
+map [normal] m mark_add
+
+# ': Перейти к буквенной быстрой метке.
+map [normal] ''"'"'' mark_evaluate
+
+# J: Следующая/предыдущая страница; advance-pages-per-row задаёт шаг разворота.
+map [normal] J navigate next
+
+# K: Следующая/предыдущая страница; advance-pages-per-row задаёт шаг разворота.
+map [normal] K navigate previous
+
+# <A-Right>: Следующая/предыдущая страница; advance-pages-per-row задаёт шаг разворота.
+map [normal] '<A-Right>' navigate next
+
+# <A-KPRight>: Следующая/предыдущая страница; advance-pages-per-row задаёт шаг разворота.
+map [normal] '<A-KPRight>' navigate next
+
+# <A-Left>: Следующая/предыдущая страница; advance-pages-per-row задаёт шаг разворота.
+map [normal] '<A-Left>' navigate previous
+
+# <A-KPLeft>: Следующая/предыдущая страница; advance-pages-per-row задаёт шаг разворота.
+map [normal] '<A-KPLeft>' navigate previous
+
+# <PageDown>: Следующая/предыдущая страница; advance-pages-per-row задаёт шаг разворота.
+map [normal] '<PageDown>' navigate next
+
+# <KP_Page_Down>: Следующая/предыдущая страница; advance-pages-per-row задаёт шаг разворота.
+map [normal] '<KP_Page_Down>' navigate next
+
+# <PageUp>: Следующая/предыдущая страница; advance-pages-per-row задаёт шаг разворота.
+map [normal] '<PageUp>' navigate previous
+
+# <KP_Page_Up>: Следующая/предыдущая страница; advance-pages-per-row задаёт шаг разворота.
+map [normal] '<KP_Page_Up>' navigate previous
+
+# <Forward>: Следующая/предыдущая страница; advance-pages-per-row задаёт шаг разворота.
+map [normal] '<Forward>' navigate next
+
+# <Back>: Следующая/предыдущая страница; advance-pages-per-row задаёт шаг разворота.
+map [normal] '<Back>' navigate previous
+
+# <C-p>: Открыть диалог печати.
+map [normal] '<C-p>' print
+
+# <C-r>: Переключить перекрашивание.
+map [normal] '<C-r>' recolor
+
+# R: Перечитать файл с сохранением текущего состояния.
+map [normal] R reload
+
+# r: Повернуть страницы на 90 градусов.
+map [normal] r rotate rotate-cw
+
+# h: Прокрутить в заданном направлении; full-down/full-up в книге перелистывают точный разворот.
+map [normal] h scroll left
+
+# j: Прокрутить в заданном направлении; full-down/full-up в книге перелистывают точный разворот.
+map [normal] j scroll down
+
+# k: Прокрутить в заданном направлении; full-down/full-up в книге перелистывают точный разворот.
+map [normal] k scroll up
+
+# l: Прокрутить в заданном направлении; full-down/full-up в книге перелистывают точный разворот.
+map [normal] l scroll right
+
+# <Left>: Прокрутить в заданном направлении; full-down/full-up в книге перелистывают точный разворот.
+map [normal] '<Left>' scroll left
+
+# <KPLeft>: Прокрутить в заданном направлении; full-down/full-up в книге перелистывают точный разворот.
+map [normal] '<KPLeft>' scroll left
+
+# <Up>: Прокрутить в заданном направлении; full-down/full-up в книге перелистывают точный разворот.
+map [normal] '<Up>' scroll up
+
+# <KPUp>: Прокрутить в заданном направлении; full-down/full-up в книге перелистывают точный разворот.
+map [normal] '<KPUp>' scroll up
+
+# <Down>: Прокрутить в заданном направлении; full-down/full-up в книге перелистывают точный разворот.
+map [normal] '<Down>' scroll down
+
+# <KPDown>: Прокрутить в заданном направлении; full-down/full-up в книге перелистывают точный разворот.
+map [normal] '<KPDown>' scroll down
+
+# H: Прокрутить в заданном направлении; full-down/full-up в книге перелистывают точный разворот.
+map [normal] H scroll page-top
+
+# L: Прокрутить в заданном направлении; full-down/full-up в книге перелистывают точный разворот.
+map [normal] L scroll page-bottom
+
+# <Right>: Прокрутить в заданном направлении; full-down/full-up в книге перелистывают точный разворот.
+map [normal] '<Right>' scroll right
+
+# <KPRight>: Прокрутить в заданном направлении; full-down/full-up в книге перелистывают точный разворот.
+map [normal] '<KPRight>' scroll right
+
+# <C-t>: Прокрутить в заданном направлении; full-down/full-up в книге перелистывают точный разворот.
+map [normal] '<C-t>' scroll half-left
+
+# <A-k>: Прокрутить в заданном направлении; full-down/full-up в книге перелистывают точный разворот.
+map [normal] '<A-k>' scroll partial-up
+
+# <A-j>: Прокрутить в заданном направлении; full-down/full-up в книге перелистывают точный разворот.
+map [normal] '<A-j>' scroll partial-down
+
+# <A-Up>: Прокрутить в заданном направлении; full-down/full-up в книге перелистывают точный разворот.
+map [normal] '<A-Up>' scroll partial-up
+
+# <A-KPUp>: Прокрутить в заданном направлении; full-down/full-up в книге перелистывают точный разворот.
+map [normal] '<A-KPUp>' scroll partial-up
+
+# <A-Down>: Прокрутить в заданном направлении; full-down/full-up в книге перелистывают точный разворот.
+map [normal] '<A-Down>' scroll partial-down
+
+# <A-KPDown>: Прокрутить в заданном направлении; full-down/full-up в книге перелистывают точный разворот.
+map [normal] '<A-KPDown>' scroll partial-down
+
+# <C-d>: Прокрутить в заданном направлении; full-down/full-up в книге перелистывают точный разворот.
+map [normal] '<C-d>' scroll half-down
+
+# <C-u>: Прокрутить в заданном направлении; full-down/full-up в книге перелистывают точный разворот.
+map [normal] '<C-u>' scroll half-up
+
+# <C-y>: Прокрутить в заданном направлении; full-down/full-up в книге перелистывают точный разворот.
+map [normal] '<C-y>' scroll half-right
+
+# t: Показать/скрыть местное время HH:MM перед номером страницы; обновляется автоматически.
+map [normal] t toggle_time
+
+# <C-f>: Прокрутить в заданном направлении; full-down/full-up в книге перелистывают точный разворот.
+map [normal] '<C-f>' scroll full-down
+
+# <C-b>: Прокрутить в заданном направлении; full-down/full-up в книге перелистывают точный разворот.
+map [normal] '<C-b>' scroll full-up
+
+# y: Прокрутить в заданном направлении; full-down/full-up в книге перелистывают точный разворот.
+map [normal] y scroll full-right
+
+# <Space>: Прокрутить в заданном направлении; full-down/full-up в книге перелистывают точный разворот.
+map [normal] '<Space>' scroll full-down
+
+# <S-Space>: Прокрутить в заданном направлении; full-down/full-up в книге перелистывают точный разворот.
+map [normal] '<S-Space>' scroll full-up
+
+# Y: Копировать путь текущего файла.
+map [normal] Y copy_filepath
+
+# <C-o>: Перейти по истории позиций чтения.
+map [normal] '<C-o>' jumplist backward
+
+# <C-i>: Перейти по истории позиций чтения.
+map [normal] '<C-i>' jumplist forward
+
+# <C-j>: Переместиться по документу двоичным поиском.
+map [normal] '<C-j>' bisect forward
+
+# <C-k>: Переместиться по документу двоичным поиском.
+map [normal] '<C-k>' bisect backward
+
+# n: Следующее/предыдущее совпадение поиска.
+map [normal] n search forward
+
+# N: Следующее/предыдущее совпадение поиска.
+map [normal] N search backward
+
+# P: Выравнять прокрутку по краю текущей страницы.
+map [normal] P snap_to_page
+
+# <Tab>: Показать/скрыть оглавление.
+map [normal] '<Tab>' toggle_index
+
+# <C-n>: Показать/скрыть строку состояния.
+map [normal] '<C-n>' toggle_statusbar
+
+# <C-m>: Показать/скрыть строку команд.
+map [normal] '<C-m>' toggle_inputbar
+
+# d: Переключить одну и две колонки.
+map [normal] d toggle_page_mode
+
+# D: Изменить колонку первой страницы разворота.
+map [normal] D cycle_first_column
+
+# <C-->: Изменить размер текста книги на один пункт.
+map [normal] '<C-->' adjust_book_font down
+
+# <C-=>: Изменить размер текста книги на один пункт.
+map [normal] '<C-=>' adjust_book_font up
+
+# <C-+>: Изменить размер текста книги на один пункт.
+map [normal] '<C-+>' adjust_book_font up
+
+# <C-KPAdd>: Изменить размер текста книги на один пункт.
+map [normal] '<C-KPAdd>' adjust_book_font up
+
+# <C-KPSubtract>: Изменить размер текста книги на один пункт.
+map [normal] '<C-KPSubtract>' adjust_book_font down
+
+# +: Изменить масштаб всего документа.
+map [normal] + zoom in
+
+# <KPAdd>: Изменить масштаб всего документа.
+map [normal] '<KPAdd>' zoom in
+
+# -: Изменить масштаб всего документа.
+map [normal] - zoom out
+
+# <KPSubtract>: Изменить масштаб всего документа.
+map [normal] '<KPSubtract>' zoom out
+
+# =: Изменить масштаб всего документа.
+map [normal] = zoom specific
+
+# zi: Изменить масштаб всего документа.
+map [normal] zi zoom in
+
+# zI: Изменить масштаб всего документа.
+map [normal] zI zoom in
+
+# zo: Изменить масштаб всего документа.
+map [normal] zo zoom out
+
+# zO: Изменить масштаб всего документа.
+map [normal] zO zoom out
+
+# z0: Изменить масштаб всего документа.
+map [normal] z0 zoom original
+
+# zz: Изменить масштаб всего документа.
+map [normal] zz zoom specific
+
+# zZ: Изменить масштаб всего документа.
+map [normal] zZ zoom specific
+
+# <A-o>: Выбрать документ в системном диалоге.
+map [normal] '<A-o>' file_chooser
+
+# <C-c>: Отменить действие/выделение, скрыть поиск согласно abort-clear-search.
+map [normal] '<C-c>' abort
+
+# <Esc>: Отменить действие/выделение, скрыть поиск согласно abort-clear-search.
+map [normal] '<Esc>' abort
+
+# <C-[>: Отменить действие/выделение, скрыть поиск согласно abort-clear-search.
+map [normal] '<C-[>' abort
+
+# q: Закрыть программу.
+map [normal] q quit
+
+# <F5>: Войти/выйти из режима презентации.
+map [normal] '<F5>' toggle_presentation
+
+# <F11>: Включить/выключить полноэкранное окно (режим клавиш не меняется).
+map [normal] '<F11>' toggle_fullscreen
+
+# w: Переключить непрерывную сетку и одну выбранную страницу.
+map [normal] w toggle_single_page_mode
+
+# 1: Регулировка изображения; уменьшить/увеличить контраст. Диапазон -100…100.
+map [normal] 1 adjust_contrast down
+
+# 2: Регулировка изображения; уменьшить/увеличить контраст. Диапазон -100…100.
+map [normal] 2 adjust_contrast up
+
+# 3: Регулировка изображения; уменьшить/увеличить яркость. Диапазон -100…100.
+map [normal] 3 adjust_brightness down
+
+# 4: Регулировка изображения; уменьшить/увеличить яркость. Диапазон -100…100.
+map [normal] 4 adjust_brightness up
+
+# 5: Регулировка изображения; уменьшить/увеличить гамму. Диапазон -100…100.
+map [normal] 5 adjust_gamma down
+
+# 6: Регулировка изображения; уменьшить/увеличить гамму. Диапазон -100…100.
+map [normal] 6 adjust_gamma up
+
+# 7: Регулировка изображения; уменьшить/увеличить насыщенность. Диапазон -100…100.
+map [normal] 7 adjust_saturation down
+
+# 8: Регулировка изображения; уменьшить/увеличить насыщенность. Диапазон -100…100.
+map [normal] 8 adjust_saturation up
+
+# Режим [presentation]
+
+# <C-c>: Отменить действие/выделение, скрыть поиск согласно abort-clear-search.
+map [presentation] '<C-c>' abort
+
+# <Esc>: Отменить действие/выделение, скрыть поиск согласно abort-clear-search.
+map [presentation] '<Esc>' abort
+
+# <C-[>: Отменить действие/выделение, скрыть поиск согласно abort-clear-search.
+map [presentation] '<C-[>' abort
+
+# q: Закрыть программу.
+map [presentation] q quit
+
+# <F11>: Включить/выключить полноэкранное окно (режим клавиш не меняется).
+map [presentation] '<F11>' toggle_fullscreen
+
+# J: Следующая/предыдущая страница; advance-pages-per-row задаёт шаг разворота.
+map [presentation] J navigate next
+
+# <Down>: Следующая/предыдущая страница; advance-pages-per-row задаёт шаг разворота.
+map [presentation] '<Down>' navigate next
+
+# <KPDown>: Следующая/предыдущая страница; advance-pages-per-row задаёт шаг разворота.
+map [presentation] '<KPDown>' navigate next
+
+# <Right>: Следующая/предыдущая страница; advance-pages-per-row задаёт шаг разворота.
+map [presentation] '<Right>' navigate next
+
+# <KPRight>: Следующая/предыдущая страница; advance-pages-per-row задаёт шаг разворота.
+map [presentation] '<KPRight>' navigate next
+
+# <PageDown>: Следующая/предыдущая страница; advance-pages-per-row задаёт шаг разворота.
+map [presentation] '<PageDown>' navigate next
+
+# <KP_Page_Down>: Следующая/предыдущая страница; advance-pages-per-row задаёт шаг разворота.
+map [presentation] '<KP_Page_Down>' navigate next
+
+# <Forward>: Следующая/предыдущая страница; advance-pages-per-row задаёт шаг разворота.
+map [presentation] '<Forward>' navigate next
+
+# <Space>: Следующая/предыдущая страница; advance-pages-per-row задаёт шаг разворота.
+map [presentation] '<Space>' navigate next
+
+# K: Следующая/предыдущая страница; advance-pages-per-row задаёт шаг разворота.
+map [presentation] K navigate previous
+
+# <Left>: Следующая/предыдущая страница; advance-pages-per-row задаёт шаг разворота.
+map [presentation] '<Left>' navigate previous
+
+# <KPLeft>: Следующая/предыдущая страница; advance-pages-per-row задаёт шаг разворота.
+map [presentation] '<KPLeft>' navigate previous
+
+# <Up>: Следующая/предыдущая страница; advance-pages-per-row задаёт шаг разворота.
+map [presentation] '<Up>' navigate previous
+
+# <KPUp>: Следующая/предыдущая страница; advance-pages-per-row задаёт шаг разворота.
+map [presentation] '<KPUp>' navigate previous
+
+# <PageUp>: Следующая/предыдущая страница; advance-pages-per-row задаёт шаг разворота.
+map [presentation] '<PageUp>' navigate previous
+
+# <KP_Page_Up>: Следующая/предыдущая страница; advance-pages-per-row задаёт шаг разворота.
+map [presentation] '<KP_Page_Up>' navigate previous
+
+# <Back>: Следующая/предыдущая страница; advance-pages-per-row задаёт шаг разворота.
+map [presentation] '<Back>' navigate previous
+
+# <S-Space>: Следующая/предыдущая страница; advance-pages-per-row задаёт шаг разворота.
+map [presentation] '<S-Space>' navigate previous
+
+# <BackSpace>: Следующая/предыдущая страница; advance-pages-per-row задаёт шаг разворота.
+map [presentation] '<BackSpace>' navigate previous
+
+# <F5>: Войти/выйти из режима презентации.
+map [presentation] '<F5>' toggle_presentation
+
+# t: Показать/скрыть местное время HH:MM перед номером страницы; обновляется автоматически.
+map [presentation] t toggle_time
+
+# 1: Регулировка изображения; уменьшить/увеличить контраст. Диапазон -100…100.
+map [presentation] 1 adjust_contrast down
+
+# 2: Регулировка изображения; уменьшить/увеличить контраст. Диапазон -100…100.
+map [presentation] 2 adjust_contrast up
+
+# 3: Регулировка изображения; уменьшить/увеличить яркость. Диапазон -100…100.
+map [presentation] 3 adjust_brightness down
+
+# 4: Регулировка изображения; уменьшить/увеличить яркость. Диапазон -100…100.
+map [presentation] 4 adjust_brightness up
+
+# 5: Регулировка изображения; уменьшить/увеличить гамму. Диапазон -100…100.
+map [presentation] 5 adjust_gamma down
+
+# 6: Регулировка изображения; уменьшить/увеличить гамму. Диапазон -100…100.
+map [presentation] 6 adjust_gamma up
+
+# 7: Регулировка изображения; уменьшить/увеличить насыщенность. Диапазон -100…100.
+map [presentation] 7 adjust_saturation down
+
+# 8: Регулировка изображения; уменьшить/увеличить насыщенность. Диапазон -100…100.
+map [presentation] 8 adjust_saturation up
+
+# Режим [index]
+
+# <C-c>: Показать/скрыть оглавление.
+map [index] '<C-c>' toggle_index
+
+# <Esc>: Показать/скрыть оглавление.
+map [index] '<Esc>' toggle_index
+
+# <C-[>: Показать/скрыть оглавление.
+map [index] '<C-[>' toggle_index
+
+# q: Закрыть программу.
+map [index] q quit
+
+# <F11>: Включить/выключить полноэкранное окно (режим клавиш не меняется).
+map [index] '<F11>' toggle_fullscreen
+
+# <Tab>: Показать/скрыть оглавление.
+map [index] '<Tab>' toggle_index
+
+# k: Навигация/сворачивание/выбор пункта оглавления.
+map [index] k navigate_index up
+
+# j: Навигация/сворачивание/выбор пункта оглавления.
+map [index] j navigate_index down
+
+# <C-d>: Навигация/сворачивание/выбор пункта оглавления.
+map [index] '<C-d>' navigate_index half-down
+
+# <C-u>: Навигация/сворачивание/выбор пункта оглавления.
+map [index] '<C-u>' navigate_index half-up
+
+# h: Навигация/сворачивание/выбор пункта оглавления.
+map [index] h navigate_index collapse
+
+# zc: Навигация/сворачивание/выбор пункта оглавления.
+map [index] zc navigate_index collapse
+
+# zC: Навигация/сворачивание/выбор пункта оглавления.
+map [index] zC navigate_index collapse-recursive
+
+# H: Навигация/сворачивание/выбор пункта оглавления.
+map [index] H navigate_index collapse-all
+
+# zM: Навигация/сворачивание/выбор пункта оглавления.
+map [index] zM navigate_index collapse-all
+
+# l: Навигация/сворачивание/выбор пункта оглавления.
+map [index] l navigate_index expand
+
+# zo: Навигация/сворачивание/выбор пункта оглавления.
+map [index] zo navigate_index expand
+
+# zO: Навигация/сворачивание/выбор пункта оглавления.
+map [index] zO navigate_index expand-recursive
+
+# L: Навигация/сворачивание/выбор пункта оглавления.
+map [index] L navigate_index expand-all
+
+# zR: Навигация/сворачивание/выбор пункта оглавления.
+map [index] zR navigate_index expand-all
+
+# <Up>: Навигация/сворачивание/выбор пункта оглавления.
+map [index] '<Up>' navigate_index up
+
+# <KPUp>: Навигация/сворачивание/выбор пункта оглавления.
+map [index] '<KPUp>' navigate_index up
+
+# <Down>: Навигация/сворачивание/выбор пункта оглавления.
+map [index] '<Down>' navigate_index down
+
+# <KPDown>: Навигация/сворачивание/выбор пункта оглавления.
+map [index] '<KPDown>' navigate_index down
+
+# <Left>: Навигация/сворачивание/выбор пункта оглавления.
+map [index] '<Left>' navigate_index collapse
+
+# <KPLeft>: Навигация/сворачивание/выбор пункта оглавления.
+map [index] '<KPLeft>' navigate_index collapse
+
+# <Right>: Навигация/сворачивание/выбор пункта оглавления.
+map [index] '<Right>' navigate_index expand
+
+# <KPRight>: Навигация/сворачивание/выбор пункта оглавления.
+map [index] '<KPRight>' navigate_index expand
+
+# <Space>: Навигация/сворачивание/выбор пункта оглавления.
+map [index] '<Space>' navigate_index select
+
+# <Return>: Навигация/сворачивание/выбор пункта оглавления.
+map [index] '<Return>' navigate_index select
+
+# <C-j>: Навигация/сворачивание/выбор пункта оглавления.
+map [index] '<C-j>' navigate_index select
+
+# gg: Навигация/сворачивание/выбор пункта оглавления.
+map [index] gg navigate_index top
+
+# G: Навигация/сворачивание/выбор пункта оглавления.
+map [index] G navigate_index bottom
+
+# Режим [insert]
+
+# <C-c>: Отменить действие/выделение, скрыть поиск согласно abort-clear-search.
+map [insert] '<C-c>' abort
+
+# <Esc>: Отменить действие/выделение, скрыть поиск согласно abort-clear-search.
+map [insert] '<Esc>' abort
+
+# <C-[>: Отменить действие/выделение, скрыть поиск согласно abort-clear-search.
+map [insert] '<C-[>' abort
+
+# q: Закрыть программу.
+map [insert] q quit
+
+# <F11>: Включить/выключить полноэкранное окно (режим клавиш не меняется).
+map [insert] '<F11>' toggle_fullscreen
+
+# Режим [inputbar]
+
+# <F11>: Включить/выключить полноэкранное окно (режим клавиш не меняется).
+map [inputbar] '<F11>' toggle_fullscreen
+
+# <Esc>: Отменить действие/выделение, скрыть поиск согласно abort-clear-search.
+map [inputbar] '<Esc>' abort
+
+# <C-c>: Отменить действие/выделение, скрыть поиск согласно abort-clear-search.
+map [inputbar] '<C-c>' abort
+
+# <C-j>: Выполнить введённую команду/поиск.
+map [inputbar] '<C-j>' input_activate
+
+# <C-[>: Отменить ввод и вернуться к чтению.
+map [inputbar] '<C-[>' input_abort
+
+# <Tab>: Выбрать пункт или группу автодополнения.
+map [inputbar] '<Tab>' input_completion input-next
+
+# <C-Tab>: Выбрать пункт или группу автодополнения.
+map [inputbar] '<C-Tab>' input_completion input-next-group
+
+# <ShiftTab>: Выбрать пункт или группу автодополнения.
+map [inputbar] '<ShiftTab>' input_completion input-previous
+
+# <C-ShiftTab>: Выбрать пункт или группу автодополнения.
+map [inputbar] '<C-ShiftTab>' input_completion input-previous-group
+
+# <BackSpace>: Редактировать строку команды/поиска.
+map [inputbar] '<BackSpace>' input_edit delete-last-char
+
+# <C-h>: Редактировать строку команды/поиска.
+map [inputbar] '<C-h>' input_edit delete-last-char
+
+# <C-u>: Редактировать строку команды/поиска.
+map [inputbar] '<C-u>' input_edit delete-to-line-start
+
+# <C-k>: Редактировать строку команды/поиска.
+map [inputbar] '<C-k>' input_edit delete-to-line-end
+
+# <C-d>: Редактировать строку команды/поиска.
+map [inputbar] '<C-d>' input_edit delete-current-char
+
+# <C-w>: Редактировать строку команды/поиска.
+map [inputbar] '<C-w>' input_edit delete-last-word
+
+# <C-f>: Редактировать строку команды/поиска.
+map [inputbar] '<C-f>' input_edit next-char
+
+# <C-b>: Редактировать строку команды/поиска.
+map [inputbar] '<C-b>' input_edit previous-char
+
+# <Right>: Редактировать строку команды/поиска.
+map [inputbar] '<Right>' input_edit next-char
+
+# <Left>: Редактировать строку команды/поиска.
+map [inputbar] '<Left>' input_edit previous-char
+
+# <C-a>: Редактировать строку команды/поиска.
+map [inputbar] '<C-a>' input_edit line-start
+
+# <C-e>: Редактировать строку команды/поиска.
+map [inputbar] '<C-e>' input_edit line-end
+
+# <Up>: Выбрать предыдущую/следующую введённую команду.
+map [inputbar] '<Up>' input_history input-previous
+
+# <Down>: Выбрать предыдущую/следующую введённую команду.
+map [inputbar] '<Down>' input_history input-next
+
+# <C-p>: Выбрать предыдущую/следующую введённую команду.
+map [inputbar] '<C-p>' input_history input-previous
+
+# <C-n>: Выбрать предыдущую/следующую введённую команду.
+map [inputbar] '<C-n>' input_history input-next
+
+# =================== МЫШЬ / ТАЧПАД ===================
+# Встроенные мышиные действия перечислены полностью. Строки ниже — справка:
+# sc_mouse_scroll/sc_mouse_zoom обрабатывают дельты и состояния кнопок и
+# не равны обычным scroll/zoom. Замена их map меняет поведение жестов.
+# ЛКМ по тексту — выделить/копировать; по ссылке — открыть согласно double-click-follow.
+# Модификатор highlighter-modifier + ЛКМ — прямоугольное выделение.
+# synctex-edit-modifier + ЛКМ — обратный SyncTeX (если включён в сборке).
+# [normal] колесо вверх → прокрутка вверх.
+# [normal] колесо вниз → прокрутка вниз.
+# [normal] прокрутка влево → прокрутка влево.
+# [normal] прокрутка вправо → прокрутка вправо.
+# [normal] плавный жест тачпада → прокрутка в двух направлениях.
+# [normal] Shift + колесо вверх → прокрутка влево.
+# [normal] Shift + колесо вниз → прокрутка вправо.
+# [normal] Ctrl + колесо вверх → масштабирование.
+# [normal] Ctrl + колесо вниз → масштабирование.
+# [normal] Ctrl + плавный жест тачпада → масштабирование.
+# [normal] нажатие средней кнопки → прокрутка перетаскиванием.
+# [normal] при удержании средней кнопки: отпускание средней кнопки → прокрутка перетаскиванием.
+# [normal] при удержании средней кнопки: перемещение указателя → прокрутка перетаскиванием.
+# [presentation] колесо вверх → прокрутка вверх.
+# [presentation] колесо вниз → прокрутка вниз.
+# [presentation] прокрутка влево → прокрутка влево.
+# [presentation] прокрутка вправо → прокрутка вправо.
+# [presentation] нажатие ЛКМ → следующая страница.
+# [presentation] нажатие ПКМ → предыдущая страница.
+# [presentation] Shift + колесо вверх → прокрутка влево.
+# [presentation] Shift + колесо вниз → прокрутка вправо.
+# [presentation] Ctrl + колесо вверх → масштабирование.
+# [presentation] Ctrl + колесо вниз → масштабирование.
+
+# =================== СПРАВОЧНИК ФУНКЦИЙ ===================
+# Функции без стандартного назначения можно привязать собственной строкой map.
+# abort: Отменить действие/выделение, скрыть поиск согласно abort-clear-search.
+# adjust_book_font: Изменить размер текста книги на один пункт.
+# adjust_brightness: Регулировка изображения; уменьшить/увеличить яркость. Диапазон -100…100.
+# adjust_contrast: Регулировка изображения; уменьшить/увеличить контраст. Диапазон -100…100.
+# adjust_gamma: Регулировка изображения; уменьшить/увеличить гамму. Диапазон -100…100.
+# adjust_saturation: Регулировка изображения; уменьшить/увеличить насыщенность. Диапазон -100…100.
+# adjust_window: Подогнать страницу/разворот под окно.
+# bisect: Переместиться по документу двоичным поиском.
+# change_mode: Переключить режим: normal, insert, index или presentation.
+# copy_filepath: Копировать путь текущего файла.
+# copy_link: Копировать адрес ссылки.
+# cycle_first_column: Изменить колонку первой страницы разворота.
+# display_link: Показать адрес выбранной ссылки.
+# exec: Выполнить внешнюю команду exec-command.
+# feedkeys: Выполнить переданную строку как последовательность нажатий клавиш.
+# file_chooser: Выбрать документ в системном диалоге.
+# focus_inputbar: Открыть строку команд/поиск с заданным текстом; append-filepath добавляет путь.
+# follow: Открыть ссылку по её номеру.
+# goto: Перейти к указанной странице, началу или концу.
+# input_abort: Отменить ввод и вернуться к чтению.
+# input_activate: Выполнить введённую команду/поиск.
+# input_completion: Выбрать пункт или группу автодополнения.
+# input_edit: Редактировать строку команды/поиска.
+# input_history: Выбрать предыдущую/следующую введённую команду.
+# jumplist: Перейти по истории позиций чтения.
+# mark_add: Поставить буквенную быструю метку.
+# mark_evaluate: Перейти к буквенной быстрой метке.
+# navigate: Следующая/предыдущая страница; advance-pages-per-row задаёт шаг разворота.
+# navigate_index: Навигация/сворачивание/выбор пункта оглавления.
+# nohlsearch: Скрыть подсветку поиска.
+# page_mode: Выравнять размеры фиксированных страниц.
+# print: Открыть диалог печати.
+# quit: Закрыть программу.
+# recolor: Переключить перекрашивание.
+# reload: Перечитать файл с сохранением текущего состояния.
+# reset_page_effects: Сбросить яркость, контраст, гамму и насыщенность в 0.
+# rotate: Повернуть страницы на 90 градусов.
+# scroll: Прокрутить в заданном направлении; full-down/full-up в книге перелистывают точный разворот.
+# search: Следующее/предыдущее совпадение поиска.
+# set: Функция set; описание и аргументы ниже из документации.
+# snap_to_page: Выравнять прокрутку по краю текущей страницы.
+# toggle_fullscreen: Включить/выключить полноэкранное окно (режим клавиш не меняется).
+# toggle_index: Показать/скрыть оглавление.
+# toggle_inputbar: Показать/скрыть строку команд.
+# toggle_page_mode: Переключить одну и две колонки.
+# toggle_presentation: Войти/выйти из режима презентации.
+# toggle_single_page_mode: Переключить непрерывную сетку и одну выбранную страницу.
+# toggle_statusbar: Показать/скрыть строку состояния.
+# toggle_time: Показать/скрыть местное время HH:MM перед номером страницы; обновляется автоматически.
+# zoom: Изменить масштаб всего документа.
+# zoom_page: Изменить масштаб отдельной страницы.
+# Полный справочник функций и аргументов (англ.):
+#   The following shortcut functions can be mapped:
+#
+#   * ``abort``
+#
+#     Switch back to normal mode.
+#
+#   * ``adjust_window``
+#
+#     Adjust page width. Possible arguments are ``best-fit`` and ``width``.
+#
+#   * ``change_mode``
+#
+#     Change current mode. Pass the desired mode as argument.
+#
+#   * ``copy_filepath``
+#
+#     Copy the full path of the currently opened document to the clipboard
+#
+#   * ``copy_link``
+#
+#     Copy a link target to the clipboard.
+#
+#   * ``cycle_first_column``
+#
+#     In multiple page layout, cycle the column in which the first page is displayed.
+#
+#   * ``display_link``:
+#
+#     Display link target.
+#
+#   * ``exec``:
+#
+#     Execute an external command. ``$FILE`` expands to the current document path,
+#     ``$PAGE`` to the current page number, and ``$DBUS`` to the bus name of the
+#     D-Bus interface.
+#
+#   * ``file_chooser``:
+#
+#     Open a File Chooser Dialog. Uses the native file chooser on Windows and MacOS,
+#     desktop portals when available and otherwise GtkFileChooser.
+#
+#   * ``focus_inputbar``
+#
+#     Focus inputbar.
+#
+#   * ``follow``
+#
+#     Follow a link.
+#
+#   * ``goto``
+#
+#     Go to a certain page.
+#
+#   * ``jumplist``
+#
+#     Move forwards/backwards in the jumplist. Pass ``forward`` as argument to
+#     move to the next entry and ``backward`` to move to the previous one.
+#
+#   * ``navigate``
+#
+#     Navigate to the next/previous page.
+#
+#   * ``navigate_index``
+#
+#     Navigate through the index.
+#
+#   * ``print``
+#
+#     Show the print dialog.
+#
+#   * ``page_mode``
+#
+#     Set the page sizing mode. Default is ``equal_none``, which doesn't resize
+#     individual pages. ``equal_width`` and ``equal_height`` resizes each page to
+#     have the same width and height respectively.
+#
+#   * ``quit``
+#
+#     Quit zatura.
+#
+#   * ``recolor``
+#
+#     Recolor pages.
+#
+#   * ``reload``
+#
+#     Reload the document.
+#
+#   * ``rotate``
+#
+#     Rotate the page. Pass ``rotate-ccw`` as argument for counterclockwise rotation
+#     and ``rotate-cw`` for clockwise rotation.
+#
+#   * ``scroll``
+#
+#     Scroll.
+#
+#   * ``search``
+#
+#     Search next/previous item. Pass ``forward`` as argument to search for the next
+#     hit and ``backward`` to search for the previous hit.
+#
+#   * ``set``
+#
+#     Set an option.
+#
+#   * ``snap_to_page``
+#
+#     Snaps to the current page. Equivalent to ``goto <current_page>``
+#
+#   * ``toggle_fullscreen``
+#
+#     Toggle fullscreen.
+#
+#   * ``toggle_index``
+#
+#     Show or hide index.
+#
+#   * ``toggle_inputbar``
+#
+#     Show or hide inputbar.
+#
+#   * ``toggle_page_mode``
+#
+#     Toggle between one and multiple pages per row.
+#
+#   * ``toggle_single_page_mode``
+#
+#     Toggle between displaying a page grid or a single page.
+#
+#   * ``toggle_statusbar``
+#
+#     Show or hide statusbar.
+#
+#   * ``zoom``
+#
+#     Zoom in or out.
+#
+#   * ``zoom_page``
+#
+#     Zoom in or out of the current page.
+#
+#   * ``mark_add``
+#
+#     Set a quickmark.
+#
+#   * ``mark_evaluate``
+#
+#     Go to a quickmark.
+#
+#   * ``feedkeys``
+#
+#     Simulate key presses. Note that all keys will be interpreted as if pressing a
+#     key on the keyboard. To input uppercase letters, follow the same convention as
+#     for key bindings, i.e. for ``X``, use ``<S-X>``.
+#
+#
+# *Pass arguments*
+#   Some shortcut function require or have optional arguments which influence the
+#   behaviour of them. Those can be passed as the last argument:
+#
+#   ::
+#
+#     map <C-i> zoom in
+#     map <C-o> zoom out
+#
+#   Possible arguments are:
+#
+#   * best-fit
+#   * bottom
+#   * backward
+#   * collapse
+#   * collapse-recursive
+#   * collapse-all
+#   * default
+#   * down
+#   * expand
+#   * expand-recursive
+#   * expand-all
+#   * forward
+#   * full-down
+#   * full-up
+#   * half-down
+#   * half-up
+#   * smooth-down
+#   * smooth-up
+#   * in
+#   * left
+#   * next
+#   * out
+#   * page-bottom
+#   * page-top
+#   * previous
+#   * right
+#   * rotate-ccw
+#   * rotate-cw
+#   * select
+#   * specific
+#   * toggle
+#   * top
+#   * up
+#   * width
+#   * equal_none
+#   * equal_width
+#   * equal_height
+#
+
+# =================== ПОЛЬЗОВАТЕЛЬСКИЕ ИЗМЕНЕНИЯ ===================
+# Добавляйте настройки ниже: последние строки имеют приоритет.
+# Сброс изображения можно назначить отдельно, например:
+# map [normal] <C-0> reset_page_effects

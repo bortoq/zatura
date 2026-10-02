@@ -9,6 +9,11 @@
 #include <gdk/gdk.h>
 #include <girara/types.h>
 #include "types.h"
+#include "page-effects.h"
+
+unsigned int zathura_renderer_get_effects_generation(ZathuraRenderer* renderer);
+PageEffects zathura_renderer_get_page_effects(ZathuraRenderer* renderer);
+bool zathura_renderer_set_page_effects(ZathuraRenderer* renderer, const PageEffects* effects);
 
 typedef struct zathura_renderer_class_s ZathuraRendererClass;
 
@@ -222,5 +227,8 @@ bool zathura_render_request_get_render_plain(ZathuraRenderRequest* request);
  * @param zatura Zatura object
  */
 void render_all(zathura_t* zathura);
+
+/** Generation of the surface delivered by the current completed signal. */
+unsigned int zathura_render_request_get_completed_effects_generation(ZathuraRenderRequest* request);
 
 #endif // RENDER_H

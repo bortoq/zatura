@@ -14,7 +14,7 @@
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(sqlite3_stmt, sqlite3_finalize)
 
 /* version of the database layout */
-#define DATABASE_VERSION 4
+#define DATABASE_VERSION 5
 
 static char* sqlite3_column_text_dup(sqlite3_stmt* stmt, int col) {
   return g_strdup((const char*)sqlite3_column_text(stmt, col));
@@ -204,8 +204,10 @@ static void sqlite_db_check_layout(sqlite3* session, const int database_version,
   static const char QUICKMARKS_INIT[] = "CREATE TABLE IF NOT EXISTS quickmarks (file TEXT, key INTEGER, x FLOAT, y "
                                         "FLOAT, page INTEGER, zoom FLOAT, PRIMARY KEY(file, key));";
 
+  static const char SQL_VIEW_INIT[] = "CREATE TABLE IF NOT EXISTS document_view (file TEXT PRIMARY KEY, settings TEXT);";
+
   static const char* ALL_INIT[] = {SQL_BOOKMARK_INIT, SQL_JUMPLIST_INIT, SQL_FILEINFO_INIT, SQL_HISTORY_INIT,
-                                   QUICKMARKS_INIT};
+                                   QUICKMARKS_INIT, SQL_VIEW_INIT};
 
   /* update fileinfo table (part 1) */
   static const char SQL_FILEINFO_ALTER[] = "ALTER TABLE fileinfo ADD COLUMN pages_per_row INTEGER;"
@@ -744,7 +746,12 @@ static bool sqlite_set_fileinfo(zathura_database_t* db, const char* file, const 
     return false;
   }
 
-  return (sqlite3_step(stmt) == SQLITE_DONE) ? true : false;
+  if (sqlite3_step(stmt) != SQLITE_DONE) { return false; }
+  g_autoptr(sqlite3_stmt) view = prepare_statement(priv->session,
+      "REPLACE INTO document_view (file, settings) VALUES (?, ?);");
+  if (!view || sqlite3_bind_text(view, 1, file, -1, SQLITE_STATIC) != SQLITE_OK ||
+      sqlite3_bind_text(view, 2, file_info->view_settings, -1, SQLITE_STATIC) != SQLITE_OK) { return false; }
+  return sqlite3_step(view) == SQLITE_DONE;
 }
 
 static bool sqlite_get_fileinfo(zathura_database_t* db, const char* file, const uint8_t* hash,
@@ -756,7 +763,8 @@ static bool sqlite_get_fileinfo(zathura_database_t* db, const char* file, const 
 
   static const char SQL_FILEINFO_GET[] =
       "SELECT page, offset, zoom, rotation, pages_per_row, first_page_column, position_x, position_y, "
-      "page_right_to_left FROM fileinfo WHERE file = ? OR hash = ? ORDER BY time DESC LIMIT 1;";
+      "page_right_to_left, (SELECT settings FROM document_view WHERE document_view.file = fileinfo.file) "
+      "FROM fileinfo WHERE file = ? OR hash = ? ORDER BY time DESC LIMIT 1;";
 
   g_autoptr(sqlite3_stmt) stmt = prepare_statement(priv->session, SQL_FILEINFO_GET);
   if (stmt == NULL) {
@@ -783,6 +791,7 @@ static bool sqlite_get_fileinfo(zathura_database_t* db, const char* file, const 
   file_info->position_x             = sqlite3_column_double(stmt, 6);
   file_info->position_y             = sqlite3_column_double(stmt, 7);
   file_info->page_right_to_left     = sqlite3_column_int(stmt, 8) != 0;
+  file_info->view_settings          = sqlite3_column_text_dup(stmt, 9);
 
   return true;
 }

@@ -1,0 +1,62 @@
+project('zathura-ps', 'c',
+  version: '2026.07.18',
+  meson_version: '>=0.61',
+  default_options: ['c_std=c23', 'warning_level=3']
+)
+
+version = meson.project_version()
+
+cc = meson.get_compiler('c')
+
+datadir = get_option('datadir')
+desktopdir = join_paths(datadir, 'applications')
+metainfodir = join_paths(datadir, 'metainfo')
+
+# required dependencies
+zathura = dependency('zathura', version: '>=2026.07.18')
+girara = dependency('girara')
+glib = dependency('glib-2.0')
+cairo = dependency('cairo')
+spectre = dependency('libspectre')
+
+build_dependencies = [zathura, girara, glib, cairo, spectre]
+
+if get_option('plugindir') == ''
+  plugindir = zathura.get_variable(pkgconfig: 'plugindir')
+else
+  plugindir = get_option('plugindir')
+endif
+
+# defines
+defines = [
+  '-DVERSION="@0@"'.format(version),
+  '-D_DEFAULT_SOURCE',
+]
+
+# compile flags
+flags = [
+  '-Werror=implicit-function-declaration',
+  '-Werror=vla',
+  '-Werror=int-conversion',
+  '-Werror=maybe-uninitialized'
+]
+flags = cc.get_supported_arguments(flags)
+
+sources = files(
+  'zathura-ps/document.c',
+  'zathura-ps/meta.c',
+  'zathura-ps/page.c',
+  'zathura-ps/plugin.c',
+  'zathura-ps/render.c'
+)
+
+ps = shared_module('ps',
+  sources,
+  dependencies: build_dependencies,
+  c_args: defines + flags,
+  install: true,
+  install_dir: plugindir,
+  gnu_symbol_visibility: 'hidden'
+)
+
+subdir('data')

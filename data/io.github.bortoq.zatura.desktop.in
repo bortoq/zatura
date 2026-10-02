@@ -10,4 +10,4 @@ Terminal=false
 Categories=Office;Viewer;
 # Translators: Search terms to find this application. Do not translate or
 # localize the semicolons. The list must also end with a semicolon.
-Keywords=PDF;PS;PostScript;DjVU;document;presentation;viewer;
+Keywords=PDF;EPUB;FB2;PS;PostScript;DjVU;comic;document;presentation;viewer;

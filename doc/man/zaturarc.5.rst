@@ -101,6 +101,12 @@ the *zaturarc* file to make those changes permanent:
   * presentation
   * index
   * insert
+  * inputbar (command/search editing)
+
+  In ``[inputbar]``, use ``input_activate``, ``input_abort``,
+  ``input_completion``, ``input_edit``, and ``input_history``. Other modes
+  use document actions. ``original`` is the original-zoom argument and
+  ``append-filepath`` appends the document path when focusing the input bar.
 
   The brackets around the value are mandatory.
   For older configurations, ``[fullscreen]`` is accepted as a deprecated alias
@@ -852,6 +858,90 @@ The settings described here can be changed with ``set``.
 
   * Value type: Integer
   * Default value: 1
+
+*page-brightness*, *page-contrast*, *page-gamma*, *page-saturation*
+  Display-only page adjustments, independently of recolor. Each setting is an
+  integer from -100 to 100, with default 0. Out-of-range values are clamped.
+  Positive brightness lightens the page; positive contrast increases contrast;
+  positive gamma lifts midtones; saturation -100 makes the page grayscale.
+  Printing and original image/attachment export retain original colors.
+
+  The default physical number-row bindings follow mpv: 1/2 decrease/increase
+  contrast, 3/4 brightness, 5/6 gamma, and 7/8 saturation, by one unit per press.
+  They work in normal and fullscreen windows and in presentation. Command-bar
+  text input is unaffected. These bindings take priority over numeric command
+  prefixes; use ``unmap 1`` through ``unmap 8`` to restore prefix behavior.
+
+  Available mapping functions are ``adjust_brightness``, ``adjust_contrast``,
+  ``adjust_gamma``, and ``adjust_saturation`` with ``up`` or ``down`` arguments.
+  ``reset_page_effects`` restores all four values to 0 without changing recolor.
+  Example configuration::
+
+    set page-gamma 20
+    set page-saturation -100
+    map <C-0> reset_page_effects
+    map <C-b> adjust_brightness down
+
+*save-view-settings*
+  Save and restore additional viewing preferences for each document in the
+  SQLite history database. Default: true. Includes image effects, recoloring,
+  text size, margins, single-page mode, page spacing, panel visibility and clock
+  state. Saved preferences override configuration defaults for known files;
+  new files use the configuration. Base page/zoom/rotation history is retained
+  when false. ``database=null`` disables persistent history altogether. Normal
+  closure and exit save preferences; forced process termination cannot do so.
+
+*statusbar-show-time*
+  Show local time in 24-hour HH:MM form immediately before the page number.
+  Default: false. ``t`` toggles it in normal and presentation modes. Time updates
+  automatically, even while the document is idle. The statusbar must be visible
+  (``guioptions`` contains ``s``). The state is saved with document preferences.
+  A custom binding uses ``map t toggle_time``.
+
+*reflow-margin-top*
+  Top page margin for reflowable EPUB, FB2 (including ZIP), and XHTML books,
+  in logical GTK pixels. Default: 4. Range: 0 through 1000. Changes repaginate
+  the open book without a restart and preserve the current reading location.
+  Fixed-layout PDF, DjVu, and images are unaffected. Publisher/user CSS page
+  margins and root body padding are replaced; paragraph spacing, indentation,
+  and the rest of the book styling remain in effect. Oversized margins are
+  reduced proportionally to retain at least 72 points of text area per axis.
+
+*reflow-margin-bottom*
+  Bottom book page margin, in logical GTK pixels. Default: 4. Range: 0 through
+  1000. Independent of the top margin, with the same repagination and size
+  limits as ``reflow-margin-top``.
+
+*reflow-margin-outer*
+  Outside margin of a two-page spread, in logical GTK pixels. Default: 4.
+  Range: 0 through 1000. Applies to the left edge of the left page and the
+  right edge of the right page. In one column it applies to both sides.
+  Mirroring follows ``first-page-column`` and ``page-right-to-left``.
+
+*reflow-margin-inner*
+  Inside margin towards the middle of a two-page spread, in logical GTK
+  pixels. Default: 4. Range: 0 through 1000. The distance between texts in
+  a spread is twice this margin plus ``page-h-padding``. One-column layouts
+  use ``reflow-margin-outer`` for both sides. Page spacing does not change.
+
+*reflow-font-size*
+  Default text font size in points for reflowable documents such as FB2,
+  EPUB and XHTML. The default is 12; values are clamped to 6 through 72.
+  ``Ctrl+-`` decreases it by one point; ``Ctrl++`` or ``Ctrl+=`` increases
+  it. Numeric keypad plus/minus work too. Physical-key matching remains
+  independent of the active keyboard layout. Fixed-layout documents are
+  unaffected.
+
+  Reflowable pages are repaginated to fit the viewport and current number
+  of columns. Switching to two columns fits both pages automatically;
+  window resizing and font changes trigger another layout. The current
+  text location is mapped through the new pagination.
+
+  Example configuration::
+
+    set reflow-font-size 14
+    map <C-minus> adjust_book_font down
+    map <C-plus> adjust_book_font up
 
 *recolor*
   En/Disables recoloring

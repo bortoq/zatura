@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright 2015-2018 pwmt.org -->
+<component type="addon">
+  <id>org.pwmt.zathura-djvu</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>Zlib</project_license>
+  <developer id="org.pwmt">
+    <name>pwmt</name>
+  </developer>
+  <extends>org.pwmt.zathura</extends>
+  <name>Zathura-DjVU</name>
+  <summary>DjVU plugin for zathura</summary>
+  <url type="homepage">https://pwmt.org/projects/zathura-djvu/</url>
+  <url type="bugtracker">https://github.com/pwmt/zathura-djvu/issues</url>
+  <url type="donation">https://pwmt.org/help/donate</url>
+  <url type="contact">https://pwmt.org/contact</url>
+  <url type="vcs-browser">https://github.com/pwmt/zathura-djvu</url>
+  <releases>
+    <release version="2026.07.18" date="2026-07-18" />
+    <release version="2026.05.10" date="2026-05-10" />
+    <release version="2026.02.03" date="2026-02-03" />
+    <release version="2026.01.30" date="2026-01-30" />
+    <release version="0.2.11" date="2025-10-28" />
+    <release version="0.2.10" date="2024-08-04" />
+  </releases>
+</component>

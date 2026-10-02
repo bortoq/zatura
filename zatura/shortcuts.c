@@ -30,6 +30,55 @@
 #include "utils.h"
 #include "zatura.h"
 
+bool sc_adjust_book_font(girara_session_t* session, girara_argument_t* argument,
+                         girara_event_t* UNUSED(event), unsigned int count) {
+  zathura_t* app = session ? session->global.data : NULL;
+  if (!app || !zathura_document_is_reflowable(app->document)) { return false; }
+  int font = 12;
+  girara_setting_get(session, "reflow-font-size", &font);
+  const bool decrease = argument && (argument->n < 0 || argument->n == DOWN);
+  font = CLAMP(font + (decrease ? -1 : 1) * (int)MIN(MAX(count, 1), 66), 6, 72);
+  girara_setting_set(session, "reflow-font-size", &font);
+  return true;
+}
+
+bool sc_adjust_page_effect(girara_session_t* session, girara_argument_t* argument, girara_event_t* UNUSED(event),
+                           unsigned int UNUSED(t)) {
+  if (!session || !argument || !argument->data) {
+    return false;
+  }
+  const char* name = argument->data;
+  int value = 0;
+  if (!girara_setting_get(session, name, &value)) {
+    return false;
+  }
+  const int step = argument->n == DOWN || argument->n == -1 ? -1 : 1;
+  value = CLAMP(value + step, -100, 100);
+  girara_setting_set(session, name, &value);
+  return true;
+}
+
+#define PAGE_EFFECT_SHORTCUT(function, setting) \
+  bool function(girara_session_t* session, girara_argument_t* argument, girara_event_t* event, unsigned int t) { \
+    girara_argument_t adjustment = {.n = argument ? argument->n : 1, .data = (void*)setting}; \
+    return sc_adjust_page_effect(session, &adjustment, event, t); \
+  }
+PAGE_EFFECT_SHORTCUT(sc_adjust_brightness, "page-brightness")
+PAGE_EFFECT_SHORTCUT(sc_adjust_contrast, "page-contrast")
+PAGE_EFFECT_SHORTCUT(sc_adjust_gamma, "page-gamma")
+PAGE_EFFECT_SHORTCUT(sc_adjust_saturation, "page-saturation")
+#undef PAGE_EFFECT_SHORTCUT
+
+bool sc_reset_page_effects(girara_session_t* session, girara_argument_t* UNUSED(argument),
+                          girara_event_t* UNUSED(event), unsigned int UNUSED(t)) {
+  const int neutral = 0;
+  const char* names[] = {"page-brightness", "page-contrast", "page-gamma", "page-saturation"};
+  for (unsigned i = 0; i < G_N_ELEMENTS(names); ++i) {
+    girara_setting_set(session, names[i], &neutral);
+  }
+  return true;
+}
+
 /* Helper function for highlighting the links */
 static bool draw_links(zathura_t* zathura) {
   return zathura_document_widget_prepare_links(zathura->ui.document_widget);
@@ -313,12 +362,17 @@ bool sc_equal_page_mode(girara_session_t* session, girara_argument_t* argument, 
   zathura_t* zathura = session->global.data;
   g_return_val_if_fail(argument != NULL, false);
 
-  if (argument->n >= ZATHURA_EQUAL_MODE_NUMBER) {
+  if (argument->n < 0 || argument->n >= ZATHURA_EQUAL_MODE_NUMBER) {
     girara_error("equal mode: unknown mode %d", argument->n);
     return false;
   }
 
-  return apply_equal_page_mode(zathura, argument->n);
+  const bool applied = apply_equal_page_mode(zathura, argument->n);
+  if (applied) {
+    const char* modes[] = {"none", "equal_width", "equal_height"};
+    girara_setting_set(session, "page-mode", modes[argument->n]);
+  }
+  return applied;
 }
 
 bool sc_focus_inputbar(girara_session_t* session, girara_argument_t* argument, girara_event_t* UNUSED(event),
@@ -602,6 +656,8 @@ bool sc_reload(girara_session_t* session, girara_argument_t* UNUSED(argument), g
   document_open(zathura, zathura_filemonitor_get_filepath(zathura->file_monitor.monitor), NULL,
                 zathura->file_monitor.password, file_info.current_page, &file_info);
 
+  g_free(file_info.view_settings);
+
   // redo search to preserve the previous search state
   if (zathura->global.search_string && zathura->global.are_search_results_highlighted) {
     g_idle_add_full(G_PRIORITY_LOW + 10, redo_search, zathura, NULL);
@@ -690,6 +746,29 @@ bool sc_scroll(girara_session_t* session, girara_argument_t* argument, girara_ev
     if (layout_mode == DOCUMENT_WIDGET_SINGLE) {
       return scroll_single_page_full(zathura, argument->n == FULL_DOWN);
     }
+  }
+
+  /* Reflowable pages fill one viewport: full scrolling turns an exact row
+   * rather than adding a viewport-sized offset that accumulates rounding. */
+  if ((argument->n == FULL_DOWN || argument->n == FULL_UP) &&
+      zathura_document_is_reflowable(zathura->document)) {
+    unsigned int columns = 1;
+    girara_setting_get(session, "pages-per-row", &columns);
+    columns = MAX(columns, 1);
+    g_autofree char* first = NULL;
+    girara_setting_get(session, "first-page-column", &first);
+    const int offset = find_first_page_column(first, columns) - 1;
+    const int count = zathura_document_get_number_of_pages(zathura->document);
+    const int page = zathura_document_get_current_page_number(zathura->document);
+    const int rows = (count + offset + columns - 1) / columns;
+    const int delta = (int)MIN(MAX(t, 1), (unsigned int)rows) * (argument->n == FULL_DOWN ? 1 : -1);
+    int row = (page + offset) / columns + delta;
+    bool wrap = false;
+    girara_setting_get(session, "scroll-wrap", &wrap);
+    row = wrap ? (row % rows + rows) % rows : CLAMP(row, 0, rows - 1);
+    zathura_document_widget_reanchor(zathura->ui.document_widget);
+    page_set(zathura, CLAMP(row * (int)columns - offset, 0, count - 1));
+    return false;
   }
 
   /* if TOP or BOTTOM, go there and we are done */
@@ -1567,6 +1646,8 @@ bool sc_toggle_single_page_mode(girara_session_t* session, girara_argument_t* UN
     const unsigned int pages_per_row = 1;
     girara_setting_set(zathura->ui.session, "pages-per-row", &pages_per_row);
   }
+  const bool single = old_mode != DOCUMENT_WIDGET_SINGLE;
+  girara_setting_set(session, "single-page-mode", &single);
 
   return true;
 }
@@ -1877,4 +1958,12 @@ bool sc_file_chooser(girara_session_t* session, girara_argument_t* UNUSED(argume
   GtkWindow* parent = GTK_WINDOW(session->gtk.window);
   gtk_file_dialog_open(dialog, parent, NULL, cb_file_chooser_open, zathura);
   return true;
+}
+
+bool sc_toggle_time(girara_session_t* session, girara_argument_t* UNUSED(argument),
+                    girara_event_t* UNUSED(event), unsigned int UNUSED(t)) {
+  bool enabled = false;
+  girara_setting_get(session, "statusbar-show-time", &enabled);
+  enabled = !enabled;
+  return girara_setting_set(session, "statusbar-show-time", &enabled);
 }

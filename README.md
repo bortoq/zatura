@@ -5,6 +5,23 @@ zatura is a highly customizable and functional document viewer based on the
 girara user interface library and several document libraries.
 It is a fork of [zathura](https://github.com/pwmt/zathura).
 
+Differences from Zathura
+-----------------------
+
+* Physical keyboard shortcuts work identically with English and Russian layouts.
+* Normal and fullscreen windows share the same shortcuts; F11 changes the window state.
+* Contrast, brightness, gamma and saturation controls use keys 1–8, with responsive key repeat.
+* EPUB and FB2 books (including FB2 in ZIP) fit one or two columns to the window;
+  Ctrl+- / Ctrl++ changes the text size, and four configurable page margins save screen space.
+* Document history also restores image adjustments, book layout and viewing preferences.
+* `t` toggles a local HH:MM clock before the page number.
+* The original Zathura plugin API remains supported; bundled plugin sources cover
+  books, PDF, DjVu, PostScript, images and comic archives.
+
+Configuration is `~/.config/zatura/zaturarc`. See the [complete annotated example](doc/zaturarc.example),
+[reading guide](doc/READING.md), [plugin/format details](doc/PLUGINS.md) and
+[refactoring notes](doc/REFACTORING.md).
+
 Requirements
 ------------
 
@@ -16,7 +33,7 @@ The following dependencies are required:
 * `libxkbcommon` (for layout independent shortcuts)
 * `libmagic` from file(1): for mime-type detection
 * `json-glib`
-* `sqlite3` (>= 3.25.0): sqlite3 database backend
+* `sqlite3` (>= 3.35.0): sqlite3 database backend
 * `libxxhash`: file hashing
 
 The following dependencies are optional:

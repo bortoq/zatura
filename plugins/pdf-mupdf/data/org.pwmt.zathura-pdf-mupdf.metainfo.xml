@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright 2015-2018 pwmt.org -->
+<component type="addon">
+  <id>org.pwmt.zathura-pdf-mupdf</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>Zlib</project_license>
+  <developer id="org.pwmt">
+    <name>pwmt</name>
+  </developer>
+  <extends>org.pwmt.zathura</extends>
+  <name>Zathura-PDF-MuPDF</name>
+  <summary>PDF plugin for zathura based on MuPDF</summary>
+  <url type="homepage">https://pwmt.org/projects/zathura-pdf-mupdf/</url>
+  <url type="bugtracker">https://github.com/pwmt/zathura-pdf-mupdf/issues</url>
+  <url type="donation">https://pwmt.org/help/donate</url>
+  <url type="contact">https://pwmt.org/contact</url>
+  <url type="vcs-browser">https://github.com/pwmt/zathura-pdf-mupdf</url>
+  <releases>
+    <release version="2026.07.18" date="2026-07-18" />
+    <release version="2026.05.10" date="2026-05-10" />
+    <release version="2026.02.03" date="2026-02-03" />
+    <release version="2026.01.30" date="2026-01-30" />
+    <release version="0.4.6" date="2025-10-28" />
+    <release version="0.4.5" date="2025-10-27" />
+    <release version="0.4.4" date="2024-08-04" />
+  </releases>
+</component>

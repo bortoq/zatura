@@ -177,6 +177,8 @@ static void cb_view_adjustment_changed(GtkAdjustment* adjustment, zathura_t* zat
     zathura_document_set_viewport_height(document, size);
   }
 
+  zathura_reflow_queue(zathura);
+
   // bounds from the old layout must not replace the pending page anchor.
   if (zathura_document_widget_mode_change_pending(zathura->ui.document_widget)) {
     girara_debug("Handling view adjustment change while processing page mode change.");
@@ -357,6 +359,7 @@ void cb_page_layout_value_changed(girara_session_t* session, const char* name, g
   zathura_document_set_position_x(document, anchor_x);
   zathura_document_set_position_y(document, anchor_y);
   refresh_view(zathura);
+  zathura_reflow_queue(zathura);
 }
 
 void cb_index_row_activated(GtkListView* view, guint position, void* data) {
@@ -776,4 +779,25 @@ void cb_hide_links(GtkWidget* widget, gpointer data) {
 
   zathura_t* zathura = data;
   zathura_document_widget_hide_links(zathura->ui.document_widget);
+}
+
+void cb_reflow_font_size_changed(girara_session_t* session, const char* name,
+                                 girara_setting_type_t UNUSED(type), const void* value, void* UNUSED(data)) {
+  const int requested = *(const int*)value;
+  const int font = CLAMP(requested, 6, 72);
+  if (font != requested) { girara_setting_set(session, name, &font); return; }
+  zathura_reflow_queue(session->global.data);
+}
+
+void cb_reflow_margin_changed(girara_session_t* session, const char* name,
+                              girara_setting_type_t UNUSED(type), const void* value, void* UNUSED(data)) {
+  const int requested = *(const int*)value;
+  const int margin = CLAMP(requested, 0, 1000);
+  if (margin != requested) { girara_setting_set(session, name, &margin); return; }
+  zathura_reflow_queue(session->global.data);
+}
+
+void cb_statusbar_time_changed(girara_session_t* session, const char* UNUSED(name),
+                               girara_setting_type_t UNUSED(type), const void* UNUSED(value), void* UNUSED(data)) {
+  statusbar_clock_update(session->global.data);
 }

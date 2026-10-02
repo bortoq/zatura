@@ -26,6 +26,7 @@ typedef struct zathura_page_widget_private_s {
   cairo_surface_t* surface;             /**< Cairo surface */
   cairo_surface_t* thumbnail;           /**< Cairo surface */
   ZathuraRenderRequest* render_request; /* Request object */
+  unsigned int effects_generation;
   bool cached;                          /**< Cached state */
 
   struct {
@@ -511,6 +512,12 @@ static void cb_page_draw(GtkDrawingArea* GIRARA_UNUSED(area), cairo_t* cairo, in
   const unsigned int page_height = (unsigned int)height;
   const unsigned int page_width  = (unsigned int)width;
 
+  if ((priv->surface || priv->thumbnail) && page_widget_on_screen(widget) &&
+      priv->effects_generation != zathura_renderer_get_effects_generation(zathura->sync.render_thread)) {
+    /* Keep drawing the previous image while a worker filters the latest settings. */
+    zathura_render_request(priv->render_request, g_get_real_time());
+  }
+
   bool surface_exists = priv->surface != NULL || priv->thumbnail != NULL;
 
   if (zathura->predecessor_document != NULL && zathura->predecessor_document_widget != NULL && !surface_exists) {
@@ -849,7 +856,13 @@ void zathura_page_widget_update_surface(ZathuraPageWidget* widget, cairo_surface
   if (thumbnail_size == 0) {
     thumbnail_size = ZATHURA_PAGE_THUMBNAIL_DEFAULT_SIZE;
   }
-  bool new_render = (priv->surface == NULL && priv->thumbnail == NULL);
+  const unsigned int generation = zathura_renderer_get_effects_generation(priv->zathura->sync.render_thread);
+  const bool effects_changed = surface && priv->effects_generation != generation;
+  if (effects_changed) {
+    cairo_surface_destroy(priv->thumbnail);
+    priv->thumbnail = NULL;
+  }
+  bool new_render = (priv->surface == NULL && priv->thumbnail == NULL) || effects_changed;
 
   if (priv->surface != NULL) {
     cairo_surface_destroy(priv->surface);
@@ -857,6 +870,7 @@ void zathura_page_widget_update_surface(ZathuraPageWidget* widget, cairo_surface
   }
   if (surface != NULL) {
     priv->surface = cairo_surface_reference(surface);
+    priv->effects_generation = generation;
 
     if (surface_small_enough(surface, thumbnail_size, priv->thumbnail)) {
       if (priv->thumbnail != NULL) {
@@ -876,10 +890,12 @@ void zathura_page_widget_update_surface(ZathuraPageWidget* widget, cairo_surface
   }
 }
 
-static void cb_update_surface(ZathuraRenderRequest* UNUSED(request), cairo_surface_t* surface, void* data) {
+static void cb_update_surface(ZathuraRenderRequest* request, cairo_surface_t* surface, void* data) {
   ZathuraPageWidget* widget = data;
   g_return_if_fail(ZATHURA_IS_PAGE_WIDGET(widget));
   zathura_page_widget_update_surface(widget, surface, false);
+  ZathuraPageWidgetPrivate* completed_priv = zathura_page_widget_get_instance_private(widget);
+  completed_priv->effects_generation = zathura_render_request_get_completed_effects_generation(request);
 
   if (surface == NULL) {
     return;
@@ -1369,6 +1385,12 @@ static void cb_menu_image_save(GSimpleAction* UNUSED(action), GVariant* UNUSED(p
   priv->images.current = NULL;
 }
 
+void zathura_page_widget_refresh_effects(ZathuraPageWidget* widget) {
+  g_return_if_fail(ZATHURA_IS_PAGE_WIDGET(widget));
+  /* Frame scheduling combines repeat key events without resetting geometry or surfaces. */
+  zathura_page_widget_redraw_canvas(widget);
+}
+
 void zathura_page_widget_update_view_time(ZathuraPageWidget* widget) {
   g_return_if_fail(ZATHURA_IS_PAGE_WIDGET(widget));
   ZathuraPageWidgetPrivate* priv = zathura_page_widget_get_instance_private(widget);
@@ -1377,7 +1399,9 @@ void zathura_page_widget_update_view_time(ZathuraPageWidget* widget) {
     zathura_render_request_update_view_time(priv->render_request);
   }
   /* do not kick the initial render while it is held */
-  if (priv->surface == NULL && priv->zathura->sync.initial_render_held == false) {
+  const bool stale_effects = zathura_page_get_visibility(priv->page) &&
+      priv->effects_generation != zathura_renderer_get_effects_generation(priv->zathura->sync.render_thread);
+  if ((priv->surface == NULL || stale_effects) && priv->zathura->sync.initial_render_held == false) {
     zathura_render_request(priv->render_request, g_get_real_time());
   }
 }

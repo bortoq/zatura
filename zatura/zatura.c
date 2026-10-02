@@ -25,6 +25,7 @@
 #include "bookmarks.h"
 #include "callbacks.h"
 #include "config.h"
+#include "view-settings.h"
 #include "commands.h"
 #include "database-null.h"
 #ifndef WITH_SANDBOX
@@ -218,8 +219,11 @@ static bool init_ui(zathura_t* zathura) {
   gtk_widget_add_controller(GTK_WIDGET(zathura->ui.session->gtk.view), GTK_EVENT_CONTROLLER(drop_target));
 
   /* zatura signals */
-  zathura->signals.refresh_view = g_signal_new("refresh-view", GTK_TYPE_WIDGET, G_SIGNAL_RUN_LAST, 0, NULL, NULL,
-                                               g_cclosure_marshal_generic, G_TYPE_NONE, 1, G_TYPE_POINTER);
+  zathura->signals.refresh_view = g_signal_lookup("refresh-view", GTK_TYPE_WIDGET);
+  if (zathura->signals.refresh_view == 0) {
+    zathura->signals.refresh_view = g_signal_new("refresh-view", GTK_TYPE_WIDGET, G_SIGNAL_RUN_LAST, 0, NULL, NULL,
+                                                 g_cclosure_marshal_generic, G_TYPE_NONE, 1, G_TYPE_POINTER);
+  }
 
   g_signal_connect(G_OBJECT(zathura->ui.session->gtk.view), "refresh-view", G_CALLBACK(cb_refresh_view), zathura);
 
@@ -404,12 +408,15 @@ bool zathura_init(zathura_t* zathura) {
   /* configuration */
   config_load_default(zathura);
   config_load_files(zathura);
+  zathura->default_view_settings = zatura_view_settings_capture(zathura, NULL);
 
   /* UI */
   if (init_ui(zathura) == false) {
     girara_error("Failed to initialize UI.");
     goto error_free;
   }
+
+  statusbar_clock_update(zathura);
 
   /* database */
   if (init_database(zathura) == false) {
@@ -455,6 +462,8 @@ void zathura_free(zathura_t* zathura) {
   }
 
   document_close(zathura, false);
+  g_clear_handle_id(&zathura->statusbar_clock_source, g_source_remove);
+  g_free(zathura->default_view_settings);
   document_predecessor_free(zathura);
 
   /* MIME type detection */
@@ -600,6 +609,13 @@ static bool setup_renderer(zathura_t* zathura, zathura_document_t* UNUSED(docume
   zathura_renderer_enable_recolor_reverse_video(renderer, recolor);
   girara_setting_get(zathura->ui.session, "recolor-adjust-lightness", &recolor);
   zathura_renderer_enable_recolor_adjust_lightness(renderer, recolor);
+
+  PageEffects effects = {0};
+  girara_setting_get(zathura->ui.session, "page-brightness", &effects.brightness);
+  girara_setting_get(zathura->ui.session, "page-contrast", &effects.contrast);
+  girara_setting_get(zathura->ui.session, "page-gamma", &effects.gamma);
+  girara_setting_get(zathura->ui.session, "page-saturation", &effects.saturation);
+  zathura_renderer_set_page_effects(renderer, &effects);
 
   zathura->sync.render_thread = renderer;
 
@@ -850,6 +866,9 @@ static bool document_widget_create(zathura_t* zathura, zathura_document_t* docum
   g_signal_connect(widget, "page-widgets-loaded", G_CALLBACK(cb_document_widget_page_widgets_loaded), zathura);
 
   zathura->ui.document_widget = ZATHURA_DOCUMENT_WIDGET(widget);
+  if (zathura->reflow.busy) {
+    zathura_document_widget_reanchor(zathura->ui.document_widget);
+  }
   gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(zathura->ui.view), widget);
   gtk_widget_set_visible(widget, TRUE);
   return true;
@@ -866,6 +885,126 @@ static void document_widget_release(zathura_t* zathura) {
   gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(zathura->ui.view), NULL);
   zathura_document_widget_set_document(document_widget, NULL);
   g_object_unref(document_widget);
+}
+
+static void initial_render_cancel_hold(zathura_t* zathura);
+
+/* Rebuild page objects only after the old renderer is stopped. The MuPDF
+ * extension maps its content bookmark through the new pagination. */
+bool zathura_reflow_document(zathura_t* zathura) {
+  if (!zathura || zathura->reflow.busy || !zathura->ui.document_widget ||
+      !zathura_document_is_reflowable(zathura->document)) { return false; }
+  zathura_document_t* document = zathura->document;
+  unsigned int vh = 0, vw = 0, columns = 1;
+  zathura_document_get_viewport_size(document, &vh, &vw);
+  if (vw < 100 || vh < 100) { return false; }
+  girara_setting_get(zathura->ui.session, "pages-per-row", &columns);
+  columns = MAX(columns, 1);
+  int hpad = 1, vpad = 1, font = 12;
+  girara_setting_get(zathura->ui.session, "page-h-padding", &hpad);
+  girara_setting_get(zathura->ui.session, "page-v-padding", &vpad);
+  girara_setting_get(zathura->ui.session, "reflow-font-size", &font);
+  const double unit = zathura_document_get_scale(document) / zathura_document_get_zoom(document);
+  const float width = MAX(80.0, ((double)vw - MAX(hpad, 0) * (columns - 1) - 8) / columns / unit);
+  const float height = MAX(120.0, (double)vh / unit);
+  int top = 4, bottom = 4, outer = 4, inner = 4;
+  girara_setting_get(zathura->ui.session, "reflow-margin-top", &top);
+  girara_setting_get(zathura->ui.session, "reflow-margin-bottom", &bottom);
+  girara_setting_get(zathura->ui.session, "reflow-margin-outer", &outer);
+  girara_setting_get(zathura->ui.session, "reflow-margin-inner", &inner);
+  g_autofree char* first = NULL;
+  girara_setting_get(zathura->ui.session, "first-page-column", &first);
+  bool rtl = false;
+  girara_setting_get(zathura->ui.session, "page-right-to-left", &rtl);
+  zatura_reflow_margins_t margins = {.top = top / unit, .bottom = bottom / unit,
+      .outer = outer / unit, .inner = inner / unit, .columns = columns,
+      .first_column = find_first_page_column(first, columns), .right_to_left = rtl};
+  if (columns == 1) { margins.inner = margins.outer; }
+  /* Preserve a usable text area even for oversized user margins. */
+  const float horizontal = margins.outer + margins.inner;
+  const float vertical = margins.top + margins.bottom;
+  if (horizontal > width - 72) {
+    margins.outer *= (width - 72) / horizontal;
+    margins.inner *= (width - 72) / horizontal;
+  }
+  if (vertical > height - 72) {
+    margins.top *= (height - 72) / vertical;
+    margins.bottom *= (height - 72) / vertical;
+  }
+  if (zathura_document_reflow_matches(document, width, height, font, &margins)) { return false; }
+  zathura->reflow.busy = true;
+  /* Index links and search rectangles refer to the old pagination. */
+  if (zathura->ui.index) {
+    GtkWidget* parent = gtk_widget_get_parent(zathura->ui.index);
+    if (GTK_IS_STACK(parent)) { gtk_stack_remove(GTK_STACK(parent), zathura->ui.index); }
+    else { g_object_ref_sink(zathura->ui.index); g_object_unref(zathura->ui.index); }
+    zathura->ui.index = NULL;
+    zathura->global.current_index_position = 0;
+    if (girara_mode_get(zathura->ui.session) == zathura->modes.index) {
+      girara_mode_set(zathura->ui.session, zathura->modes.normal);
+    }
+  }
+  g_clear_pointer(&zathura->sync.pending_search_input, g_free);
+  if (zathura->global.search_string && zathura->global.are_search_results_highlighted) {
+    zathura->sync.pending_search_input = g_strdup(zathura->global.search_string);
+    zathura->sync.pending_search_direction = zathura->global.search_direction;
+    zathura->global.current_search_result = 0;
+    zathura->global.total_search_results = 0;
+  }
+  int mode = DOCUMENT_WIDGET_GRID;
+  g_object_get(zathura->ui.document_widget, "layout-mode", &mode, NULL);
+  initial_render_cancel_hold(zathura);
+  zathura_document_widget_stop_page_widget_preload(zathura->ui.document_widget);
+  zathura_renderer_stop(zathura->sync.render_thread);
+  document_widget_release(zathura);
+  g_clear_object(&zathura->sync.render_thread);
+  const bool success = zathura_document_reflow(document, width, height, font, &margins);
+  const unsigned int page = zathura_document_get_current_page_number(document);
+  zathura_page_t* current = zathura_document_get_page(document, page);
+  if (!current || !zathura_page_load(current, NULL)) {
+    zathura->reflow.busy = false;
+    document_close(zathura, false);
+    return false;
+  }
+  for (unsigned int i = 0; i < zathura_document_get_number_of_pages(document); ++i) {
+    zathura_page_t* item = zathura_document_get_page(document, i);
+    zathura_page_set_width(item, zathura_page_get_width(current));
+    zathura_page_set_height(item, zathura_page_get_height(current));
+  }
+  zathura_document_set_zoom(document, 1.0);
+  zathura_document_set_adjust_mode(document, ZATHURA_ADJUST_NONE);
+  zathura_document_set_position_x(document, 0);
+  zathura_document_set_position_y(document, 0);
+  if (!setup_renderer(zathura, document) ||
+      !document_widget_create(zathura, document, MAX(vpad, 0), MAX(hpad, 0), columns,
+                              find_first_page_column(first, columns), rtl)) {
+    zathura->reflow.busy = false;
+    document_close(zathura, false);
+    return false;
+  }
+  g_object_set(zathura->ui.document_widget, "layout-mode", mode, NULL);
+  zathura_document_widget_ensure_page(zathura->ui.document_widget, page);
+  page_set(zathura, page);
+  zathura_document_widget_start_page_widget_preload(zathura->ui.document_widget);
+  statusbar_page_number_update(zathura);
+  refresh_view(zathura);
+  zathura->reflow.busy = false;
+  return success;
+}
+
+static gboolean reflow_pending(gpointer data) {
+  zathura_t* zathura = data;
+  zathura->reflow.source = 0;
+  zathura_reflow_document(zathura);
+  return G_SOURCE_REMOVE;
+}
+
+void zathura_reflow_queue(zathura_t* zathura) {
+  if (zathura && !zathura->reflow.busy && !zathura->reflow.source &&
+      zathura_document_is_reflowable(zathura->document)) {
+    /* Bounded coalescing: repeats do not postpone processing until release. */
+    zathura->reflow.source = g_timeout_add(50, reflow_pending, zathura);
+  }
 }
 
 /* render the focused page once synchronously now that the scale is settled */
@@ -931,6 +1070,7 @@ bool document_open(zathura_t* zathura, const char* path, const char* uri, const 
   }
 
   g_return_val_if_fail(zathura->document == NULL, false);
+  g_autofree char* saved_view = NULL;
 
   /* FIXME: since there are many call chains leading here, check again if we need to expand ~ or
    * ~user. We should fix all call sites instead */
@@ -1018,6 +1158,19 @@ bool document_open(zathura_t* zathura, const char* path, const char* uri, const 
   }
   girara_debug("checking file info: found = %s", known_file ? "true" : "false");
 
+  saved_view = file_info_p ? g_strdup(file_info.view_settings) : file_info.view_settings;
+  bool save_view = true;
+  girara_setting_get(zathura->ui.session, "save-view-settings", &save_view);
+  zathura->reflow.busy = true;
+  zatura_view_settings_restore(zathura, zathura->default_view_settings);
+  if (save_view && known_file) {
+    zatura_view_settings_restore(zathura, saved_view);
+    /* Recreate saved book pagination before validating its stored page number. */
+    zatura_view_settings_restore_layout(document, saved_view);
+    number_of_pages = zathura_document_get_number_of_pages(document);
+  }
+  zathura->reflow.busy = false;
+
   /* set page offset */
   zathura_document_set_page_offset(document, file_info.page_offset);
 
@@ -1091,7 +1244,7 @@ bool document_open(zathura_t* zathura, const char* path, const char* uri, const 
       zathura_document_set_adjust_mode(document, ZATHURA_ADJUST_NONE);
     }
   } else {
-    zathura_document_set_adjust_mode(document, ZATHURA_ADJUST_NONE);
+    zathura_document_set_adjust_mode(document, save_view ? zatura_view_settings_adjust_mode(saved_view) : ZATHURA_ADJUST_NONE);
   }
 
   /* initialize bisect state */
@@ -1217,7 +1370,12 @@ bool document_open(zathura_t* zathura, const char* path, const char* uri, const 
     girara_setting_set(zathura->ui.session, "first-page-column", first_page_column_list);
     g_free(file_info.first_page_column_list);
 
-    page_right_to_left = file_info.page_right_to_left;
+    if (known_file) {
+      page_right_to_left = file_info.page_right_to_left;
+      girara_setting_set(zathura->ui.session, "page-right-to-left", &page_right_to_left);
+    } else {
+      girara_setting_get(zathura->ui.session, "page-right-to-left", &page_right_to_left);
+    }
 
     /* create and fully configure the view only once there is a document to display */
     if (!document_widget_create(zathura, document, page_v_padding, page_h_padding, pages_per_row, first_page_column,
@@ -1270,6 +1428,8 @@ bool document_open(zathura_t* zathura, const char* path, const char* uri, const 
   zathura_update_view_ppi(zathura);
 
   zathura_document_widget_start_page_widget_preload(zathura->ui.document_widget);
+
+  zathura_reflow_queue(zathura);
 
   /* emit DocumentOpen signal */
 #ifndef WITH_SANDBOX
@@ -1381,6 +1541,9 @@ static zathura_fileinfo_t zathura_get_document_fileinfo(zathura_t* zathura, zath
   girara_setting_get(zathura->ui.session, "first-page-column", &file_info.first_page_column_list);
   girara_setting_get(zathura->ui.session, "page-right-to-left", &file_info.page_right_to_left);
 
+  bool save_view = true;
+  girara_setting_get(zathura->ui.session, "save-view-settings", &save_view);
+  if (save_view) { file_info.view_settings = zatura_view_settings_capture(zathura, document); }
   return file_info;
 }
 
@@ -1408,6 +1571,7 @@ static void save_fileinfo_to_db(zathura_t* zathura) {
   zathura_db_save_quickmarks(zathura->database, path, zathura->global.marks);
 
   g_free(file_info.first_page_column_list);
+  g_free(file_info.view_settings);
 }
 
 bool document_predecessor_free(zathura_t* zathura) {
@@ -1445,6 +1609,8 @@ bool document_close(zathura_t* zathura, bool keep_monitor) {
   if (zathura_has_document(zathura) == false) {
     return false;
   }
+
+  g_clear_handle_id(&zathura->reflow.source, g_source_remove);
 
   /* stop rendering */
   zathura_renderer_stop(zathura->sync.render_thread);
@@ -1623,7 +1789,16 @@ void statusbar_page_number_update(zathura_t* zathura) {
         page_number_text = g_strdup_printf("[%d/%d]", current_page_number + 1, number_of_pages);
       }
     }
-    girara_statusbar_item_set_text(zathura->ui.statusbar.page_number, page_number_text);
+    bool show_time = false;
+    girara_setting_get(zathura->ui.session, "statusbar-show-time", &show_time);
+    if (show_time) {
+      g_autoptr(GDateTime) now = g_date_time_new_now_local();
+      g_autofree char* time = g_date_time_format(now, "%H:%M");
+      g_autofree char* text = g_strdup_printf("%s %s", time, page_number_text);
+      girara_statusbar_item_set_text(zathura->ui.statusbar.page_number, text);
+    } else {
+      girara_statusbar_item_set_text(zathura->ui.statusbar.page_number, page_number_text);
+    }
 
     bool page_number_in_window_title = false;
     girara_setting_get(zathura->ui.session, "window-title-page", &page_number_in_window_title);
@@ -1634,8 +1809,26 @@ void statusbar_page_number_update(zathura_t* zathura) {
       girara_set_window_title(zathura->ui.session, title);
     }
   } else {
-    girara_statusbar_item_set_text(zathura->ui.statusbar.page_number, "");
+    bool show_time = false;
+    girara_setting_get(zathura->ui.session, "statusbar-show-time", &show_time);
+    g_autoptr(GDateTime) now = g_date_time_new_now_local();
+    g_autofree char* time = show_time ? g_date_time_format(now, "%H:%M") : g_strdup("");
+    girara_statusbar_item_set_text(zathura->ui.statusbar.page_number, time);
   }
+}
+
+static gboolean statusbar_clock_tick(gpointer data) {
+  statusbar_page_number_update(data);
+  return G_SOURCE_CONTINUE;
+}
+
+void statusbar_clock_update(zathura_t* zathura) {
+  if (!zathura) { return; }
+  g_clear_handle_id(&zathura->statusbar_clock_source, g_source_remove);
+  bool show = false;
+  girara_setting_get(zathura->ui.session, "statusbar-show-time", &show);
+  if (show) { zathura->statusbar_clock_source = g_timeout_add_seconds(1, statusbar_clock_tick, zathura); }
+  statusbar_page_number_update(zathura);
 }
 
 bool position_set(zathura_t* zathura, double position_x, double position_y) {

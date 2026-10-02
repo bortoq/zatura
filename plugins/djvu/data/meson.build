@@ -1,0 +1,18 @@
+install_data('org.pwmt.zathura-djvu.metainfo.xml', install_dir: metainfodir)
+install_data('org.pwmt.zathura-djvu.desktop', install_dir: desktopdir)
+
+desktop_file_validate = find_program('desktop-file-validate', required: false, native: true)
+if desktop_file_validate.found()
+  test('validate-desktop',
+    desktop_file_validate,
+    args: [join_paths(meson.current_source_dir(), 'org.pwmt.zathura-djvu.desktop')]
+  )
+endif
+
+appstream_util = find_program('appstreamcli', required: false, native: true)
+if appstream_util.found()
+  test('validate-appdata',
+    appstream_util,
+    args: ['validate', '--no-net', join_paths(meson.current_source_dir(), 'org.pwmt.zathura-djvu.metainfo.xml')]
+  )
+endif

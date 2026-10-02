@@ -1,0 +1,10 @@
+*.o
+*.do
+*~
+.depend
+*.so
+*.swp
+tags
+compile_commands.json
+.ycm_extra_conf.*
+build

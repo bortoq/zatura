@@ -1,0 +1,7 @@
+*.o
+*~
+*.swp
+*.swo
+.ycm_extra_conf.*
+compile_commands.json
+build

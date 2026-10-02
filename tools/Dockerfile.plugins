@@ -1,0 +1,2 @@
+FROM zatura-build:local
+RUN apk add --no-cache mupdf-dev djvulibre-dev libspectre-dev libarchive-dev shared-mime-info ghostscript

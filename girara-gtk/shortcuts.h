@@ -244,4 +244,6 @@ bool girara_mouse_event_add(girara_session_t* session, guint mask, guint button,
  */
 bool girara_mouse_event_remove(girara_session_t* session, guint mask, guint button, girara_mode_t mode);
 
+void girara_inputbar_shortcut_free(girara_inputbar_shortcut_t* shortcut);
+
 #endif

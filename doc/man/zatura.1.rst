@@ -20,6 +20,27 @@ focuses on keyboard interaction.
 file name, the content will be read from the standard input. If no files are
 given, an empty **zatura** instance launches.
 
+Reading books and saving preferences
+------------------------------------
+
+EPUB, FB2 (including ZIP), and other reflowable formats use the available window
+height. ``d`` changes one/two columns; ``Ctrl+-`` and ``Ctrl++`` change text size.
+The four ``reflow-margin-*`` settings control top, bottom, outside and inside
+page margins in logical pixels. PDF and other fixed-layout pages are unaffected.
+
+With ``database=sqlite`` and ``save-view-settings=true`` (the defaults), closing
+or exiting saves viewing preferences separately for each document. Reopening
+restores image adjustments, recoloring, font size, margins, single-page mode,
+page spacing, panels and clock state, in addition to the existing page, zoom,
+rotation and column history. Unseen documents use the configured defaults.
+History is stored in ``$XDG_DATA_HOME/zatura/bookmarks.sqlite`` (normally
+``~/.local/share/zatura/bookmarks.sqlite``). ``database=null`` disables history;
+``save-view-settings=false`` disables the additional viewing preferences.
+
+The settings file is ``~/.config/zatura/zaturarc``; the repository includes a
+fully annotated example at ``doc/zaturarc.example``. Keyboard shortcuts refer
+to physical US positions and work independently of the active text layout.
+
 Options
 -------
 
@@ -92,8 +113,14 @@ General
     Scroll to the left, down, up or right direction
   ^t, ^d, ^u, ^y
     Scroll a half page left, down, up or right
-  t, ^f, ^b, space, <S-space>, y
-    Scroll a full page left, down, up or right
+  ^f, ^b, space, <S-space>, y
+    Scroll a full page down, up or right. Reflowable books turn exact spreads.
+  t
+    Toggle local HH:MM before the page number in the statusbar.
+  1, 2 / 3, 4 / 5, 6 / 7, 8
+    Decrease/increase contrast, brightness, gamma and saturation.
+  ^-, ^+ (or ^=)
+    Decrease/increase the base text size in EPUB/FB2 books.
   gg, G, nG
     Goto to the first, the last or to the nth page
   P

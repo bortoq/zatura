@@ -7,6 +7,13 @@
 
 #include "types.h"
 
+bool sc_adjust_page_effect(girara_session_t*, girara_argument_t*, girara_event_t*, unsigned int);
+bool sc_adjust_brightness(girara_session_t*, girara_argument_t*, girara_event_t*, unsigned int);
+bool sc_adjust_contrast(girara_session_t*, girara_argument_t*, girara_event_t*, unsigned int);
+bool sc_adjust_gamma(girara_session_t*, girara_argument_t*, girara_event_t*, unsigned int);
+bool sc_adjust_saturation(girara_session_t*, girara_argument_t*, girara_event_t*, unsigned int);
+bool sc_reset_page_effects(girara_session_t*, girara_argument_t*, girara_event_t*, unsigned int);
+
 /**
  * Abort the current action and return to normal mode
  *
@@ -405,5 +412,10 @@ bool sc_file_chooser(girara_session_t* session, girara_argument_t* argument, gir
  * @return true if no error occurred otherwise false
  */
 bool apply_equal_page_mode(zathura_t* zathura, zathura_equal_mode_t mode);
+
+bool sc_adjust_book_font(girara_session_t* session, girara_argument_t* argument,
+                         girara_event_t* event, unsigned int count);
+
+bool sc_toggle_time(girara_session_t* session, girara_argument_t* argument, girara_event_t* event, unsigned int t);
 
 #endif // SHORTCUTS_H

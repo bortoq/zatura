@@ -7,6 +7,9 @@
 #include <glib.h>
 #include <magic.h>
 #include <stdio.h>
+#include <string.h>
+#include <archive.h>
+#include <archive_entry.h>
 
 #include "macros.h"
 
@@ -112,10 +115,43 @@ static char* guess_type_glib(const char* path) {
   return NULL;
 }
 
+/* Inspect ZIP headers only; leave EPUB and image archives to their plugins.
+ * Members are never extracted to disk, including names containing ../. */
+static bool zip_contains_fb2(const char* path) {
+  struct archive* zip = archive_read_new();
+  if (!zip) {
+    return false;
+  }
+  archive_read_support_format_zip(zip);
+  bool found = false;
+  if (archive_read_open_filename(zip, path, 16384) == ARCHIVE_OK) {
+    struct archive_entry* entry = NULL;
+    for (unsigned i = 0; i < 4096 && archive_read_next_header(zip, &entry) == ARCHIVE_OK; ++i) {
+      const char* name = archive_entry_pathname(entry);
+      const size_t length = name ? strlen(name) : 0;
+      if (archive_entry_filetype(entry) == AE_IFREG && length >= 4 &&
+          g_ascii_strcasecmp(name + length - 4, ".fb2") == 0) {
+        found = true;
+        break;
+      }
+    }
+  }
+  archive_read_free(zip);
+  return found;
+}
+
 char* zathura_content_type_guess(zathura_content_type_context_t* context, const char* path,
                                  const girara_list_t* supported_content_types) {
   /* try libmagic first */
   g_autofree char* content_type = guess_type_magic(context, path);
+  g_autofree char* lower_path = g_ascii_strdown(path, -1);
+  if ((g_strcmp0(content_type, "application/zip") == 0 || g_str_has_suffix(lower_path, ".zip") ||
+       g_str_has_suffix(lower_path, ".fb2z")) && zip_contains_fb2(path)) {
+    g_autofree char* fb2_type = g_content_type_from_mime_type("application/x-fictionbook+xml");
+    if (supported_content_types == NULL || girara_list_find(supported_content_types, list_cmpstr, fb2_type)) {
+      return g_steal_pointer(&fb2_type);
+    }
+  }
   if (content_type != NULL) {
     if (supported_content_types == NULL ||
         girara_list_find(supported_content_types, list_cmpstr, content_type) != NULL) {

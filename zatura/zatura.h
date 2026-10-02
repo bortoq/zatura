@@ -188,6 +188,14 @@ struct zathura_s {
     gchar* file;
   } stdin_support;
 
+  struct {
+    guint source;
+    bool busy;
+  } reflow;
+
+  char* default_view_settings;
+  guint statusbar_clock_source;
+
   zathura_document_t* document;                       /**< The current document */
   zathura_document_t* predecessor_document;           /**< The document from before a reload */
   ZathuraDocumentWidget* predecessor_document_widget; /**< The document widget from before a reload */
@@ -455,6 +463,7 @@ bool adjust_view(zathura_t* zathura);
  * @param zatura The zatura session
  */
 void statusbar_page_number_update(zathura_t* zathura);
+void statusbar_clock_update(zathura_t* zathura);
 
 /**
  * Gets the nicely formatted filename of the loaded document according to settings
@@ -498,5 +507,8 @@ void zathura_modify_current_search_result(zathura_t* zathura, int diff);
  * @param current_page_number The current page number
  */
 void zathura_set_current_search_result_previous_pages(zathura_t* zathura, unsigned int current_page_number);
+
+bool zathura_reflow_document(zathura_t* zathura);
+void zathura_reflow_queue(zathura_t* zathura);
 
 #endif // ZATHURA_H

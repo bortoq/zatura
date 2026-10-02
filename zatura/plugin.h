@@ -10,6 +10,9 @@
 #include "plugin-api.h"
 #include "zathura-version.h"
 #include "zatura.h"
+#include "reflow.h"
+const zatura_reflow_plugin_v2_t* zathura_plugin_get_reflow_v2(const zathura_plugin_t* plugin);
+const zatura_reflow_plugin_t* zathura_plugin_get_reflow(const zathura_plugin_t* plugin);
 
 /**
  * Creates a new instance of the plugin manager

@@ -289,6 +289,8 @@ void zathura_document_widget_clear_thumbnails(ZathuraDocumentWidget* document);
  *
  * @param zatura Zatura object
  */
+void zathura_document_widget_refresh_effects(ZathuraDocumentWidget* document);
+
 void zathura_document_widget_render_all(ZathuraDocumentWidget* document);
 
 /**
@@ -335,5 +337,7 @@ unsigned int zathura_document_widget_get_pages_per_row(ZathuraDocumentWidget* do
  * @return The column for the first page
  */
 unsigned int zathura_document_widget_get_first_page_column(ZathuraDocumentWidget* document);
+
+void zathura_document_widget_reanchor(ZathuraDocumentWidget* document);
 
 #endif // DOCUMENT_WIDGET_H

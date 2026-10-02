@@ -68,6 +68,8 @@ zathura_link_t* zathura_page_widget_link_get(ZathuraPageWidget* widget, unsigned
  *
  * @param widget the widget
  */
+void zathura_page_widget_refresh_effects(ZathuraPageWidget* widget);
+
 void zathura_page_widget_update_view_time(ZathuraPageWidget* widget);
 /**
  * Check if we have a surface.

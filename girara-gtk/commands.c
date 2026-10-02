@@ -381,6 +381,10 @@ static bool girara_cmd_map_unmap(girara_session_t* session, girara_list_t* argum
           }
         }
 
+        if (!found) {
+          shortcut_key = gdk_keyval_from_name(tmp_inner + 2);
+          found = shortcut_key != GDK_KEY_VoidSymbol;
+        }
         if (found == false) {
           girara_warning("Invalid special key value or mode: %s", tmp_inner);
           girara_notify(session, GIRARA_ERROR, _("Invalid special key value for %s"), tmp_inner);
@@ -416,6 +420,10 @@ static bool girara_cmd_map_unmap(girara_session_t* session, girara_list_t* argum
         }
       }
 
+      if (!found) {
+        shortcut_key = gdk_keyval_from_name(tmp_inner);
+        found = shortcut_key != GDK_KEY_VoidSymbol;
+      }
       if (found == false) {
         girara_warning("Invalid special key value or mode: %s", tmp_inner);
         girara_notify(session, GIRARA_ERROR, _("Invalid special key value or mode %s"), tmp_inner);
@@ -431,7 +439,9 @@ static bool girara_cmd_map_unmap(girara_session_t* session, girara_list_t* argum
   }
 
   if (unmap == true) {
-    if (mouse_event == false) {
+    if (!mouse_event && shortcut_mode == session->modes.inputbar) {
+      girara_inputbar_shortcut_remove(session, shortcut_mask, shortcut_key);
+    } else if (mouse_event == false) {
       girara_shortcut_remove(session, shortcut_mask, shortcut_key, shortcut_buffer_command, shortcut_mode);
     } else {
       girara_mouse_event_remove(session, shortcut_mask, shortcut_mouse_button, shortcut_mode);
@@ -529,7 +539,11 @@ static bool girara_cmd_map_unmap(girara_session_t* session, girara_list_t* argum
     }
   }
 
-  if (mouse_event == false) {
+  if (!mouse_event && shortcut_mode == session->modes.inputbar) {
+    if (shortcut_key == 0) { return false; }
+    girara_inputbar_shortcut_add(session, shortcut_mask, shortcut_key, shortcut_function,
+                                shortcut_argument_n, shortcut_argument_data);
+  } else if (mouse_event == false) {
     girara_shortcut_add(session, shortcut_mask, shortcut_key, shortcut_buffer_command, shortcut_function, shortcut_mode,
                         shortcut_argument_n, shortcut_argument_data);
   } else {

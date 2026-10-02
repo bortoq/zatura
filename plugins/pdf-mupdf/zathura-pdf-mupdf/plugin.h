@@ -1,0 +1,206 @@
+/* SPDX-License-Identifier: Zlib */
+
+#ifndef PDF_H
+#define PDF_H
+
+#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
+#include <zathura/plugin-api.h>
+#include <zathura/reflow.h>
+#include <mupdf/fitz.h>
+#include <cairo.h>
+
+typedef struct mupdf_document_s {
+  fz_context* ctx;       /**< Context */
+  fz_document* document; /**< mupdf document */
+  GMutex mutex;
+  bool reflow_margins_active;
+  float reflow_width, reflow_height;
+  zatura_reflow_margins_t margins;
+} mupdf_document_t;
+
+typedef struct mupdf_page_s {
+  fz_page* page;       /**< Reference to the mupdf page */
+  fz_context* ctx;     /**< Context */
+  fz_stext_page* text; /**< Page text */
+  fz_point offset;    /**< Content translation inside full-size book page */
+  fz_rect bbox;        /**< Bbox */
+  bool extracted_text; /**< If text has already been extracted */
+} mupdf_page_t;
+
+fz_point mupdf_reflow_offset(const mupdf_document_t* document, unsigned int page);
+
+/**
+ * Open a pdf document
+ *
+ * @param document Zathura document
+ * @return true if no error occurred, otherwise false
+ */
+zathura_error_t pdf_document_open(zathura_document_t* document);
+
+/**
+ * Closes and frees the internal document structure
+ *
+ * @param document Zathura document
+ * @return true if no error occurred, otherwise false
+ */
+zathura_error_t pdf_document_free(zathura_document_t* document, void* mupdf_document);
+
+/**
+ * Saves the document to the given path
+ *
+ * @param document Zathura document
+ * @param path File path
+ * @return ZATHURA_ERROR_OK when no error occurred, otherwise see
+ *    zathura_error_t
+ */
+zathura_error_t pdf_document_save_as(zathura_document_t* document, void* mupdf_document, const char* path);
+
+/**
+ * Generates the index of the document
+ *
+ * @param document Zathura document
+ * @param error Set to an error value (see zathura_error_t) if an
+ *   error occurred
+ * @return Tree node object or NULL if an error occurred (e.g.: the document has
+ *   no index)
+ */
+girara_tree_node_t* pdf_document_index_generate(zathura_document_t* document, void* mupdf_document,
+                                                zathura_error_t* error);
+
+/**
+ * Returns a reference to a page
+ *
+ * @param page Page object
+ * @return A page object or NULL if an error occurred
+ */
+zathura_error_t pdf_page_init(zathura_page_t* page);
+
+/**
+ * Frees a pdf page
+ *
+ * @param page Page
+ * @return true if no error occurred, otherwise false
+ */
+zathura_error_t pdf_page_clear(zathura_page_t* page, void* mupdf_page);
+
+/**
+ * Searches for a specific text on a page and returns a list of results
+ *
+ * @param page Page
+ * @param text Search item
+ * @param error Set to an error value (see zathura_error_t) if an
+ *   error occurred
+ * @return List of search results or NULL if an error occurred
+ */
+girara_list_t* pdf_page_search_text(zathura_page_t* page, void* mupdf_page, const char* text, zathura_error_t* error);
+
+/**
+ * Returns a list of internal/external links that are shown on the given page
+ *
+ * @param page Page
+ * @param error Set to an error value (see zathura_error_t) if an
+ *   error occurred
+ * @return List of links or NULL if an error occurred
+ */
+girara_list_t* pdf_page_links_get(zathura_page_t* page, void* mupdf_page, zathura_error_t* error);
+
+/**
+ * Returns a list of attachment names included in the document
+ *
+ * @param document Zathura document
+ * @param data Mupdf document representation
+ * @param error Set to an error value (see zathura_error_t) if an
+ *   error occurred
+ * @return List of attachments
+ */
+girara_list_t* pdf_document_attachments_get(zathura_document_t* document, void* data, zathura_error_t* error);
+
+/**
+ * Saves an attachment to a file
+ *
+ * @param document Zathura document
+ * @param data Mupdf document representation
+ * @param name Name of the attachment
+ * @param file Target file path
+ * @return ZATHURA_ERROR_OK when no error occurred, otherwise see
+ *    zathura_error_t
+ */
+zathura_error_t pdf_document_attachment_save(zathura_document_t* document, void* data, const char* name,
+                                             const char* file);
+
+/**
+ * Returns a list of images included on the zathura page
+ *
+ * @param page The page
+ * @param error Set to an error value (see zathura_error_t) if an
+ *   error occurred
+ * @return List of images
+ */
+girara_list_t* pdf_page_images_get(zathura_page_t* page, void* mupdf_page, zathura_error_t* error);
+
+/**
+ * Gets the content of the image in a cairo surface
+ *
+ * @param page Page
+ * @param image Image identifier
+ * @param error Set to an error value (see \ref zathura_error_t) if an
+ *   error occurred
+ * @return The cairo image surface or NULL if an error occurred
+ */
+cairo_surface_t* pdf_page_image_get_cairo(zathura_page_t* page, void* mupdf_page, zathura_image_t* image,
+                                          zathura_error_t* error);
+
+/**
+ * Get text for selection
+ * @param page Page
+ * @param rectangle Selection
+ * @error Set to an error value (see \ref zathura_error_t) if an error
+ * occurred
+ * @return The selected text (needs to be deallocated with g_free)
+ */
+char* pdf_page_get_text(zathura_page_t* page, void* mupdf_page, zathura_rectangle_t rectangle, zathura_error_t* error);
+
+/**
+ * Gets rectangles of highlighted text
+ * @param page Page
+ * @param rectangle Selection
+ * @error Set to an error value (see \ref zathura_error_t) if an error
+ * occurred
+ * @return List of rectangles or NULL if an error occurred.
+ */
+girara_list_t* pdf_page_get_selection(zathura_page_t* page, void* mupdf_page, zathura_rectangle_t rectangle,
+                                      zathura_error_t* error);
+
+/**
+ * Returns a list of document information entries of the document
+ *
+ * @param document Zathura document
+ * @param error Set to an error value (see zathura_error_t) if an
+ *   error occurred
+ * @return List of information entries or NULL if an error occurred
+ */
+girara_list_t* pdf_document_get_information(zathura_document_t* document, void* mupdf_document, zathura_error_t* error);
+
+/**
+ * Get the page label
+ *
+ * @param page Page
+ * @param data Mupdf page representation
+ * @param label Label
+ * @return ZATHURA_ERROR_OK when no error occurred, otherwise see
+ *    zathura_error_t
+ */
+zathura_error_t pdf_page_get_label(zathura_page_t* page, void* data, char** label);
+
+/**
+ * Renders a page onto a cairo object
+ *
+ * @param page Page
+ * @param cairo Cairo object
+ * @return  true if no error occurred, otherwise false
+ */
+zathura_error_t pdf_page_render_cairo(zathura_page_t* page, void* mupdf_page, cairo_t* cairo, bool printing);
+
+#endif // PDF_H

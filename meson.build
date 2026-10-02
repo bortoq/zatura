@@ -56,8 +56,9 @@ cairo = dependency('cairo')
 magic = dependency('libmagic')
 sqlite = dependency('sqlite3', version: '>=3.35.0')
 xxhash = dependency('libxxhash')
+archive = dependency('libarchive')
 
-build_dependencies = [libm, girara, glib, gio, gthread, gmodule, gtk4, cairo, magic, json_glib, xxhash, xkbcommon]
+build_dependencies = [libm, girara, glib, gio, gthread, gmodule, gtk4, cairo, magic, json_glib, xxhash, xkbcommon, archive]
 
 # defines
 defines = [
@@ -144,6 +145,7 @@ sources = files(
   'zatura/links.c',
   'zatura/marks.c',
   'zatura/page.c',
+  'zatura/page-effects.c',
   'zatura/page-widget.c',
   'zatura/plugin.c',
   'zatura/print.c',
@@ -153,6 +155,7 @@ sources = files(
   'zatura/types.c',
   'zatura/utils.c',
   'zatura/zatura.c',
+  'zatura/view-settings.c',
 )
 sources += zatura_resources
 
@@ -163,6 +166,7 @@ headers = files(
   'zatura/macros.h',
   'zatura/page.h',
   'zatura/plugin-api.h',
+  'zatura/reflow.h',
   'zatura/types.h',
 )
 headers += version_header

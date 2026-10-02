@@ -411,6 +411,12 @@ void zathura_document_widget_update_mode(ZathuraDocumentWidget* document) {
   gtk_widget_queue_resize(GTK_WIDGET(document));
 }
 
+void zathura_document_widget_reanchor(ZathuraDocumentWidget* document) {
+  ZathuraDocumentWidgetPrivate* priv = zathura_document_widget_get_instance_private(document);
+  priv->mode_change_pending = true;
+  gtk_widget_queue_allocate(GTK_WIDGET(document));
+}
+
 bool zathura_document_widget_mode_change_pending(ZathuraDocumentWidget* document) {
   g_return_val_if_fail(document != NULL, false);
   ZathuraDocumentWidgetPrivate* priv = zathura_document_widget_get_instance_private(document);
@@ -1212,6 +1218,20 @@ void zathura_document_widget_clear_thumbnails(ZathuraDocumentWidget* document) {
     /* the widget exists only if the background fill already created it */
     if (page_widget != NULL) {
       zathura_page_widget_clear_thumbnail(ZATHURA_PAGE_WIDGET(page_widget));
+    }
+  }
+}
+
+void zathura_document_widget_refresh_effects(ZathuraDocumentWidget* document) {
+  g_return_if_fail(document != NULL);
+  ZathuraDocumentWidgetPrivate* priv = zathura_document_widget_get_instance_private(document);
+  if (!priv->document) {
+    return;
+  }
+  const unsigned int count = zathura_document_get_number_of_pages(priv->document);
+  for (unsigned int i = 0; i < count; ++i) {
+    if (priv->pages[i] && zathura_page_get_visibility(zathura_document_get_page(priv->document, i))) {
+      zathura_page_widget_refresh_effects(ZATHURA_PAGE_WIDGET(priv->pages[i]));
     }
   }
 }

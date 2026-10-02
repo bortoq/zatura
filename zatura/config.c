@@ -31,6 +31,37 @@
 
 #define INCREMENTAL_SEARCH false
 
+static void cb_page_effect_changed(girara_session_t* session, const char* name, girara_setting_type_t UNUSED(type),
+                                   const void* value, void* UNUSED(data)) {
+  const int supplied = *(const int*)value;
+  const int bounded = CLAMP(supplied, -100, 100);
+  if (bounded != supplied) {
+    girara_notify(session, GIRARA_WARNING, "%s: clamped to %d", name, bounded);
+    girara_setting_set(session, name, &bounded);
+    return;
+  }
+  zathura_t* zathura = session->global.data;
+  if (!zathura || !zathura->sync.render_thread) {
+    return;
+  }
+  PageEffects effects = {0};
+  girara_setting_get(session, "page-brightness", &effects.brightness);
+  girara_setting_get(session, "page-contrast", &effects.contrast);
+  girara_setting_get(session, "page-gamma", &effects.gamma);
+  girara_setting_get(session, "page-saturation", &effects.saturation);
+  if (zathura_renderer_set_page_effects(zathura->sync.render_thread, &effects) && zathura_has_document(zathura)) {
+    zathura_document_widget_refresh_effects(zathura->ui.document_widget);
+  }
+}
+
+static void add_page_effect_shortcuts(girara_session_t* session, girara_mode_t mode) {
+  const char* names[] = {"page-contrast", "page-brightness", "page-gamma", "page-saturation"};
+  for (unsigned i = 0; i < G_N_ELEMENTS(names); ++i) {
+    girara_shortcut_add(session, 0, GDK_KEY_1 + 2 * i, NULL, sc_adjust_page_effect, mode, -1, (void*)names[i]);
+    girara_shortcut_add(session, 0, GDK_KEY_2 + 2 * i, NULL, sc_adjust_page_effect, mode, 1, (void*)names[i]);
+  }
+}
+
 static void cb_jumplist_change(girara_session_t* session, const char* UNUSED(name), girara_setting_type_t UNUSED(type),
                                const void* value, void* UNUSED(data)) {
   g_return_if_fail(value != NULL);
@@ -328,6 +359,7 @@ static void add_default_shortcuts(girara_session_t* gsession, girara_mode_t mode
   girara_shortcut_add(gsession, GDK_CONTROL_MASK, GDK_KEY_p, NULL, sc_print, mode, 0, NULL);
 
   girara_shortcut_add(gsession, GDK_CONTROL_MASK, GDK_KEY_r, NULL, sc_recolor, mode, 0, NULL);
+  add_page_effect_shortcuts(gsession, mode);
 
   girara_shortcut_add(gsession, 0, GDK_KEY_R, NULL, sc_reload, mode, 0, NULL);
 
@@ -359,7 +391,7 @@ static void add_default_shortcuts(girara_session_t* gsession, girara_mode_t mode
   girara_shortcut_add(gsession, GDK_CONTROL_MASK, GDK_KEY_d, NULL, sc_scroll, mode, HALF_DOWN, NULL);
   girara_shortcut_add(gsession, GDK_CONTROL_MASK, GDK_KEY_u, NULL, sc_scroll, mode, HALF_UP, NULL);
   girara_shortcut_add(gsession, GDK_CONTROL_MASK, GDK_KEY_y, NULL, sc_scroll, mode, HALF_RIGHT, NULL);
-  girara_shortcut_add(gsession, 0, GDK_KEY_t, NULL, sc_scroll, mode, FULL_LEFT, NULL);
+  girara_shortcut_add(gsession, 0, GDK_KEY_t, NULL, sc_toggle_time, mode, 0, NULL);
   girara_shortcut_add(gsession, GDK_CONTROL_MASK, GDK_KEY_f, NULL, sc_scroll, mode, FULL_DOWN, NULL);
   girara_shortcut_add(gsession, GDK_CONTROL_MASK, GDK_KEY_b, NULL, sc_scroll, mode, FULL_UP, NULL);
   girara_shortcut_add(gsession, 0, GDK_KEY_y, NULL, sc_scroll, mode, FULL_RIGHT, NULL);
@@ -384,6 +416,12 @@ static void add_default_shortcuts(girara_session_t* gsession, girara_mode_t mode
   girara_shortcut_add(gsession, 0, GDK_KEY_d, NULL, sc_toggle_page_mode, mode, 0, NULL);
   girara_shortcut_add(gsession, 0, GDK_KEY_D, NULL, sc_cycle_first_column, mode, 0, NULL);
 
+  girara_shortcut_add(gsession, GDK_CONTROL_MASK, GDK_KEY_minus, NULL, sc_adjust_book_font, mode, -1, NULL);
+  girara_shortcut_add(gsession, GDK_CONTROL_MASK, GDK_KEY_equal, NULL, sc_adjust_book_font, mode, 1, NULL);
+  girara_shortcut_add(gsession, GDK_CONTROL_MASK, GDK_KEY_plus, NULL, sc_adjust_book_font, mode, 1, NULL);
+  girara_shortcut_add(gsession, GDK_CONTROL_MASK | GDK_SHIFT_MASK, GDK_KEY_plus, NULL, sc_adjust_book_font, mode, 1, NULL);
+  girara_shortcut_add(gsession, GDK_CONTROL_MASK, GDK_KEY_KP_Add, NULL, sc_adjust_book_font, mode, 1, NULL);
+  girara_shortcut_add(gsession, GDK_CONTROL_MASK, GDK_KEY_KP_Subtract, NULL, sc_adjust_book_font, mode, -1, NULL);
   girara_shortcut_add(gsession, 0, GDK_KEY_plus, NULL, sc_zoom, mode, ZOOM_IN, NULL);
   girara_shortcut_add(gsession, 0, GDK_KEY_KP_Add, NULL, sc_zoom, mode, ZOOM_IN, NULL);
   girara_shortcut_add(gsession, 0, GDK_KEY_minus, NULL, sc_zoom, mode, ZOOM_OUT, NULL);
@@ -497,6 +535,13 @@ void config_load_default(zathura_t* zathura) {
 
   girara_setting_add(gsession, "database",              DEFAULT_DB,   STRING, true,  _("Database backend"),         NULL, NULL);
   girara_setting_add(gsession, "filemonitor",           "glib",       STRING, true,  _("File monitor backend"),     NULL, NULL);
+  int_value = 12;
+  girara_setting_add(gsession, "reflow-font-size", &int_value, INT, false, _("Book font size in points"), cb_reflow_font_size_changed, NULL);
+  int_value = 4;
+  girara_setting_add(gsession, "reflow-margin-top", &int_value, INT, false, _("Book top margin in pixels"), cb_reflow_margin_changed, NULL);
+  girara_setting_add(gsession, "reflow-margin-bottom", &int_value, INT, false, _("Book bottom margin in pixels"), cb_reflow_margin_changed, NULL);
+  girara_setting_add(gsession, "reflow-margin-outer", &int_value, INT, false, _("Book outside margin in pixels"), cb_reflow_margin_changed, NULL);
+  girara_setting_add(gsession, "reflow-margin-inner", &int_value, INT, false, _("Book inside margin in pixels"), cb_reflow_margin_changed, NULL);
   uint_value = 10;
   girara_setting_add(gsession, "zoom-step",             &uint_value,  UINT,   false, _("Zoom step"),                NULL, NULL);
   int_value = 1;
@@ -535,6 +580,11 @@ void config_load_default(zathura_t* zathura) {
   girara_setting_add(gsession, "signature-success-color",    NULL,         STRING,  false, _("Color used to highlight valid signatures"), cb_color_change, NULL);
   girara_setting_add(gsession, "signature-warning-color",    NULL,         STRING,  false, _("Color used to highlight signatures with warnings"), cb_color_change, NULL);
   girara_setting_add(gsession, "signature-error-color",      NULL,         STRING,  false, _("Color used to highlight invalid signatures"), cb_color_change, NULL);
+  int_value = 0;
+  girara_setting_add(gsession, "page-brightness", &int_value, INT, false, _("Page brightness (-100 to 100)"), cb_page_effect_changed, NULL);
+  girara_setting_add(gsession, "page-contrast", &int_value, INT, false, _("Page contrast (-100 to 100)"), cb_page_effect_changed, NULL);
+  girara_setting_add(gsession, "page-gamma", &int_value, INT, false, _("Page gamma (-100 to 100)"), cb_page_effect_changed, NULL);
+  girara_setting_add(gsession, "page-saturation", &int_value, INT, false, _("Page saturation (-100 to 100)"), cb_page_effect_changed, NULL);
   bool_value = false;
   girara_setting_add(gsession, "recolor",                    &bool_value,  BOOLEAN, false, _("Recolor pages"), cb_setting_recolor_change, NULL);
   bool_value = false;
@@ -591,6 +641,10 @@ void config_load_default(zathura_t* zathura) {
   girara_setting_add(gsession, "statusbar-home-tilde",       &bool_value,  BOOLEAN, false, _("Use ~ instead of $HOME in the filename in the statusbar"), cb_window_statbusbar_changed, NULL);
   bool_value = false;
   girara_setting_add(gsession, "statusbar-page-percent",     &bool_value,  BOOLEAN, false, _("Display (current page / total pages) as a percent in the statusbar"), cb_window_statbusbar_changed, NULL);
+  bool_value = false;
+  girara_setting_add(gsession, "statusbar-show-time", &bool_value, BOOLEAN, false, _("Show local HH:MM before page number"), cb_statusbar_time_changed, NULL);
+  bool_value = true;
+  girara_setting_add(gsession, "save-view-settings", &bool_value, BOOLEAN, false, _("Save and restore document viewing settings"), NULL, NULL);
   bool_value = true;
   girara_setting_add(gsession, "synctex",                    &bool_value,  BOOLEAN, false, _("Enable SyncTeX support"), NULL, NULL);
   girara_setting_add(gsession, "synctex-editor-command",     "",           STRING,  false, _("SyncTeX editor command"), NULL, NULL);
@@ -684,6 +738,7 @@ void config_load_default(zathura_t* zathura) {
   girara_shortcut_add(gsession, 0, GDK_KEY_F11, NULL, sc_toggle_fullscreen, INSERT, 0, NULL);
 
   /* Presentation mode */
+  add_page_effect_shortcuts(gsession, PRESENTATION);
   girara_shortcut_add(gsession, 0, GDK_KEY_F11, NULL, sc_toggle_fullscreen, PRESENTATION, 0, NULL);
   girara_shortcut_add(gsession, 0,              GDK_KEY_J,             NULL, sc_navigate,            PRESENTATION, NEXT,         NULL);
   girara_shortcut_add(gsession, 0,              GDK_KEY_Down,          NULL, sc_navigate,            PRESENTATION, NEXT,         NULL);
@@ -808,6 +863,11 @@ void config_load_default(zathura_t* zathura) {
   girara_shortcut_mapping_add(gsession, "nohlsearch",               sc_nohlsearch);
   girara_shortcut_mapping_add(gsession, "print",                    sc_print);
   girara_shortcut_mapping_add(gsession, "quit",                     sc_quit);
+  girara_shortcut_mapping_add(gsession, "adjust_brightness", sc_adjust_brightness);
+  girara_shortcut_mapping_add(gsession, "adjust_contrast", sc_adjust_contrast);
+  girara_shortcut_mapping_add(gsession, "adjust_gamma", sc_adjust_gamma);
+  girara_shortcut_mapping_add(gsession, "adjust_saturation", sc_adjust_saturation);
+  girara_shortcut_mapping_add(gsession, "reset_page_effects", sc_reset_page_effects);
   girara_shortcut_mapping_add(gsession, "recolor",                  sc_recolor);
   girara_shortcut_mapping_add(gsession, "reload",                   sc_reload);
   girara_shortcut_mapping_add(gsession, "rotate",                   sc_rotate);
@@ -819,8 +879,20 @@ void config_load_default(zathura_t* zathura) {
   girara_shortcut_mapping_add(gsession, "toggle_page_mode",         sc_toggle_page_mode);
   girara_shortcut_mapping_add(gsession, "toggle_presentation",      sc_toggle_presentation);
   girara_shortcut_mapping_add(gsession, "toggle_single_page_mode",  sc_toggle_single_page_mode);
+  girara_shortcut_mapping_add(gsession, "adjust_book_font", sc_adjust_book_font);
   girara_shortcut_mapping_add(gsession, "zoom",                     sc_zoom);
   girara_shortcut_mapping_add(gsession, "zoom_page",                sc_zoom_page);
+
+  girara_shortcut_mapping_add(gsession, "toggle_time", sc_toggle_time);
+
+  /* Inputbar mappings use the inputbar dispatcher, not the document view. */
+  girara_shortcut_mapping_add(gsession, "input_activate", girara_isc_activate);
+  girara_shortcut_mapping_add(gsession, "input_abort", girara_isc_abort);
+  girara_shortcut_mapping_add(gsession, "input_completion", girara_isc_completion);
+  girara_shortcut_mapping_add(gsession, "input_edit", girara_isc_string_manipulation);
+  girara_shortcut_mapping_add(gsession, "input_history", girara_isc_command_history);
+
+  girara_shortcut_add(gsession, 0, GDK_KEY_t, NULL, sc_toggle_time, PRESENTATION, 0, NULL);
 
   /* add argument mappings */
   girara_argument_mapping_add(gsession, "backward",           BACKWARD);
@@ -866,6 +938,21 @@ void config_load_default(zathura_t* zathura) {
   girara_argument_mapping_add(gsession, "equal_height",       ZATHURA_EQUAL_HEIGHT);
   girara_argument_mapping_add(gsession, "smooth-up",          SMOOTH_UP);
   girara_argument_mapping_add(gsession, "smooth-down",        SMOOTH_DOWN);
+  girara_argument_mapping_add(gsession, "original", ZOOM_ORIGINAL);
+  girara_argument_mapping_add(gsession, "append-filepath", APPEND_FILEPATH);
+  girara_argument_mapping_add(gsession, "input-next", GIRARA_NEXT);
+  girara_argument_mapping_add(gsession, "input-previous", GIRARA_PREVIOUS);
+  girara_argument_mapping_add(gsession, "input-next-group", GIRARA_NEXT_GROUP);
+  girara_argument_mapping_add(gsession, "input-previous-group", GIRARA_PREVIOUS_GROUP);
+  girara_argument_mapping_add(gsession, "delete-last-char", GIRARA_DELETE_LAST_CHAR);
+  girara_argument_mapping_add(gsession, "delete-last-word", GIRARA_DELETE_LAST_WORD);
+  girara_argument_mapping_add(gsession, "delete-to-line-start", GIRARA_DELETE_TO_LINE_START);
+  girara_argument_mapping_add(gsession, "delete-to-line-end", GIRARA_DELETE_TO_LINE_END);
+  girara_argument_mapping_add(gsession, "delete-current-char", GIRARA_DELETE_CURR_CHAR);
+  girara_argument_mapping_add(gsession, "next-char", GIRARA_NEXT_CHAR);
+  girara_argument_mapping_add(gsession, "previous-char", GIRARA_PREVIOUS_CHAR);
+  girara_argument_mapping_add(gsession, "line-start", GIRARA_GOTO_START);
+  girara_argument_mapping_add(gsession, "line-end", GIRARA_GOTO_END);
   /* clang-format on */
 }
 

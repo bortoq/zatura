@@ -265,4 +265,13 @@ gboolean cb_drop_file(GtkDropTarget* self, const GValue* value, double x, double
  */
 void cb_hide_links(GtkWidget* widget, gpointer data);
 
+void cb_statusbar_time_changed(girara_session_t* session, const char* name,
+                               girara_setting_type_t type, const void* value, void* data);
+
+void cb_reflow_margin_changed(girara_session_t* session, const char* name,
+                              girara_setting_type_t type, const void* value, void* data);
+
+void cb_reflow_font_size_changed(girara_session_t* session, const char* name,
+                                 girara_setting_type_t type, const void* value, void* data);
+
 #endif // CALLBACKS_H

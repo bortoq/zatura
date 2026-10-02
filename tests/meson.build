@@ -10,6 +10,12 @@ keycodes = executable('test_keycodes', files('test_keycodes.c', '../girara-gtk/k
 )
 test('keycodes', keycodes)
 
+effects = executable('test_page_effects', files('test_page_effects.c', '../zatura/page-effects.c'),
+  dependencies: [cairo, glib, libm],
+  include_directories: include_directories('../zatura'),
+)
+test('page-effects', effects)
+
 test_dependencies = [
   libzatura_dep,
 ]
@@ -80,6 +86,57 @@ if xvfb.found()
   else
     xvfb_args += ['-a']
   endif
+
+  config_reference = executable('dump_config_reference', files('../tools/dump-config-reference.c'),
+    dependencies: build_dependencies + test_dependencies,
+    include_directories: include_directories,
+    c_args: defines + flags,
+    export_dynamic: true,
+  )
+
+  reflow = executable('test_reflow', files('test_reflow.c'),
+    dependencies: build_dependencies + test_dependencies,
+    include_directories: include_directories,
+    c_args: defines + flags,
+    export_dynamic: true,
+  )
+  python_reflow = find_program('python3')
+  test('xvfb_reflow', python_reflow,
+    args: [meson.current_source_dir() / 'run_reflow.py', xvfb] + xvfb_args + [reflow],
+    timeout: 60,
+    env: env + ['GTK_A11Y=none', 'GSK_RENDERER=cairo'],
+  )
+
+  view_history = executable('test_view_history', files('test_view_history.c'),
+    dependencies: build_dependencies + test_dependencies + [sqlite],
+    include_directories: include_directories,
+    c_args: defines + flags,
+    export_dynamic: true,
+  )
+  test('xvfb_view_history', python_reflow,
+    args: [meson.current_source_dir() / 'run_reflow.py', xvfb] + xvfb_args + [view_history],
+    timeout: 60,
+    env: env + ['GTK_A11Y=none', 'GSK_RENDERER=cairo'],
+  )
+
+  plugin_formats = executable('test_plugin_formats', files('test_plugin_formats.c'),
+    dependencies: build_dependencies + test_dependencies,
+    include_directories: include_directories,
+    c_args: defines + flags,
+    export_dynamic: true,
+  )
+
+  pdf_effects = executable('test_pdf_effects', files('test_pdf_effects.c'),
+    dependencies: build_dependencies + test_dependencies,
+    include_directories: include_directories,
+    c_args: defines + flags,
+    export_dynamic: true,
+  )
+  test('xvfb_pdf_effects', xvfb,
+    args: xvfb_args + [pdf_effects],
+    timeout: 30,
+    env: env + ['GTK_A11Y=none', 'GSK_RENDERER=cairo'],
+  )
 
   test('xvfb_session', xvfb,
     args: xvfb_args + [session],

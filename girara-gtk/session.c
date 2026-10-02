@@ -231,7 +231,7 @@ girara_session_t* girara_session_create(void) {
   session->bindings.commands           = girara_list_new_with_free((girara_free_function_t)girara_command_free);
   session->bindings.special_commands   = girara_list_new_with_free(g_free);
   session->bindings.shortcuts          = girara_list_new_with_free((girara_free_function_t)girara_shortcut_free);
-  session->bindings.inputbar_shortcuts = girara_list_new_with_free(g_free);
+  session->bindings.inputbar_shortcuts = girara_list_new_with_free((girara_free_function_t)girara_inputbar_shortcut_free);
 
   g_mutex_init(&session_private->feedkeys_mutex);
 
@@ -440,6 +440,12 @@ static void girara_session_private_free(girara_session_private_t* session) {
 void girara_session_destroy(girara_session_t* session) {
   if (!session) {
     return;
+  }
+
+  /* Dispose event controllers while their session callback data is still valid. */
+  if (session->gtk.window != NULL) {
+    gtk_window_destroy(GTK_WINDOW(session->gtk.window));
+    session->gtk.window = NULL;
   }
 
   /* clean up shortcuts */

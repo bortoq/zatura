@@ -47,8 +47,63 @@ struct zathura_document_s {
   zathura_device_factors_t device_factors; /**< x and y device scale factors (for e.g. HiDPI) */
   double position_x;                       /**< X adjustment */
   double position_y;                       /**< Y adjustment */
+  float reflow_width, reflow_height, reflow_font_size;
+  zatura_reflow_margins_t reflow_margins;
   bool hash_computed;                      /**< Whether the hash has been computed yet */
 };
+
+bool zathura_document_is_reflowable(zathura_document_t* document) {
+  if (!document) { return false; }
+  const zatura_reflow_plugin_t* reflow = zathura_plugin_get_reflow(document->plugin);
+  return reflow && reflow->supported(document);
+}
+
+bool zathura_document_get_reflow_layout(zathura_document_t* document, float* width, float* height,
+                                        float* font, zatura_reflow_margins_t* margins) {
+  if (!document || document->reflow_width <= 0) { return false; }
+  *width = document->reflow_width; *height = document->reflow_height;
+  *font = document->reflow_font_size; *margins = document->reflow_margins;
+  return true;
+}
+
+bool zathura_document_reflow_matches(zathura_document_t* document, float width, float height, float font_size,
+                                      const zatura_reflow_margins_t* margins) {
+  return document && fabsf(document->reflow_width - width) < 0.5f &&
+      fabsf(document->reflow_height - height) < 0.5f && document->reflow_font_size == font_size &&
+      document->reflow_margins.top == margins->top && document->reflow_margins.bottom == margins->bottom &&
+      document->reflow_margins.outer == margins->outer && document->reflow_margins.inner == margins->inner &&
+      document->reflow_margins.columns == margins->columns &&
+      document->reflow_margins.first_column == margins->first_column &&
+      document->reflow_margins.right_to_left == margins->right_to_left;
+}
+
+bool zathura_document_reflow(zathura_document_t* document, float width, float height, float font_size,
+                                      const zatura_reflow_margins_t* margins) {
+  if (!zathura_document_is_reflowable(document)) { return false; }
+  const zatura_reflow_plugin_t* reflow = zathura_plugin_get_reflow(document->plugin);
+  unsigned int page = document->current_page_number;
+  for (unsigned int i = 0; i < document->number_of_pages; ++i) {
+    zathura_page_free(document->pages[i]);
+  }
+  g_clear_pointer(&document->pages, g_free);
+  const zatura_reflow_plugin_v2_t* v2 = zathura_plugin_get_reflow_v2(document->plugin);
+  const zathura_error_t error = v2 ? v2->layout(document, width, height, font_size, margins, &page)
+                                  : reflow->layout(document, width, height, font_size, &page);
+  document->pages = g_try_malloc0_n(document->number_of_pages, sizeof(zathura_page_t*));
+  if (!document->pages) { document->number_of_pages = 0; return false; }
+  for (unsigned int i = 0; i < document->number_of_pages; ++i) {
+    document->pages[i] = zathura_page_new(document, i, NULL);
+    if (!document->pages[i]) { return false; }
+  }
+  document->current_page_number = MIN(page, document->number_of_pages ? document->number_of_pages - 1 : 0);
+  if (error == ZATHURA_ERROR_OK) {
+    document->reflow_width = width;
+    document->reflow_height = height;
+    document->reflow_font_size = font_size;
+    document->reflow_margins = *margins;
+  }
+  return error == ZATHURA_ERROR_OK;
+}
 
 static bool hash_file(XXH128_canonical_t* dst, const char* path) {
   g_autoptr(GFile) f = g_file_new_for_path(path);

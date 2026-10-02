@@ -119,6 +119,22 @@ void zathura_plugin_manager_set_dir(zathura_plugin_manager_t* plugin_manager, co
   }
 }
 
+const zatura_reflow_plugin_t* zathura_plugin_get_reflow(const zathura_plugin_t* plugin) {
+  gpointer symbol = NULL;
+  if (!plugin || !g_module_symbol(plugin->handle, "zatura_reflow_v1", &symbol)) {
+    return NULL;
+  }
+  const zatura_reflow_plugin_t* reflow = symbol;
+  return reflow && reflow->supported && reflow->layout ? reflow : NULL;
+}
+
+const zatura_reflow_plugin_v2_t* zathura_plugin_get_reflow_v2(const zathura_plugin_t* plugin) {
+  gpointer symbol = NULL;
+  if (!plugin || !g_module_symbol(plugin->handle, "zatura_reflow_v2", &symbol)) { return NULL; }
+  const zatura_reflow_plugin_v2_t* reflow = symbol;
+  return reflow && reflow->layout ? reflow : NULL;
+}
+
 static bool check_suffix(const char* path) {
 #ifdef __APPLE__
   if (g_str_has_suffix(path, ".dylib")) {

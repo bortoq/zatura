@@ -21,6 +21,7 @@ typedef struct zathura_fileinfo_s {
   double position_x;
   double position_y;
   bool page_right_to_left;
+  char* view_settings; /* JSON; caller owns this and first_page_column_list */
 } zathura_fileinfo_t;
 
 #define ZATHURA_TYPE_DATABASE (zathura_database_get_type())
