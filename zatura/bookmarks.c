@@ -32,6 +32,7 @@ zathura_bookmark_t* zathura_bookmark_add(zathura_t* zathura, const gchar* id, un
     old->page = page;
     old->x    = position_x;
     old->y    = position_y;
+    zathura_document_capture_anchor(document, page ? page - 1 : 0, old->anchor);
 
     const char* path = zathura_document_get_path(document);
     if (zathura_db_remove_bookmark(zathura->database, path, old->id) == false) {
@@ -54,6 +55,7 @@ zathura_bookmark_t* zathura_bookmark_add(zathura_t* zathura, const gchar* id, un
   bookmark->page = page;
   bookmark->x    = position_x;
   bookmark->y    = position_y;
+  zathura_document_capture_anchor(document, page ? page - 1 : 0, bookmark->anchor);
   girara_list_append(zathura->bookmarks.bookmarks, bookmark);
 
   const char* path = zathura_document_get_path(document);
@@ -130,5 +132,23 @@ bool zathura_bookmarks_load(zathura_t* zathura, const gchar* file) {
 void zathura_bookmarks_free(zathura_t* zathura) {
   if (zathura) {
     girara_list_free(zathura->bookmarks.bookmarks);
+  }
+}
+
+void zathura_bookmarks_anchors(zathura_t* zathura, bool capture) {
+  if (!zathura || !zathura->document || !zathura->bookmarks.bookmarks) { return; }
+  for (size_t i = 0; i < girara_list_size(zathura->bookmarks.bookmarks); ++i) {
+    zathura_bookmark_t* bookmark = girara_list_nth(zathura->bookmarks.bookmarks, i);
+    if (capture && !bookmark->anchor[0]) {
+      if (zathura_document_capture_anchor(zathura->document, bookmark->page ? bookmark->page - 1 : 0, bookmark->anchor)) {
+        zathura_db_add_bookmark(zathura->database, zathura_document_get_path(zathura->document), bookmark);
+      }
+    } else if (!capture) {
+      unsigned int page = 0;
+      if (zathura_document_resolve_anchor(zathura->document, bookmark->anchor, &page)) {
+        bookmark->page = page + 1;
+        bookmark->x = bookmark->y = DBL_MIN;
+      }
+    }
   }
 }

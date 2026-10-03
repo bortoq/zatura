@@ -11,6 +11,7 @@ struct zathura_bookmark_s {
   unsigned int page;
   double x;
   double y;
+  char anchor[128];
 };
 
 typedef struct zathura_bookmark_s zathura_bookmark_t;
@@ -59,5 +60,7 @@ bool zathura_bookmarks_load(zathura_t* zathura, const gchar* file);
  * @param zatura The zatura instance.
  */
 void zathura_bookmarks_free(zathura_t* zathura);
+
+void zathura_bookmarks_anchors(zathura_t* zathura, bool capture);
 
 #endif // BOOKMARKS_H

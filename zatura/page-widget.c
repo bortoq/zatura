@@ -283,6 +283,7 @@ static void zathura_page_widget_dispose(GObject* object) {
   ZathuraPageWidget* widget      = ZATHURA_PAGE_WIDGET(object);
   ZathuraPageWidgetPrivate* priv = zathura_page_widget_get_instance_private(widget);
 
+  if (priv->render_request) { zathura_render_request_set_surfaces(priv->render_request, NULL, NULL); }
   g_clear_object(&priv->render_request);
   g_clear_pointer(&priv->image_popover, gtk_widget_unparent);
   g_clear_object(&priv->image_actions);
@@ -884,6 +885,7 @@ void zathura_page_widget_update_surface(ZathuraPageWidget* widget, cairo_surface
     cairo_surface_destroy(priv->thumbnail);
     priv->thumbnail = NULL;
   }
+  zathura_render_request_set_surfaces(priv->render_request, priv->surface, priv->thumbnail);
   /* force a redraw here */
   if (priv->surface != NULL) {
     zathura_page_widget_redraw_canvas(widget);
@@ -938,8 +940,7 @@ static void cb_cache_invalidated(ZathuraRenderRequest* UNUSED(request), void* da
   g_return_if_fail(ZATHURA_IS_PAGE_WIDGET(widget));
 
   ZathuraPageWidgetPrivate* priv = zathura_page_widget_get_instance_private(widget);
-  if (zathura_page_widget_have_surface(widget) == true && priv->cached == true &&
-      zathura_page_get_visibility(priv->page) == false) {
+  if (zathura_page_get_visibility(priv->page) == false) {
     /* The page was in the cache but got removed and is invisible, so get rid of
      * the surface. */
     zathura_page_widget_update_surface(widget, NULL, false);
@@ -1395,6 +1396,7 @@ void zathura_page_widget_update_view_time(ZathuraPageWidget* widget) {
   g_return_if_fail(ZATHURA_IS_PAGE_WIDGET(widget));
   ZathuraPageWidgetPrivate* priv = zathura_page_widget_get_instance_private(widget);
 
+  zathura_render_request_set_visible(priv->render_request, zathura_page_get_visibility(priv->page));
   if (zathura_page_get_visibility(priv->page) == true) {
     zathura_render_request_update_view_time(priv->render_request);
   }
@@ -1416,6 +1418,7 @@ void zathura_page_widget_abort_render_request(ZathuraPageWidget* widget) {
   g_return_if_fail(ZATHURA_IS_PAGE_WIDGET(widget));
   ZathuraPageWidgetPrivate* priv = zathura_page_widget_get_instance_private(widget);
   zathura_render_request_abort(priv->render_request);
+  zathura_render_request_set_visible(priv->render_request, zathura_page_get_visibility(priv->page));
 
   /* Make sure that if we are not cached and invisible, that there is no
    * surface.
@@ -1456,4 +1459,5 @@ void zathura_page_widget_clear_thumbnail(ZathuraPageWidget* widget) {
   ZathuraPageWidgetPrivate* priv = zathura_page_widget_get_instance_private(widget);
   cairo_surface_destroy(priv->thumbnail);
   priv->thumbnail = NULL;
+  zathura_render_request_set_surfaces(priv->render_request, priv->surface, NULL);
 }

@@ -18,6 +18,8 @@ typedef struct mupdf_document_s {
   bool reflow_margins_active;
   float reflow_width, reflow_height;
   zatura_reflow_margins_t margins;
+  GArray* anchor_offsets;
+  char* anchor_digest;
 } mupdf_document_t;
 
 typedef struct mupdf_page_s {

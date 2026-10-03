@@ -104,4 +104,6 @@ const char* zathura_plugin_get_path(const zathura_plugin_t* plugin);
  */
 const char* zathura_plugin_get_version(const zathura_plugin_t* plugin);
 
+const zatura_content_anchor_plugin_t* zathura_plugin_get_content_anchor(const zathura_plugin_t* plugin);
+
 #endif // PLUGIN_H

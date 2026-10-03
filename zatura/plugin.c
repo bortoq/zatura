@@ -401,3 +401,10 @@ const char* zathura_plugin_get_version(const zathura_plugin_t* plugin) {
 
   return "unknown";
 }
+
+const zatura_content_anchor_plugin_t* zathura_plugin_get_content_anchor(const zathura_plugin_t* plugin) {
+  gpointer symbol = NULL;
+  if (!plugin || !g_module_symbol(plugin->handle, "zatura_content_anchor_v1", &symbol)) { return NULL; }
+  const zatura_content_anchor_plugin_t* extension = symbol;
+  return extension && extension->capture && extension->resolve ? extension : NULL;
+}

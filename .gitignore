@@ -23,6 +23,7 @@ zatura-*.tar.gz
 
 # build dirs
 build/
+build-ci/
 gcov/
 subprojects/girara
 

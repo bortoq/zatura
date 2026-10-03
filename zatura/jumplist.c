@@ -45,6 +45,7 @@ static void zathura_jumplist_save(zathura_t* zathura) {
     cur->x                       = zathura_document_get_position_x(document);
     cur->y                       = zathura_document_get_position_y(document);
     cur->page                    = zathura_document_get_current_page_number(document);
+    zathura_document_capture_anchor(document, cur->page, cur->anchor);
   }
 }
 
@@ -189,4 +190,16 @@ void zathura_jumplist_free(zathura_t* zathura) {
   zathura_jumplist_clear(zathura);
   girara_list_free(zathura->jumplist.list);
   zathura->jumplist.list = NULL;
+}
+
+void zathura_jumplist_anchors(zathura_t* zathura, bool capture) {
+  if (!zathura || !zathura->document || !zathura->jumplist.list) { return; }
+  for (size_t i = 0; i < girara_list_size(zathura->jumplist.list); ++i) {
+    zathura_jump_t* jump = girara_list_nth(zathura->jumplist.list, i);
+    if (capture && !jump->anchor[0]) {
+      zathura_document_capture_anchor(zathura->document, jump->page, jump->anchor);
+    } else if (!capture && zathura_document_resolve_anchor(zathura->document, jump->anchor, &jump->page)) {
+      jump->x = jump->y = DBL_MIN;
+    }
+  }
 }

@@ -33,6 +33,14 @@ static void raw_page_free(RawPage* entry) {
   g_free(entry);
 }
 
+typedef struct {
+  zathura_page_t* page;
+  cairo_surface_t* surface;
+  cairo_surface_t* thumbnail;
+  size_t surface_bytes, thumbnail_bytes;
+  bool visible;
+} DisplayPixels;
+
 /* private data for ZaturaRenderer */
 typedef struct private_s {
   GThreadPool* pool;       /**< Pool of threads */
@@ -63,6 +71,9 @@ typedef struct private_s {
   GMutex raw_mutex;
   GQueue raw_pages;
   size_t raw_bytes;
+  size_t cache_limit;
+  GHashTable* display_pixels; /* Borrowed surface identities, protected by raw_mutex. */
+  guint cache_trim_source;
 
   GMutex effects_mutex;
   PageEffects effects;
@@ -127,6 +138,8 @@ static void zathura_renderer_init(ZathuraRenderer* renderer) {
   g_mutex_init(&priv->effects_mutex);
   g_mutex_init(&priv->raw_mutex);
   g_queue_init(&priv->raw_pages);
+  priv->cache_limit = (size_t)256 * 1024 * 1024;
+  priv->display_pixels = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, g_free);
 
   /* recolor */
   priv->recolor.enabled          = false;
@@ -179,6 +192,7 @@ static void renderer_finalize(GObject* object) {
   g_mutex_clear(&(priv->mutex));
   g_mutex_clear(&priv->effects_mutex);
   g_queue_clear_full(&priv->raw_pages, (GDestroyNotify)raw_page_free);
+  g_hash_table_unref(priv->display_pixels);
   g_mutex_clear(&priv->raw_mutex);
 
   g_free(priv->page_cache.cache);
@@ -292,6 +306,7 @@ static void render_request_dispose(GObject* object) {
   ZathuraRenderRequestPrivate* priv = zathura_render_request_get_instance_private(request);
 
   if (priv->renderer != NULL) {
+    zathura_render_request_set_surfaces(request, NULL, NULL);
     /* unregister the request */
     renderer_unregister_request(priv->renderer, request);
     /* release our private reference to the renderer */
@@ -434,6 +449,7 @@ void zathura_renderer_stop(ZathuraRenderer* renderer) {
     girara_debug("Setting about-to-close flag for renderer");
   }
   priv->about_to_close = true;
+  g_clear_handle_id(&priv->cache_trim_source, g_source_remove);
 
   if (priv->pool != NULL) {
     girara_debug("Waiting for thread pool to finish.");
@@ -648,6 +664,139 @@ static bool render_to_cairo_surface(cairo_surface_t* surface, zathura_page_t* pa
   return err == ZATHURA_ERROR_OK;
 }
 
+static size_t cache_usage_locked(ZathuraRendererPrivate* priv, size_t* displayed) {
+  g_autoptr(GHashTable) seen = g_hash_table_new(g_direct_hash, g_direct_equal);
+  size_t total = 0, display_bytes = 0;
+  GHashTableIter iterator; gpointer value;
+  g_hash_table_iter_init(&iterator, priv->display_pixels);
+  while (g_hash_table_iter_next(&iterator, NULL, &value)) {
+    const DisplayPixels* pair = value;
+    if (pair->surface && g_hash_table_add(seen, pair->surface)) { display_bytes += pair->surface_bytes; }
+    if (pair->thumbnail && g_hash_table_add(seen, pair->thumbnail)) { display_bytes += pair->thumbnail_bytes; }
+  }
+  total = display_bytes;
+  for (GList* link = priv->raw_pages.head; link; link = link->next) {
+    const RawPage* raw = link->data;
+    if (g_hash_table_add(seen, raw->surface)) { total += raw->bytes; }
+  }
+  if (displayed) { *displayed = display_bytes; }
+  return total;
+}
+
+static bool raw_visible_locked(ZathuraRendererPrivate* priv, const RawPage* raw) {
+  GHashTableIter iterator; gpointer value;
+  g_hash_table_iter_init(&iterator, priv->display_pixels);
+  while (g_hash_table_iter_next(&iterator, NULL, &value)) {
+    const DisplayPixels* pair = value;
+    if (pair->page == raw->page && pair->visible) { return true; }
+  }
+  return false;
+}
+
+static void trim_raw_locked(ZathuraRendererPrivate* priv) {
+  while (priv->raw_bytes > MIN(RAW_CACHE_LIMIT, priv->cache_limit) ||
+         cache_usage_locked(priv, NULL) > priv->cache_limit) {
+    GList* candidate = priv->raw_pages.tail;
+    while (candidate && raw_visible_locked(priv, candidate->data)) { candidate = candidate->prev; }
+    if (!candidate) { break; } /* Visible originals stay reusable while holding adjustment keys. */
+    RawPage* old = candidate->data;
+    priv->raw_bytes -= old->bytes;
+    g_queue_delete_link(&priv->raw_pages, candidate);
+    raw_page_free(old);
+  }
+}
+
+static gboolean trim_display_cache(gpointer data) {
+  ZathuraRenderer* renderer = data;
+  ZathuraRendererPrivate* priv = zathura_renderer_get_instance_private(renderer);
+  priv->cache_trim_source = 0;
+  while (!priv->about_to_close) {
+    g_mutex_lock(&priv->raw_mutex);
+    trim_raw_locked(priv);
+    const size_t bytes = cache_usage_locked(priv, NULL);
+    ZathuraRenderRequest* oldest = NULL;
+    gint64 oldest_time = G_MAXINT64;
+    if (bytes > priv->cache_limit) {
+      GHashTableIter iterator; gpointer key, value;
+      g_hash_table_iter_init(&iterator, priv->display_pixels);
+      while (g_hash_table_iter_next(&iterator, &key, &value)) {
+        const DisplayPixels* pair = value;
+        ZathuraRenderRequestPrivate* request = zathura_render_request_get_instance_private(key);
+        if (!pair->visible && (pair->surface || pair->thumbnail) && request->last_view_time < oldest_time) {
+          oldest = key; oldest_time = request->last_view_time;
+        }
+      }
+    }
+    if (oldest) { g_object_ref(oldest); }
+    g_mutex_unlock(&priv->raw_mutex);
+    if (!oldest) { break; }
+    ZathuraRenderRequestPrivate* request = zathura_render_request_get_instance_private(oldest);
+    const int page = zathura_page_get_index(request->page);
+    for (size_t i = 0; i < priv->page_cache.num_cached_pages; ++i) {
+      if (priv->page_cache.cache[i] == page) {
+        memmove(priv->page_cache.cache + i, priv->page_cache.cache + i + 1,
+                (priv->page_cache.num_cached_pages - i - 1) * sizeof(int));
+        priv->page_cache.cache[--priv->page_cache.num_cached_pages] = -1;
+        break;
+      }
+    }
+    g_signal_emit(oldest, request_signals[REQUEST_CACHE_INVALIDATED], 0);
+    g_object_unref(oldest);
+  }
+  return G_SOURCE_REMOVE;
+}
+
+static void schedule_cache_trim(ZathuraRenderer* renderer) {
+  ZathuraRendererPrivate* priv = zathura_renderer_get_instance_private(renderer);
+  if (!priv->cache_trim_source && !priv->about_to_close) {
+    priv->cache_trim_source = g_idle_add_full(G_PRIORITY_DEFAULT_IDLE, trim_display_cache,
+                                            g_object_ref(renderer), g_object_unref);
+  }
+}
+
+void zathura_renderer_set_cache_limit(ZathuraRenderer* renderer, unsigned int mib) {
+  ZathuraRendererPrivate* priv = zathura_renderer_get_instance_private(renderer);
+  g_mutex_lock(&priv->raw_mutex);
+  priv->cache_limit = (size_t)CLAMP(mib, 1, 16384) * 1024 * 1024;
+  g_mutex_unlock(&priv->raw_mutex);
+  schedule_cache_trim(renderer);
+}
+
+void zathura_renderer_get_cache_usage(ZathuraRenderer* renderer, size_t* raw, size_t* display, size_t* total) {
+  ZathuraRendererPrivate* priv = zathura_renderer_get_instance_private(renderer);
+  g_mutex_lock(&priv->raw_mutex);
+  *raw = priv->raw_bytes;
+  *total = cache_usage_locked(priv, display);
+  g_mutex_unlock(&priv->raw_mutex);
+}
+
+void zathura_render_request_set_surfaces(ZathuraRenderRequest* request, cairo_surface_t* surface,
+                                        cairo_surface_t* thumbnail) {
+  ZathuraRenderRequestPrivate* rp = zathura_render_request_get_instance_private(request);
+  if (!rp->renderer) { return; }
+  ZathuraRendererPrivate* priv = zathura_renderer_get_instance_private(rp->renderer);
+  DisplayPixels* pair = g_new0(DisplayPixels, 1);
+  pair->page = rp->page; pair->surface = surface; pair->thumbnail = thumbnail;
+  pair->visible = zathura_page_get_visibility(rp->page);
+  if (surface) { pair->surface_bytes = (size_t)cairo_image_surface_get_stride(surface) * cairo_image_surface_get_height(surface); }
+  if (thumbnail) { pair->thumbnail_bytes = (size_t)cairo_image_surface_get_stride(thumbnail) * cairo_image_surface_get_height(thumbnail); }
+  g_mutex_lock(&priv->raw_mutex);
+  if (surface || thumbnail) { g_hash_table_replace(priv->display_pixels, request, pair); }
+  else { g_hash_table_remove(priv->display_pixels, request); g_free(pair); }
+  g_mutex_unlock(&priv->raw_mutex);
+  schedule_cache_trim(rp->renderer);
+}
+
+void zathura_render_request_set_visible(ZathuraRenderRequest* request, bool visible) {
+  ZathuraRenderRequestPrivate* rp = zathura_render_request_get_instance_private(request);
+  ZathuraRendererPrivate* priv = zathura_renderer_get_instance_private(rp->renderer);
+  g_mutex_lock(&priv->raw_mutex);
+  DisplayPixels* pair = g_hash_table_lookup(priv->display_pixels, request);
+  if (pair) { pair->visible = visible; }
+  g_mutex_unlock(&priv->raw_mutex);
+  schedule_cache_trim(rp->renderer);
+}
+
 static cairo_surface_t* original_surface(ZathuraRenderer* renderer, zathura_page_t* page, unsigned int width,
                                          unsigned int height, double scale, zathura_device_factors_t factors,
                                          bool plain) {
@@ -677,7 +826,7 @@ static cairo_surface_t* original_surface(ZathuraRenderer* renderer, zathura_page
     return NULL;
   }
   const size_t bytes = (size_t)cairo_image_surface_get_stride(surface) * height;
-  if (!plain && bytes <= RAW_CACHE_LIMIT) {
+  if (!plain) {
     RawPage* entry = g_new0(RawPage, 1);
     *entry = (RawPage){page, width, height, scale, factors, cairo_surface_reference(surface), bytes};
     g_mutex_lock(&priv->raw_mutex);
@@ -692,13 +841,9 @@ static cairo_surface_t* original_surface(ZathuraRenderer* renderer, zathura_page
       }
       link = next;
     }
-    while (priv->raw_bytes > RAW_CACHE_LIMIT - bytes) {
-      RawPage* old = g_queue_pop_tail(&priv->raw_pages);
-      priv->raw_bytes -= old->bytes;
-      raw_page_free(old);
-    }
     g_queue_push_head(&priv->raw_pages, entry);
     priv->raw_bytes += bytes;
+    trim_raw_locked(priv);
     g_mutex_unlock(&priv->raw_mutex);
   }
   return surface;

@@ -129,7 +129,7 @@ the *zaturarc* file to make those changes permanent:
       map ? shortcut_function optional_argument
 
   Keyboard shortcuts use physical US keyboard positions. For example, ``map a``
-  uses the same key when the active layout is English or Russian. Text typed
+  uses the same key regardless of the active keyboard layout. Text typed
   into the input bar and dialogs still follows the active layout.
 
 *Using modifiers*
@@ -813,6 +813,16 @@ The settings described here can be changed with ``set``.
 
   * Value type: Boolean
   * Default value: true
+
+*page-cache-memory*
+  Shared cache budget in MiB for original pixels, displayed/processed surfaces
+  and thumbnails. Shared buffers are counted once. Hidden buffers are evicted;
+  visible frames and their original pixels stay pinned and may exceed the budget.
+  Plugin decode buffers, in-flight work and GTK/driver memory are outside this limit.
+
+  * Value type: Unsigned integer
+  * Default value: 256
+  * Range: 1 to 16384
 
 *page-cache-size*
   Defines the maximum number of pages that could be kept in the page cache. When

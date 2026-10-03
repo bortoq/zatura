@@ -1,0 +1,26 @@
+# Maintainer: Zatura contributors
+pkgname=zatura-bin
+pkgver=@VERSION@
+pkgrel=1
+pkgdesc='Document viewer with physical shortcuts, book reflow and image controls'
+arch=('x86_64')
+url='https://github.com/bortoq/zatura'
+license=('Zlib')
+depends=('bash' 'coreutils' 'fontconfig')
+optdepends=('ttf-dejavu: document fonts')
+provides=('zatura')
+conflicts=('zatura')
+source=("https://github.com/bortoq/zatura/releases/download/v${pkgver}/zatura-${pkgver}-linux-x86_64.tar.gz")
+sha256sums=('@SHA256@')
+
+package() {
+  install -d "$pkgdir/opt/zatura" "$pkgdir/usr/bin" "$pkgdir/usr/share/applications" "$pkgdir/usr/share/icons/hicolor/scalable/apps" "$pkgdir/usr/share/licenses/$pkgname"
+  cp -a "$srcdir/zatura-$pkgver/." "$pkgdir/opt/zatura/"
+  printf '#!/bin/sh\nexec /opt/zatura/AppRun "$@"\n' > "$pkgdir/usr/bin/zatura"
+  chmod 755 "$pkgdir/usr/bin/zatura"
+  sed 's|Exec=AppRun %U|Exec=zatura %U|' "$pkgdir/opt/zatura/zatura.desktop" > "$pkgdir/usr/share/applications/io.github.bortoq.zatura.desktop"
+  install -m644 "$pkgdir/opt/zatura/zatura.svg" "$pkgdir/usr/share/icons/hicolor/scalable/apps/io.github.bortoq.zatura.svg"
+  sed -i 's/^Icon=zatura$/Icon=io.github.bortoq.zatura/' "$pkgdir/usr/share/applications/io.github.bortoq.zatura.desktop"
+  install -m644 "$pkgdir/opt/zatura/LICENSE" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+  chmod -R go-w "$pkgdir"
+}

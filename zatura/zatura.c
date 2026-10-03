@@ -617,6 +617,9 @@ static bool setup_renderer(zathura_t* zathura, zathura_document_t* UNUSED(docume
   girara_setting_get(zathura->ui.session, "page-saturation", &effects.saturation);
   zathura_renderer_set_page_effects(renderer, &effects);
 
+  unsigned int cache_mib = 256;
+  girara_setting_get(zathura->ui.session, "page-cache-memory", &cache_mib);
+  zathura_renderer_set_cache_limit(renderer, cache_mib);
   zathura->sync.render_thread = renderer;
 
   return true;
@@ -958,7 +961,11 @@ bool zathura_reflow_document(zathura_t* zathura) {
   zathura_renderer_stop(zathura->sync.render_thread);
   document_widget_release(zathura);
   g_clear_object(&zathura->sync.render_thread);
+  zathura_bookmarks_anchors(zathura, true);
+  zathura_jumplist_anchors(zathura, true);
   const bool success = zathura_document_reflow(document, width, height, font, &margins);
+  zathura_bookmarks_anchors(zathura, false);
+  zathura_jumplist_anchors(zathura, false);
   const unsigned int page = zathura_document_get_current_page_number(document);
   zathura_page_t* current = zathura_document_get_page(document, page);
   if (!current || !zathura_page_load(current, NULL)) {

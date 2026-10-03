@@ -1,0 +1,17 @@
+pkgbase = zatura-bin
+	pkgdesc = Document viewer with physical shortcuts, book reflow and image controls
+	pkgver = @VERSION@
+	pkgrel = 1
+	url = https://github.com/bortoq/zatura
+	arch = x86_64
+	license = Zlib
+	depends = bash
+	depends = coreutils
+	depends = fontconfig
+	optdepends = ttf-dejavu: document fonts
+	provides = zatura
+	conflicts = zatura
+	source = https://github.com/bortoq/zatura/releases/download/v@VERSION@/zatura-@VERSION@-linux-x86_64.tar.gz
+	sha256sums = @SHA256@
+
+pkgname = zatura-bin

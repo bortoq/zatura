@@ -114,4 +114,6 @@ void zathura_jumplist_clear(zathura_t* zathura);
  */
 void zathura_jumplist_free(zathura_t* zathura);
 
+void zathura_jumplist_anchors(zathura_t* zathura, bool capture);
+
 #endif

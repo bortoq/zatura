@@ -1,7 +1,7 @@
 # Sources used by the portable release
 
 Zatura and its modified plugins: the release source archive and the
-[v2026.10.02 tag](https://github.com/bortoq/zatura/tree/v2026.10.02).
+[v2026.10.03 tag](https://github.com/bortoq/zatura/tree/v2026.10.03).
 Original plugin authors and revisions are listed in [plugins/README.md](../plugins/README.md).
 
 The source archive's `external-sources/` also contains these unmodified trees:

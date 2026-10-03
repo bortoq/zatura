@@ -4,9 +4,9 @@
 
 #include "girara-gtk/keycodes.h"
 
-static void test_russian_layout_keeps_shortcut_position(void) {
+static void test_alternate_layout_keeps_shortcut_position(void) {
   /* XKB/evdev keycodes for the physical A, J and G keys.  The fallback
-   * keyvals are what a Russian layout reports for those same keys. */
+   * keyvals are what a alternate layout reports for those same keys. */
   g_assert_cmpuint(girara_keycode_to_keyval(38, 0, GDK_KEY_Cyrillic_ef), ==, GDK_KEY_a);
   g_assert_cmpuint(girara_keycode_to_keyval(44, GDK_CONTROL_MASK, GDK_KEY_Cyrillic_o), ==, GDK_KEY_j);
   g_assert_cmpuint(girara_keycode_to_keyval(42, GDK_SHIFT_MASK, GDK_KEY_Cyrillic_PE), ==, GDK_KEY_G);
@@ -35,7 +35,7 @@ static void test_configured_keys_resolve_to_positions(void) {
 
 int main(int argc, char* argv[]) {
   g_test_init(&argc, &argv, NULL);
-  g_test_add_func("/keycodes/russian-layout", test_russian_layout_keeps_shortcut_position);
+  g_test_add_func("/keycodes/alternate-layout", test_alternate_layout_keeps_shortcut_position);
   g_test_add_func("/keycodes/shift", test_shifted_symbol_and_special_key);
   g_test_add_func("/keycodes/configured-positions", test_configured_keys_resolve_to_positions);
   return g_test_run();

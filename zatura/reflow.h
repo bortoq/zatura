@@ -20,4 +20,9 @@ typedef struct {
                             float font_size, const zatura_reflow_margins_t* margins,
                             unsigned int* page);
 } zatura_reflow_plugin_v2_t;
+/* Optional stable, serialized content locations. Returned strings use g_free. */
+typedef struct {
+  char* (*capture)(zathura_document_t* document, unsigned int page);
+  bool (*resolve)(zathura_document_t* document, const char* anchor, unsigned int* page);
+} zatura_content_anchor_plugin_t;
 #endif

@@ -988,8 +988,9 @@ bool sc_jumplist(girara_session_t* session, girara_argument_t* argument, girara_
   jump = zathura_jumplist_current(zathura);
 
   if (jump != current_jump) {
+    const bool anchored = zathura_document_resolve_anchor(zathura->document, jump->anchor, &jump->page);
     page_set(zathura, jump->page);
-    position_set(zathura, jump->x, jump->y);
+    if (!anchored && jump->x != DBL_MIN && jump->y != DBL_MIN) { position_set(zathura, jump->x, jump->y); }
   }
 
   return false;

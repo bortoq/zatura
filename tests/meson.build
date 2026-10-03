@@ -107,6 +107,33 @@ if xvfb.found()
     env: env + ['GTK_A11Y=none', 'GSK_RENDERER=cairo'],
   )
 
+  cache_budget = executable('test_cache_budget', files('test_cache_budget.c'),
+    dependencies: build_dependencies + test_dependencies,
+    include_directories: include_directories,
+    c_args: defines + flags,
+    export_dynamic: true,
+  )
+  test('xvfb_cache_budget', xvfb, args: xvfb_args + [cache_budget], timeout: 30,
+    env: env + ['GTK_A11Y=none', 'GSK_RENDERER=cairo'])
+  benchmark_render = executable('benchmark_render', files('../tools/benchmark-render.c'),
+    dependencies: build_dependencies + test_dependencies,
+    include_directories: include_directories,
+    c_args: defines + flags,
+    export_dynamic: true,
+  )
+
+  content_anchors = executable('test_content_anchors', files('test_content_anchors.c'),
+    dependencies: build_dependencies + test_dependencies,
+    include_directories: include_directories,
+    c_args: defines + flags,
+    export_dynamic: true,
+  )
+  test('xvfb_content_anchors', python_reflow,
+    args: [meson.current_source_dir() / 'run_reflow.py', xvfb] + xvfb_args + [content_anchors],
+    timeout: 120,
+    env: env + ['GTK_A11Y=none', 'GSK_RENDERER=cairo'],
+  )
+
   view_history = executable('test_view_history', files('test_view_history.c'),
     dependencies: build_dependencies + test_dependencies + [sqlite],
     include_directories: include_directories,

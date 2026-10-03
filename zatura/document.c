@@ -634,3 +634,20 @@ void zathura_document_unlock(zathura_document_t* document) {
 
   g_mutex_unlock(&document->lock);
 }
+
+bool zathura_document_capture_anchor(zathura_document_t* document, unsigned int page, char anchor[128]) {
+  anchor[0] = '\0';
+  if (!zathura_document_is_reflowable(document) || page >= document->number_of_pages) { return false; }
+  const zatura_content_anchor_plugin_t* extension = zathura_plugin_get_content_anchor(document->plugin);
+  if (!extension) { return false; }
+  g_autofree char* value = extension->capture(document, page);
+  if (!value || strlen(value) >= 128) { return false; }
+  g_strlcpy(anchor, value, 128);
+  return true;
+}
+
+bool zathura_document_resolve_anchor(zathura_document_t* document, const char* anchor, unsigned int* page) {
+  if (!document || !anchor || !anchor[0] || !zathura_document_is_reflowable(document)) { return false; }
+  const zatura_content_anchor_plugin_t* extension = zathura_plugin_get_content_anchor(document->plugin);
+  return extension && extension->resolve(document, anchor, page) && *page < document->number_of_pages;
+}

@@ -228,6 +228,7 @@ typedef struct zathura_jump_s {
   double x;
   double y;
   unsigned int page;
+  char anchor[128]; /* Optional content location; existing member offsets are unchanged. */
 } zathura_jump_t;
 
 /**

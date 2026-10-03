@@ -231,4 +231,11 @@ void render_all(zathura_t* zathura);
 /** Generation of the surface delivered by the current completed signal. */
 unsigned int zathura_render_request_get_completed_effects_generation(ZathuraRenderRequest* request);
 
+/* Cache budget includes unique raw/display/thumbnail buffers. Visible buffers
+ * are pinned; in-flight plugin/GTK allocations are outside this cache budget. */
+void zathura_renderer_set_cache_limit(ZathuraRenderer* renderer, unsigned int mib);
+void zathura_renderer_get_cache_usage(ZathuraRenderer* renderer, size_t* raw, size_t* display, size_t* total);
+void zathura_render_request_set_surfaces(ZathuraRenderRequest* request, cairo_surface_t* surface, cairo_surface_t* thumbnail);
+void zathura_render_request_set_visible(ZathuraRenderRequest* request, bool visible);
+
 #endif // RENDER_H

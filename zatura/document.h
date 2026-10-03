@@ -366,4 +366,7 @@ bool zathura_document_get_reflow_layout(zathura_document_t* document, float* wid
 bool zathura_document_reflow_matches(zathura_document_t* document, float width, float height, float font_size,
                                const zatura_reflow_margins_t* margins);
 
+bool zathura_document_capture_anchor(zathura_document_t* document, unsigned int page, char anchor[128]);
+bool zathura_document_resolve_anchor(zathura_document_t* document, const char* anchor, unsigned int* page);
+
 #endif // DOCUMENT_H

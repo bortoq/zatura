@@ -1,0 +1,10 @@
+.git
+.agents
+.codex
+.aws
+build
+build-ci
+dist
+subprojects/girara
+**/__pycache__
+**/*.pyc

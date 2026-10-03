@@ -186,6 +186,8 @@ zathura_error_t pdf_document_free(zathura_document_t* document, void* data) {
 
   g_mutex_lock(&mupdf_document->mutex);
 
+  g_clear_pointer(&mupdf_document->anchor_offsets, g_array_unref);
+  g_clear_pointer(&mupdf_document->anchor_digest, g_free);
   fz_drop_document(mupdf_document->ctx, mupdf_document->document);
   fz_drop_context(mupdf_document->ctx);
 
@@ -338,6 +340,8 @@ static zathura_error_t reflow_layout(zathura_document_t* document, float width, 
   fz_try(data->ctx) {
     const fz_location old = fz_location_from_page_number(data->ctx, data->document, *page);
     const fz_bookmark bookmark = fz_make_bookmark(data->ctx, data->document, old);
+    g_clear_pointer(&data->anchor_offsets, g_array_unref);
+    g_clear_pointer(&data->anchor_digest, g_free);
     fz_layout_document(data->ctx, data->document, width, height, font_size);
     const int count = fz_count_pages(data->ctx, data->document);
     const fz_location location = fz_lookup_bookmark(data->ctx, data->document, bookmark);
@@ -372,6 +376,8 @@ static zathura_error_t reflow_layout_v2(zathura_document_t* document, float widt
   fz_try(data->ctx) {
     const fz_location old = fz_location_from_page_number(data->ctx, data->document, *page);
     const fz_bookmark bookmark = fz_make_bookmark(data->ctx, data->document, old);
+    g_clear_pointer(&data->anchor_offsets, g_array_unref);
+    g_clear_pointer(&data->anchor_digest, g_free);
     fz_layout_document(data->ctx, data->document, width - margins->outer - margins->inner,
                        height - margins->top - margins->bottom, font_size);
     const int count = fz_count_pages(data->ctx, data->document);
@@ -391,4 +397,96 @@ static zathura_error_t reflow_layout_v2(zathura_document_t* document, float widt
 
 G_MODULE_EXPORT const zatura_reflow_plugin_v2_t zatura_reflow_v2 = {
   .layout = reflow_layout_v2,
+};
+
+/* Normalized text byte offsets survive layout and process changes. Bookmarks
+ * deliberately store a digest as well: changed content uses the numeric fallback.
+ * The small page-offset index is rebuilt lazily once per layout, never per key. */
+static bool anchor_index(mupdf_document_t* data) {
+  if (data->anchor_offsets) { return true; }
+  g_autoptr(GArray) offsets = g_array_new(FALSE, FALSE, sizeof(guint64));
+  g_autoptr(GChecksum) digest = g_checksum_new(G_CHECKSUM_SHA256);
+  guint64 offset = 0;
+  fz_page* page = NULL;
+  fz_stext_page* text = NULL;
+  fz_buffer* buffer = NULL;
+  bool success = false;
+  fz_var(page); fz_var(text); fz_var(buffer); fz_var(success);
+  fz_try(data->ctx) {
+    const int count = fz_count_pages(data->ctx, data->document);
+    for (int i = 0; i < count; ++i) {
+      g_array_append_val(offsets, offset);
+      page = fz_load_page(data->ctx, data->document, i);
+      const fz_stext_options options = {0};
+      text = fz_new_stext_page_from_page(data->ctx, page, &options);
+      buffer = fz_new_buffer_from_stext_page(data->ctx, text);
+      unsigned char* bytes = NULL;
+      const size_t length = fz_buffer_storage(data->ctx, buffer, &bytes);
+      const char* cursor = (const char*)bytes;
+      const char* end = cursor + length;
+      while (cursor < end) {
+        const gunichar ch = g_utf8_get_char_validated(cursor, end - cursor);
+        if (ch == (gunichar)-1 || ch == (gunichar)-2) { break; }
+        const char* next = g_utf8_next_char(cursor);
+        if (!g_unichar_isspace(ch) && ch != 0x00ad) {
+          g_checksum_update(digest, (const guchar*)cursor, next - cursor);
+          offset += next - cursor;
+        }
+        cursor = next;
+      }
+      fz_drop_buffer(data->ctx, buffer); buffer = NULL;
+      fz_drop_stext_page(data->ctx, text); text = NULL;
+      fz_drop_page(data->ctx, page); page = NULL;
+    }
+    g_array_append_val(offsets, offset);
+    success = true;
+  }
+  fz_always(data->ctx) {
+    fz_drop_buffer(data->ctx, buffer);
+    fz_drop_stext_page(data->ctx, text);
+    fz_drop_page(data->ctx, page);
+  }
+  fz_catch(data->ctx) { success = false; }
+  if (!success) { return false; }
+  data->anchor_digest = g_strdup(g_checksum_get_string(digest));
+  data->anchor_offsets = g_steal_pointer(&offsets);
+  return true;
+}
+
+static char* anchor_capture(zathura_document_t* document, unsigned int page) {
+  mupdf_document_t* data = zathura_document_get_data(document);
+  char* anchor = NULL;
+  g_mutex_lock(&data->mutex);
+  if (anchor_index(data) && page + 1 < data->anchor_offsets->len) {
+    anchor = g_strdup_printf("mupdf-text-v1:%s:%" G_GUINT64_FORMAT,
+        data->anchor_digest, g_array_index(data->anchor_offsets, guint64, page));
+  }
+  g_mutex_unlock(&data->mutex);
+  return anchor;
+}
+
+static bool anchor_resolve(zathura_document_t* document, const char* anchor, unsigned int* page) {
+  const char* prefix = "mupdf-text-v1:";
+  if (!g_str_has_prefix(anchor, prefix) || strlen(anchor) < strlen(prefix) + 66) { return false; }
+  const char* hash = anchor + strlen(prefix);
+  if (hash[64] != ':') { return false; }
+  char* end = NULL;
+  const guint64 offset = g_ascii_strtoull(hash + 65, &end, 10);
+  if (end == hash + 65 || *end != '\0' || hash[65] == '-') { return false; }
+  mupdf_document_t* data = zathura_document_get_data(document);
+  bool resolved = false;
+  g_mutex_lock(&data->mutex);
+  if (anchor_index(data) && strncmp(hash, data->anchor_digest, 64) == 0) {
+    for (unsigned int i = 0; i + 1 < data->anchor_offsets->len; ++i) {
+      const guint64 first = g_array_index(data->anchor_offsets, guint64, i);
+      const guint64 last = g_array_index(data->anchor_offsets, guint64, i + 1);
+      if (first <= offset && offset < last) { *page = i; resolved = true; break; }
+    }
+  }
+  g_mutex_unlock(&data->mutex);
+  return resolved;
+}
+
+G_MODULE_EXPORT const zatura_content_anchor_plugin_t zatura_content_anchor_v1 = {
+  .capture = anchor_capture, .resolve = anchor_resolve,
 };

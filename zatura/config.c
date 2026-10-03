@@ -31,6 +31,15 @@
 
 #define INCREMENTAL_SEARCH false
 
+static void cb_cache_memory_changed(girara_session_t* session, const char* name,
+                                   girara_setting_type_t UNUSED(type), const void* value, void* UNUSED(data)) {
+  const unsigned int input = *(const unsigned int*)value;
+  const unsigned int bounded = CLAMP(input, 1, 16384);
+  if (input != bounded) { girara_setting_set(session, name, &bounded); return; }
+  zathura_t* app = session->global.data;
+  if (app && app->sync.render_thread) { zathura_renderer_set_cache_limit(app->sync.render_thread, bounded); }
+}
+
 static void cb_page_effect_changed(girara_session_t* session, const char* name, girara_setting_type_t UNUSED(type),
                                    const void* value, void* UNUSED(data)) {
   const int supplied = *(const int*)value;
@@ -565,6 +574,9 @@ void config_load_default(zathura_t* zathura) {
   girara_setting_add(gsession, "zoom-max",              &uint_value,  UINT,   false, _("Zoom maximum"), NULL, NULL);
   uint_value = ZATHURA_PAGE_CACHE_DEFAULT_SIZE;
   girara_setting_add(gsession, "page-cache-size",       &uint_value,  UINT,   true,  _("Maximum number of pages to keep in the cache"), NULL, NULL);
+  uint_value = 256;
+  girara_setting_add(gsession, "page-cache-memory", &uint_value, UINT, false,
+      _("Shared pixel cache budget in MiB; visible pages may exceed it"), cb_cache_memory_changed, NULL);
   uint_value = ZATHURA_PAGE_THUMBNAIL_DEFAULT_SIZE;
   girara_setting_add(gsession, "page-thumbnail-size",   &uint_value,  UINT,   true,  _("Maximum size in pixels of thumbnails to keep in the cache"), NULL, NULL);
   uint_value = 2000;

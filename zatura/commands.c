@@ -142,6 +142,11 @@ bool cmd_bookmark_open(girara_session_t* session, girara_list_t* argument_list) 
   }
 
   zathura_jumplist_add(zathura);
+  unsigned int anchored_page = 0;
+  if (zathura_document_resolve_anchor(zathura->document, bookmark->anchor, &anchored_page)) {
+    bookmark->page = anchored_page + 1;
+    bookmark->x = bookmark->y = DBL_MIN;
+  }
   page_set(zathura, bookmark->page - 1);
   if (bookmark->x != DBL_MIN && bookmark->y != DBL_MIN) {
     position_set(zathura, bookmark->x, bookmark->y);

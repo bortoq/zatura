@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026.10.03
+
+- Stable serialized content anchors for book bookmarks and jump history; SQLite schema 6 migration.
+- Shared raw/processed/thumbnail cache budget (`page-cache-memory`, default 256 MiB); visible buffers stay pinned.
+- Cache/filter profiling tool and recorded scanned-page/HiDPI measurements.
+- deb, Arch/AUR and Flatpak packaging targets, standalone container build and CI.
+- Minimal documentation and compact generated configuration defaults.
+
 ## 2026.10.02 — first Zatura release
 
 Based on Zathura 2026.07.18; plugin API 8 / ABI 9 remain compatible.
@@ -11,7 +19,7 @@ Based on Zathura 2026.07.18; plugin API 8 / ABI 9 remain compatible.
 - Per-document viewing history and a togglable HH:MM statusbar clock (`t`).
 - Recolor pixel transforms moved into `page-effects`, shared by rendering paths.
 - Quieter selection defaults and silent bounds clamping for repeated adjustments.
-- Complete English and Russian reading guides and annotated configuration.
+- Reading guide and generated configuration defaults.
 - Makefile entry points, portable x86_64 musl archive and AppImage packaging.
 
 Known limits: content anchors for saved bookmarks/jump history are not implemented;
