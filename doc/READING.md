@@ -40,7 +40,7 @@ MuPDF opens reflowable books; Poppler handles PDF; other engines handle DjVu,
 PostScript/EPS and image/comic archives. Plugins must match API 8 / ABI 9.
 View history is stored per document in `$XDG_DATA_HOME/zatura/bookmarks.sqlite`
 (default `~/.local/share/zatura/`). Normal close/exit saves; forced termination cannot.
-`database "null"` disables history. Book bookmarks/jumps use content anchors across
+`database "null"` disables history. Book bookmarks/quickmarks/jumps use content anchors across
 layout changes; changed document text or older engines retain numeric fallbacks.
 `page-cache-memory` defaults to 256 MiB for cached pixel buffers. Visible pages
 may exceed it; it is not a limit on total process or GPU memory. Clock visibility requires `s` in `guioptions`.

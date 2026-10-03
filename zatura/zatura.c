@@ -963,9 +963,11 @@ bool zathura_reflow_document(zathura_t* zathura) {
   g_clear_object(&zathura->sync.render_thread);
   zathura_bookmarks_anchors(zathura, true);
   zathura_jumplist_anchors(zathura, true);
+  zathura_quickmarks_anchors(zathura, true);
   const bool success = zathura_document_reflow(document, width, height, font, &margins);
   zathura_bookmarks_anchors(zathura, false);
   zathura_jumplist_anchors(zathura, false);
+  zathura_quickmarks_anchors(zathura, false);
   const unsigned int page = zathura_document_get_current_page_number(document);
   zathura_page_t* current = zathura_document_get_page(document, page);
   if (!current || !zathura_page_load(current, NULL)) {

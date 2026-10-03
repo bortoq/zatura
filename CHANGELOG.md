@@ -1,8 +1,8 @@
 # Changelog
 
-## 2026.10.03
+## 2026.10.03.1
 
-- Stable serialized content anchors for book bookmarks and jump history; SQLite schema 6 migration.
+- Stable serialized content anchors for book bookmarks, quickmarks and jump history; SQLite schema 7 migration.
 - Shared raw/processed/thumbnail cache budget (`page-cache-memory`, default 256 MiB); visible buffers stay pinned.
 - Cache/filter profiling tool and recorded scanned-page/HiDPI measurements.
 - deb, Arch/AUR and Flatpak packaging targets, standalone container build and CI.

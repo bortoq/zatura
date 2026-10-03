@@ -123,7 +123,7 @@ if xvfb.found()
   )
 
   content_anchors = executable('test_content_anchors', files('test_content_anchors.c'),
-    dependencies: build_dependencies + test_dependencies,
+    dependencies: build_dependencies + test_dependencies + [sqlite],
     include_directories: include_directories,
     c_args: defines + flags,
     export_dynamic: true,

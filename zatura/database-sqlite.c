@@ -14,7 +14,7 @@
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(sqlite3_stmt, sqlite3_finalize)
 
 /* version of the database layout */
-#define DATABASE_VERSION 6
+#define DATABASE_VERSION 7
 
 static char* sqlite3_column_text_dup(sqlite3_stmt* stmt, int col) {
   return g_strdup((const char*)sqlite3_column_text(stmt, col));
@@ -203,7 +203,7 @@ static void sqlite_db_check_layout(sqlite3* session, const int database_version,
 
   /* crate quickmarks table */
   static const char QUICKMARKS_INIT[] = "CREATE TABLE IF NOT EXISTS quickmarks (file TEXT, key INTEGER, x FLOAT, y "
-                                        "FLOAT, page INTEGER, zoom FLOAT, PRIMARY KEY(file, key));";
+                                        "FLOAT, page INTEGER, zoom FLOAT, anchor TEXT, PRIMARY KEY(file, key));";
 
   static const char SQL_VIEW_INIT[] = "CREATE TABLE IF NOT EXISTS document_view (file TEXT PRIMARY KEY, settings TEXT);";
 
@@ -247,8 +247,8 @@ static void sqlite_db_check_layout(sqlite3* session, const int database_version,
     }
   }
   /* Idempotent also for partially migrated databases. */
-  if (database_version < 6) {
-    const char* tables[] = {"bookmarks", "jumplist"};
+  if (database_version < 7) {
+    const char* tables[] = {"bookmarks", "jumplist", "quickmarks"};
     for (size_t i = 0; i < LENGTH(tables); ++i) {
       bool exists = false;
       if (!check_column(session, tables[i], "anchor", &exists)) { return; }
@@ -620,7 +620,7 @@ static bool sqlite_save_quickmarks(zathura_database_t* db, const char* file, gir
   g_return_val_if_fail(db != NULL && file != NULL && quickmarks != NULL, false);
 
   static const char SQL_INSERT_MARK[] =
-      "INSERT INTO quickmarks (file, key, x, y, page, zoom) VALUES (?, ?, ?, ?, ?, ?);";
+      "INSERT INTO quickmarks (file, key, x, y, page, zoom, anchor) VALUES (?, ?, ?, ?, ?, ?, ?);";
   static const char SQL_REMOVE_QUICKMARKS[] = "DELETE FROM quickmarks WHERE file = ?;";
 
   ZathuraSQLDatabase* sqldb       = ZATHURA_SQLDATABASE(db);
@@ -666,7 +666,8 @@ static bool sqlite_save_quickmarks(zathura_database_t* db, const char* file, gir
         sqlite3_bind_double(inner_stmt, 3, mark->position_x) != SQLITE_OK ||
         sqlite3_bind_double(inner_stmt, 4, mark->position_y) != SQLITE_OK ||
         sqlite3_bind_int(inner_stmt, 5, mark->page) != SQLITE_OK ||
-        sqlite3_bind_double(inner_stmt, 6, mark->zoom) != SQLITE_OK) {
+        sqlite3_bind_double(inner_stmt, 6, mark->zoom) != SQLITE_OK ||
+        sqlite3_bind_text(inner_stmt, 7, mark->anchor[0] ? mark->anchor : NULL, -1, SQLITE_TRANSIENT) != SQLITE_OK) {
       girara_error("Failed to bind arguments.");
       status = false;
       break;
@@ -689,7 +690,7 @@ static girara_list_t* sqlite_load_quickmarks(zathura_database_t* db, const char*
   g_return_val_if_fail(db != NULL && file != NULL, NULL);
 
   static const char SQL_GET_QUICKMARKS[] =
-      "SELECT key, x, y, page, zoom FROM quickmarks WHERE file = ? ORDER BY key ASC;";
+      "SELECT key, x, y, page, zoom, anchor FROM quickmarks WHERE file = ? ORDER BY key ASC;";
 
   ZathuraSQLDatabase* sqldb       = ZATHURA_SQLDATABASE(db);
   ZathuraSQLDatabasePrivate* priv = zathura_sqldatabase_get_instance_private(sqldb);
@@ -722,6 +723,8 @@ static girara_list_t* sqlite_load_quickmarks(zathura_database_t* db, const char*
     mark->position_y = sqlite3_column_double(stmt, 2);
     mark->page       = sqlite3_column_int(stmt, 3);
     mark->zoom       = sqlite3_column_double(stmt, 4);
+    const char* anchor = (const char*)sqlite3_column_text(stmt, 5);
+    if (anchor) { g_strlcpy(mark->anchor, anchor, sizeof(mark->anchor)); }
     girara_list_append(quickmarks, mark);
   }
 

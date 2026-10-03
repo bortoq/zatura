@@ -3,6 +3,7 @@
 #include "marks.h"
 
 #include <stdlib.h>
+#include <float.h>
 #include <string.h>
 #include <girara-gtk/session.h>
 #include <girara-gtk/callbacks.h>
@@ -161,6 +162,7 @@ static void mark_add(zathura_t* zathura, int key) {
       mark->position_x = position_x;
       mark->position_y = position_y;
       mark->zoom       = zoom;
+      zathura_document_capture_anchor(document, page_id, mark->anchor);
       return;
     }
   }
@@ -176,6 +178,7 @@ static void mark_add(zathura_t* zathura, int key) {
   mark->position_x = position_x;
   mark->position_y = position_y;
   mark->zoom       = zoom;
+  zathura_document_capture_anchor(document, page_id, mark->anchor);
 
   girara_list_append(zathura->global.marks, mark);
 }
@@ -196,11 +199,26 @@ static void mark_evaluate(zathura_t* zathura, int key) {
       zathura_document_widget_render_all(zathura->ui.document_widget);
 
       zathura_jumplist_add(zathura);
+      const bool anchored = zathura_document_resolve_anchor(zathura->document, mark->anchor, &mark->page);
       page_set(zathura, mark->page);
-      position_set(zathura, mark->position_x, mark->position_y);
+      if (!anchored && mark->position_x != DBL_MIN && mark->position_y != DBL_MIN) {
+        position_set(zathura, mark->position_x, mark->position_y);
+      }
       zathura_jumplist_add(zathura);
 
       return;
+    }
+  }
+}
+
+void zathura_quickmarks_anchors(zathura_t* zathura, bool capture) {
+  if (!zathura || !zathura->document || !zathura->global.marks) { return; }
+  for (size_t i = 0; i < girara_list_size(zathura->global.marks); ++i) {
+    zathura_mark_t* mark = girara_list_nth(zathura->global.marks, i);
+    if (capture && !mark->anchor[0]) {
+      zathura_document_capture_anchor(zathura->document, mark->page, mark->anchor);
+    } else if (!capture && zathura_document_resolve_anchor(zathura->document, mark->anchor, &mark->page)) {
+      mark->position_x = mark->position_y = DBL_MIN;
     }
   }
 }

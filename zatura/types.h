@@ -336,6 +336,7 @@ struct zathura_mark_s {
   double position_y; /**> Vertical adjustment */
   unsigned int page; /**> Page number */
   double zoom;       /**> Zoom level */
+  char anchor[128];
 };
 
 typedef struct zathura_mark_s zathura_mark_t;
