@@ -1,27 +1,23 @@
-# Sources used by the portable release
+# Dependency sources
 
-Zatura and its modified plugins: the release source archive and the
-[v2026.10.03.1 tag](https://github.com/bortoq/zatura/tree/v2026.10.03.1).
-Original plugin authors and revisions are listed in [plugins/README.md](../plugins/README.md).
+Zatura and modified engines are in this repository. Original engine revisions:
+[plugins/README.md](../plugins/README.md). Girara utility core is linked statically
+from [e120cc0c](https://github.com/pwmt/girara/tree/e120cc0c4f486af935f09a07420606925a6f9305);
+its license notice accompanies the core packages.
 
-The source archive's `external-sources/` also contains these unmodified trees:
+Native packages use distribution libraries. GNOME Flatpak uses the shared
+Platform 49; platform sources are maintained by
+[GNOME](https://gitlab.gnome.org/GNOME/gnome-build-meta).
 
-* Girara: `e120cc0c4f486af935f09a07420606925a6f9305`, from
-  [pwmt/girara](https://github.com/pwmt/girara/tree/e120cc0c4f486af935f09a07420606925a6f9305).
-* PDF/Poppler plugin: `165f37248f235bb192d154b06094c52ca92f5b2d`, from
-  [pwmt/zathura-pdf-poppler](https://github.com/pwmt/zathura-pdf-poppler/tree/165f37248f235bb192d154b06094c52ca92f5b2d).
-* GdkPixbuf 2.44.7: [original source archive](https://download.gnome.org/sources/gdk-pixbuf/2.44/gdk-pixbuf-2.44.7.tar.xz).
-  It is built with builtin image loaders and `glycin=disabled`; see
-  `tools/build-runtime-pixbuf.sh` and BUILD-MANIFEST.json.
+AppImage contains unmodified Debian 13 shared libraries selected by linuxdeploy.
+`usr/share/licenses/zatura/dependencies` contains library copyright notices;
+`build-packages.tsv` records binary/source package versions (including build
+packages that are not shipped). Debian provides corresponding source tarballs,
+patches and build recipes through [Debian Sources](https://sources.debian.org/)
+and [Debian Snapshot](https://snapshot.debian.org/). Use the recorded source
+package and version, or enable matching `deb-src` repositories and run
+`apt-get source PACKAGE=VERSION`. Libraries remain dynamically linked and
+replaceable under `usr/lib` in an extracted AppImage.
 
-Other runtime libraries are unmodified Alpine 3.24 packages. Exact package
-versions are in BUILD-MANIFEST.json in each binary bundle. Their source archives,
-patches, build scripts and license identifiers are available through
-[Alpine aports 3.24](https://gitlab.alpinelinux.org/alpine/aports/-/tree/3.24-stable):
-find the package's origin directory under `main/`, `community/` or `testing/`,
-then use the APKBUILD matching its version. Alpine retains distfiles at
-[distfiles.alpinelinux.org](https://distfiles.alpinelinux.org/distfiles/).
-The manifest lists build tools as well as libraries; not every package is shipped.
-The runtime is dynamically linked, and constituent libraries retain their own
-licenses. Copyright notices for Zatura, bundled engines, Girara and GdkPixbuf
-are included under `licenses/` in the binary bundles.
+Older 2026.10.03.1 bundles used Alpine 3.24 and a private musl runtime; see the
+[SOURCES.md at that tag](https://github.com/bortoq/zatura/blob/v2026.10.03.1/doc/SOURCES.md).

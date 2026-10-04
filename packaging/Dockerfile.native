@@ -1,0 +1,8 @@
+FROM debian:trixie-slim
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc make meson ninja-build pkgconf libgtk-4-dev libglib2.0-dev \
+    libjson-glib-dev libmagic-dev libsqlite3-dev libxxhash-dev libxkbcommon-dev \
+    libarchive-dev gettext python3-sphinx dpkg-dev curl ca-certificates file \
+    zstd xvfb xauth git && rm -rf /var/lib/apt/lists/*
+WORKDIR /src
+ENTRYPOINT ["/src/tools/build-native.sh"]

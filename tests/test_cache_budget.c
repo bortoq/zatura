@@ -4,6 +4,7 @@
 #include <cairo-pdf.h>
 #include "zatura/zatura.h"
 #include "zatura/document.h"
+#include "zatura/plugin.h"
 #include "zatura/document-widget.h"
 #include "zatura/page.h"
 #include "zatura/page-widget.h"
@@ -23,7 +24,11 @@ int main(void) {
   cairo_destroy(context); cairo_surface_destroy(pdf);
   zathura_t* app = zathura_create();
   zathura_set_config_dir(app, dir); zathura_set_data_dir(app, dir); zathura_set_cache_dir(app, dir);
-  g_assert_true(zathura_init(app)); g_assert_true(document_open(app, file, NULL, NULL, 0, NULL)); settle();
+  g_assert_true(zathura_init(app));
+  if (!zathura_plugin_manager_get_plugin(app->plugins.manager, "application/pdf")) {
+    zathura_free(app); g_print("PDF engine not installed; skipping engine-dependent test.\n"); return 77;
+  }
+  g_assert_true(document_open(app, file, NULL, NULL, 0, NULL)); settle();
   zathura_document_widget_stop_page_widget_preload(app->ui.document_widget);
   ZathuraPageWidget* visible = ZATHURA_PAGE_WIDGET(zathura_document_widget_ensure_page(app->ui.document_widget, 0));
   ZathuraPageWidget* hidden = ZATHURA_PAGE_WIDGET(zathura_document_widget_ensure_page(app->ui.document_widget, 2));

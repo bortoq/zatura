@@ -4,6 +4,7 @@
 #include <sqlite3.h>
 #include "zatura/zatura.h"
 #include "zatura/document.h"
+#include "zatura/plugin.h"
 #include "zatura/bookmarks.h"
 #include "zatura/jumplist.h"
 #include "zatura/database.h"
@@ -42,7 +43,11 @@ int main(int argc, char** argv) {
   gtk_init();
   g_autofree char* directory = g_dir_make_tmp("zatura-anchors-XXXXXX", NULL);
   /* Upgrade the intermediate v6 schema, preserving existing bookmark anchors. */
-  zathura_t* initial = create(directory); zathura_free(initial);
+  zathura_t* initial = create(directory);
+  if (!zathura_plugin_manager_get_plugin(initial->plugins.manager, "application/x-fictionbook+xml")) {
+    zathura_free(initial); g_print("Reflow engine not installed; skipping engine-dependent test.\n"); return 77;
+  }
+  zathura_free(initial);
   g_autofree char* dbpath = g_build_filename(directory, "bookmarks.sqlite", NULL);
   sqlite3* db = NULL; g_assert_cmpint(sqlite3_open(dbpath, &db), ==, SQLITE_OK);
   g_assert_cmpint(sqlite3_exec(db, "ALTER TABLE quickmarks DROP COLUMN anchor; PRAGMA user_version=6;", NULL, NULL, NULL), ==, SQLITE_OK);

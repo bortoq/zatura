@@ -5,7 +5,8 @@
 
 Implemented: physical shortcuts, fullscreen cleanup, image effects/recolor module,
 book reflow/margins, content bookmarks/jumps, view history, shared cache budget,
-clock, quiet selection, distribution packers and container CI.
+clock, quiet selection, native dependency-based core packages, GNOME Platform / linuxdeploy packers and container CI.
+Document engines are distributed separately from these compact core packages.
 
 Measured CPU adjustments: ~79 ms at 1920×2880, ~311 ms at 3840×5760 on the
 [scanned-page workload](../benchmarks/2026-10-03.csv). GPU effects should retain

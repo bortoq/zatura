@@ -13,13 +13,16 @@ A keyboard-driven document viewer forked from [Zathura](https://github.com/pwmt/
 
 ## Install and build
 
-[Releases](https://github.com/bortoq/zatura/releases) provide Linux x86_64 AppImage and portable bundles.
+[Releases](https://github.com/bortoq/zatura/releases) provide Linux packages. See [packaging](doc/PACKAGING.md) for native dependency and GNOME Platform builds.
 
 ```sh
 chmod +x Zatura-*.AppImage
-./Zatura-2026.10.03.1-x86_64.AppImage document.epub
+./Zatura-2026.10.03.2-x86_64.AppImage --version
 # Without FUSE: add --appimage-extract-and-run.
 ```
+
+Compact release packages contain the core. Install separate document plugins
+(API 8 / ABI 9); older distribution plugins with another ABI are incompatible.
 
 Native builds require a C23 compiler, Meson >= 1.5, GTK >= 4.12, GLib >= 2.84,
 Girara >= 2026.07.07, Cairo, libxkbcommon, libmagic, JSON-GLib, SQLite >= 3.35,

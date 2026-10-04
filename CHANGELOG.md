@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026.10.03.2
+
+- Native Debian/Arch core packages with system dependencies instead of private runtime copies.
+- GNOME Platform 49 Flatpak and linuxdeploy AppImage packaging with enforced size budgets.
+- Girara utility core linked statically in native distribution builds; engines remain separate plugins.
+
 ## 2026.10.03.1
 
 - Stable serialized content anchors for book bookmarks, quickmarks and jump history; SQLite schema 7 migration.

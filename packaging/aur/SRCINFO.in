@@ -1,17 +1,24 @@
 pkgbase = zatura-bin
-	pkgdesc = Document viewer with physical shortcuts, book reflow and image controls
+	pkgdesc = GTK4 document viewer with physical shortcuts
 	pkgver = @VERSION@
 	pkgrel = 1
 	url = https://github.com/bortoq/zatura
 	arch = x86_64
 	license = Zlib
-	depends = bash
-	depends = coreutils
-	depends = fontconfig
-	optdepends = ttf-dejavu: document fonts
+	depends = glibc
+	depends = gtk4>=4.12
+	depends = glib2>=2.84
+	depends = json-glib
+	depends = file
+	depends = sqlite>=3.35
+	depends = xxhash
+	depends = libxkbcommon
+	depends = libarchive
+	depends = cairo
 	provides = zatura
 	conflicts = zatura
-	source = https://github.com/bortoq/zatura/releases/download/v@VERSION@/zatura-@VERSION@-linux-x86_64.tar.gz
+	noextract = zatura.pkg.tar.zst
+	source = zatura.pkg.tar.zst::https://github.com/bortoq/zatura/releases/download/v@VERSION@/zatura-bin-@VERSION@-1-x86_64.pkg.tar.zst
 	sha256sums = @SHA256@
 
 pkgname = zatura-bin

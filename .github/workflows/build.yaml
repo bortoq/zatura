@@ -8,13 +8,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Fetch pinned Girara sources
+        run: |
+          git clone https://github.com/pwmt/girara.git subprojects/girara
+          git -C subprojects/girara checkout e120cc0c4f486af935f09a07420606925a6f9305
       - name: Build container
-        run: docker build -t zatura-builder -f packaging/Dockerfile .
-      - name: Build runtime and run regression tests
-        run: docker run --rm -v "$PWD/build-ci:/work" zatura-builder
-      - name: Create portable archive
-        run: make portable RUNTIME=build-ci/build/runtime
+        run: docker build -t zatura-native -f packaging/Dockerfile.native .
+      - name: Build native binary and run regression tests
+        run: docker run --rm --user "$(id -u):$(id -g)" --env HOME=/tmp -v "$PWD:/src" zatura-native
+      - name: Create dependency-based Debian package
+        run: docker run --rm --user "$(id -u):$(id -g)" --env HOME=/tmp --entrypoint python3 -v "$PWD:/src" zatura-native tools/package-linux.py deb
       - uses: actions/upload-artifact@v4
         with:
-          name: zatura-linux-x86_64
-          path: dist/*.tar.gz
+          name: zatura-native-debian
+          path: dist/*.deb

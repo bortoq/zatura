@@ -8,11 +8,13 @@ PYTHON ?= python3
 MESON_ARGS ?=
 RUNTIME ?= $(BUILDDIR)/runtime
 DISTDIR ?= dist
-APPIMAGETOOL ?= appimagetool
+LINUXDEPLOY ?= linuxdeploy
+NATIVE_STAGE ?= build/native-stage
+FLATPAK_BUILDER ?= flatpak-builder
 SOURCE_ARGS ?=
-APPIMAGE_ARGS ?=
+PACKAGE_VERSION := $(shell sed -n "s/.*version: '\([^']*\)'.*/\1/p" meson.build | head -1)
 
-.PHONY: all configure build test install plugins portable appimage source deb arch flatpak profile clean help
+.PHONY: all configure build test install plugins portable appimage source deb arch flatpak flatpak-native profile clean help
 all: build
 configure:
 	@if test -f "$(BUILDDIR)/meson-private/coredata.dat"; then \
@@ -28,24 +30,31 @@ install: build
 plugins:
 	./tools/build-plugins.sh "$(abspath $(RUNTIME))"
 portable:
-	$(PYTHON) tools/package-runtime.py --runtime "$(RUNTIME)" --output "$(DISTDIR)"
-appimage: portable
-	ARCH=x86_64 $(APPIMAGETOOL) --no-appstream $(APPIMAGE_ARGS) "$(DISTDIR)/Zatura.AppDir" "$(DISTDIR)/Zatura-$$(cat $(DISTDIR)/Zatura.AppDir/VERSION)-x86_64.AppImage"
+	$(PYTHON) tools/package-native-portable.py --stage "$(NATIVE_STAGE)" --output "$(DISTDIR)"
+appimage:
+	$(PYTHON) tools/package-appimage.py --stage "$(NATIVE_STAGE)" --output "$(DISTDIR)" --linuxdeploy "$(LINUXDEPLOY)"
 source:
 	$(PYTHON) tools/package-source.py --output "$(DISTDIR)" $(SOURCE_ARGS)
-deb arch flatpak: portable
-	$(PYTHON) tools/package-linux.py $@ --appdir "$(DISTDIR)/Zatura.AppDir" --output "$(DISTDIR)"
+deb arch:
+	$(PYTHON) tools/package-linux.py $@ --stage "$(NATIVE_STAGE)" --output "$(DISTDIR)"
+flatpak:
+	$(FLATPAK_BUILDER) --force-clean --repo="$(DISTDIR)/flatpak-repo" "$(BUILDDIR)/flatpak" packaging/io.github.bortoq.zatura.json
+	flatpak build-bundle "$(DISTDIR)/flatpak-repo" "$(DISTDIR)/zatura-$(PACKAGE_VERSION)-x86_64.flatpak" io.github.bortoq.zatura --runtime-repo=https://flathub.org/repo/flathub.flatpakrepo
+	$(PYTHON) tools/check-package-size.py "$(DISTDIR)/zatura-$(PACKAGE_VERSION)-x86_64.flatpak" 15000000
+flatpak-native:
+	$(PYTHON) tools/package-flatpak.py --stage "$(NATIVE_STAGE)" --output "$(DISTDIR)"
 profile: build
 	./tools/profile-render.sh "$(BUILDDIR)/tests/benchmark_render" "$(DISTDIR)/render-profile.csv"
 clean:
-	@if test -f "$(BUILDDIR)/meson-private/coredata.dat"; then $(MESON) compile -C "$(BUILDDIR)" --clean; fi
+	$(PYTHON) tools/clean-generated.py --builddir "$(BUILDDIR)" --distdir "$(DISTDIR)"
 help:
 	@printf '%s\n' 'make build / test / install       Meson build, tests and install' \
 	 'make configure PREFIX=... MESON_ARGS=...  Set up a native build' \
 	 'make plugins RUNTIME=...         Build bundled plugins after install' \
-	 'make portable RUNTIME=...        Pack a complete musl runtime' \
-	 'make appimage APPIMAGETOOL=...    Pack AppImage from the same runtime' \
-	 'make deb / arch / flatpak        Package the installed private runtime' \
+	 'make portable NATIVE_STAGE=...        Pack a native install without libraries' \
+	 'make appimage LINUXDEPLOY=...     Bundle linked libraries with linuxdeploy' \
+	 'make deb / arch / flatpak        Package native install / GNOME Platform build' \
+	 'make clean                      Remove build and distribution output trees' \
 	 'make profile                    Measure scanned-page cache/filter costs' \
 	 'make source SOURCE_ARGS=...      Archive committed sources and optional dependencies' \
 	 'DESTDIR=... make install         Stage files for distribution packages'

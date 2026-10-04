@@ -6,6 +6,7 @@
 #include <sqlite3.h>
 #include "zatura/zatura.h"
 #include "zatura/document.h"
+#include "zatura/plugin.h"
 #include "zatura/database.h"
 #include "zatura/page.h"
 #include "zatura/shortcuts.h"
@@ -96,6 +97,11 @@ static void exercise(const char* directory, const char* document, const char* ot
 int main(int argc, char** argv) {
   gtk_init();
   g_autofree char* directory = g_dir_make_tmp("zatura-view-history-XXXXXX", NULL);
+  zathura_t* probe = create(directory);
+  const bool engines = zathura_plugin_manager_get_plugin(probe->plugins.manager, "application/pdf") &&
+      zathura_plugin_manager_get_plugin(probe->plugins.manager, "application/x-fictionbook+xml");
+  zathura_free(probe);
+  if (!engines) { g_print("PDF/reflow engines not installed; skipping engine-dependent test.\n"); return 77; }
   g_autofree char* pdf = g_build_filename(directory, "test.pdf", NULL);
   g_autofree char* other = g_build_filename(directory, "other.pdf", NULL);
   cairo_surface_t* surface = cairo_pdf_surface_create(pdf, 300, 500);

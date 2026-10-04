@@ -1,0 +1,23 @@
+{
+  "id": "io.github.bortoq.zatura",
+  "runtime": "org.gnome.Platform",
+  "runtime-version": "49",
+  "sdk": "org.gnome.Sdk",
+  "command": "zatura",
+  "finish-args": ["--share=ipc", "--socket=wayland", "--socket=fallback-x11", "--device=dri", "--filesystem=home"],
+  "cleanup": ["/include", "/lib/pkgconfig", "*.a", "/share/doc", "/share/gtk-doc"],
+  "modules": [
+    {
+      "name": "girara",
+      "buildsystem": "meson",
+      "config-opts": ["--default-library=static", "-Ddocs=disabled"],
+      "sources": [{"type": "git", "url": "https://github.com/pwmt/girara.git", "commit": "e120cc0c4f486af935f09a07420606925a6f9305"}]
+    },
+    {
+      "name": "zatura",
+      "buildsystem": "meson",
+      "config-opts": ["--default-library=static", "-Dseccomp=disabled", "-Dlandlock=disabled", "-Dsynctex=disabled", "-Dmanpages=disabled", "-Dconvert-icon=disabled", "-Dshell-completions=disabled", "-Dtests-x11=disabled", "-Dtests-wayland=disabled"],
+      "sources": [{"type": "dir", "path": "..", "skip": [".git", "build", "build-ci", "dist", "subprojects/girara"]}]
+    }
+  ]
+}

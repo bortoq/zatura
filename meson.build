@@ -1,5 +1,5 @@
 project('zatura', 'c',
-  version: '2026.10.03.1',
+  version: '2026.10.03.2',
   meson_version: '>=1.5',
   default_options: ['c_std=c23', 'warning_level=3'],
 )
