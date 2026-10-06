@@ -64,6 +64,13 @@
     <control>touch</control>
   </recommends>
   <releases>
+    <release version="2026.10.06.1" date="2026-10-06">
+      <description>
+        <p>Packages now include the compatible Poppler PDF engine. Flatpak uses
+        document portal access. Experimental sandbox thread, descriptor and
+        ioctl restrictions have been strengthened.</p>
+      </description>
+    </release>
     <release version="2026.10.02" date="2026-10-02">
       <description>
         <p>First Zatura release based on Zathura, retaining plugin API 8 and ABI 9.</p>

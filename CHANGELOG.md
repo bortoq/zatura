@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026.10.06.1
+
+- Include the compatible Poppler PDF engine in Debian, Arch, AppImage and Flatpak packages; require installed-package PDF rendering checks.
+- Remove blanket home-directory access from Flatpak; use document portal grants.
+- Require Landlock ABI 8 with TSYNC for the experimental combined sandbox; sanitize inherited descriptors and restrict filesystem and terminal mutation operations.
+- Add descriptor-reuse, sandbox startup and engine integration regressions; pin native build inputs and normalize package timestamps.
+
+
 ## 2026.10.03.2
 
 - Native Debian/Arch core packages with system dependencies instead of private runtime copies.

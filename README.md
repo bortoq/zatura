@@ -17,7 +17,7 @@ A keyboard-driven document viewer forked from [Zathura](https://github.com/pwmt/
 
 ```sh
 chmod +x Zatura-*.AppImage
-./Zatura-2026.10.03.2-x86_64.AppImage --version
+./Zatura-2026.10.06.1-x86_64.AppImage --version
 # Without FUSE: add --appimage-extract-and-run.
 ```
 
