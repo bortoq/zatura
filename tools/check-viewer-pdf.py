@@ -9,6 +9,7 @@ import os
 from pathlib import Path
 import subprocess
 import tempfile
+import threading
 import time
 
 p = argparse.ArgumentParser(description=__doc__)
@@ -46,7 +47,15 @@ with tempfile.TemporaryDirectory(prefix='zatura-pdf-smoke-') as work:
     env = dict(os.environ, GTK_A11Y='none', GSK_RENDERER='cairo', GSETTINGS_BACKEND='memory')
     log = directory / 'viewer.log'
     with log.open('w') as stream:
-        viewer = subprocess.Popen(command, env=env, stdout=stream, stderr=stream)
+        # Keep the sandbox's stdio on a pipe. The parent owns the log file;
+        # the parser never inherits a writable filesystem descriptor.
+        viewer = subprocess.Popen(command, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+        def collect_output():
+            for line in viewer.stdout:
+                stream.write(line)
+                stream.flush()
+        collector = threading.Thread(target=collect_output, daemon=True)
+        collector.start()
         rendered = False
         try:
             deadline = time.monotonic() + 20
@@ -66,6 +75,8 @@ with tempfile.TemporaryDirectory(prefix='zatura-pdf-smoke-') as work:
                 except subprocess.TimeoutExpired:
                     viewer.kill()
                     viewer.wait()
+            collector.join(timeout=3)
+            viewer.stdout.close()
     if not rendered:
         raise SystemExit('Installed viewer failed PDF rendering:\n' + log.read_text(errors='replace'))
     print('Installed viewer PDF render: OK')

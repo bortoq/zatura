@@ -23,3 +23,14 @@ int seccomp_restrict_open(scmp_filter_ctx ctx) {
   }
   return 0;
 }
+
+int seccomp_restrict_metadata(scmp_filter_ctx ctx) {
+  /* fchmod also works on read-only file descriptors. mkdir is needed only
+   * before enforcement, not for X11 communication while parsing documents. */
+  const int calls[] = {SCMP_SYS(fchmod), SCMP_SYS(fchmodat), SCMP_SYS(mkdir), SCMP_SYS(mkdirat)};
+  for (unsigned int i = 0; i < sizeof(calls) / sizeof(calls[0]); ++i) {
+    int rc = seccomp_rule_add(ctx, SCMP_ACT_ERRNO(EACCES), calls[i], 0);
+    if (rc < 0) return rc;
+  }
+  return 0;
+}

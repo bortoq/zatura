@@ -6,6 +6,23 @@ if seccomp.found()
     include_directories: include_directories,
   )
   test('seccomp-open', seccomp_open)
+  sandbox_fds = executable('test_sandbox_fds',
+    files('test_sandbox_fds.c', '../zatura/sandbox-fds.c', '../zatura/seccomp-open.c'),
+    dependencies: [seccomp], include_directories: include_directories)
+  test('sandbox-fds', sandbox_fds)
+endif
+
+if landlock
+  landlock_policy = executable('test_landlock_abi_policy',
+    files('test_landlock_abi_policy.c', '../zatura/landlock.c'),
+    dependencies: build_dependencies, include_directories: include_directories,
+    link_args: ['-Wl,--wrap=syscall'])
+  test('landlock-abi-policy', landlock_policy)
+  landlock_threads = executable('test_landlock_threads',
+    files('test_landlock_threads.c', '../zatura/landlock.c', '../zatura/sandbox-fds.c'),
+    dependencies: build_dependencies + [dependency('threads')],
+    include_directories: include_directories)
+  test('landlock-threads', landlock_threads)
 endif
 
 
@@ -256,7 +273,8 @@ if (seccomp.found() or landlock) and (xvfb.found() or weston.found())
   sandbox = executable('test_sandbox', files('test_sandbox.c'),
     dependencies: build_dependencies + [libzatura_sandbox_dep] + sandbox_dependencies,
     include_directories: include_directories,
-    c_args: defines + sandbox_defines + flags
+    c_args: defines + sandbox_defines + flags,
+    export_dynamic: true,
   )
   if landlock and xvfb.found()
     landlock_abi = executable('landlock_abi', files('landlock_abi.c'))

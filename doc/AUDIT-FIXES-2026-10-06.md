@@ -1,5 +1,8 @@
 # Audit fixes, 2026-10-06
 
+This historical report describes the initial fixes in commit `11c5978a`.
+Follow-up sandbox requirements are documented in [SANDBOX.md](SANDBOX.md).
+
 This change addresses the findings in `zatura-audit-report-2026-10-06.md`.
 Existing, uncommitted GPU rendering changes are preserved.
 

@@ -7,4 +7,5 @@ results = [json.loads(line) for line in Path(sys.argv[1]).read_text().splitlines
 for name in sys.argv[2:]:
     found = [row for row in results if row['name'].split(' / ')[-1].rsplit(':', 1)[-1] == name]
     if len(found) != 1 or found[0]['result'] != 'OK':
-        raise SystemExit(f'Required integration test {name}: {found or "missing"}')
+        status = [{'name': row['name'], 'result': row['result'], 'returncode': row.get('returncode')} for row in found]
+        raise SystemExit(f'Required integration test {name}: {status or "missing"}')

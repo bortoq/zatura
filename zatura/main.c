@@ -16,6 +16,9 @@
 #include "zatura.h"
 #include "plugin.h"
 #include "utils.h"
+#if defined(WITH_SANDBOX) && defined(__linux__)
+#include "sandbox-fds.h"
+#endif
 #ifdef WITH_SECCOMP
 #include "seccomp-filters.h"
 #endif
@@ -96,7 +99,7 @@ static zathura_t* init_zathura(const char* config_dir, const char* data_dir, con
   }
 
 #ifdef WITH_SANDBOX
-  girara_debug("Strict sandbox preventing write and network access.");
+  girara_debug("Applying experimental sandbox restrictions before document parsing.");
 #ifdef WITH_LANDLOCK
   if (landlock_drop_write() != 0) {
     girara_error("Failed to apply landlock write restriction.");
@@ -107,6 +110,14 @@ static zathura_t* init_zathura(const char* config_dir, const char* data_dir, con
 #ifdef WITH_SECCOMP
   if (seccomp_enable_strict_filter(zathura)) {
     girara_error("Failed to initialize strict seccomp filter.");
+    zathura_free(zathura);
+    return NULL;
+  }
+#endif
+#ifdef __linux__
+  int bad_fd;
+  if (sandbox_check_fds(&bad_fd) != 0) {
+    girara_error("Unsafe writable descriptor %d remains after sandbox enforcement.", bad_fd);
     zathura_free(zathura);
     return NULL;
   }
@@ -242,6 +253,11 @@ static void start_process_group(void* GIRARA_UNUSED(data)) {
 
 /* main function */
 GIRARA_VISIBLE int main(int argc, char* argv[]) {
+#if defined(WITH_SANDBOX) && defined(__linux__)
+  if (sandbox_prepare_inherited_fds() != 0) {
+    return 1;
+  }
+#endif
   init_locale();
 
 #ifdef WITH_SANDBOX

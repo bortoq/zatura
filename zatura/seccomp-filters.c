@@ -191,12 +191,10 @@ int seccomp_enable_strict_filter(zathura_t* zathura) {
     /* permit the socket syscall for local UNIX domain sockets (required by X11) */
     ADD_RULE("allow", SCMP_ACT_ALLOW, socket, 1, SCMP_CMP(0, SCMP_CMP_EQ, AF_UNIX));
 
-    ALLOW_RULE(mkdir); /* mkdirat */
     ALLOW_RULE(setsockopt);
     ALLOW_RULE(getsockopt);
     ALLOW_RULE(getsockname);
     ALLOW_RULE(connect);
-    ALLOW_RULE(fchmod);
     ALLOW_RULE(sendto);
     ALLOW_RULE(umask);
     ALLOW_RULE(uname);
@@ -272,7 +270,7 @@ int seccomp_enable_strict_filter(zathura_t* zathura) {
    *         SCMP_CMP(2, SCMP_CMP_MASKED_EQ, PROT_READ | PROT_WRITE | PROT_NONE, PROT_READ | PROT_WRITE | PROT_NONE));
    */
 
-  if (seccomp_restrict_open(ctx) < 0) {
+  if (seccomp_restrict_open(ctx) < 0 || seccomp_restrict_metadata(ctx) < 0) {
     girara_error("Failed to restrict open/openat flags.");
     goto out;
   }
@@ -324,13 +322,13 @@ int seccomp_enable_strict_filter(zathura_t* zathura) {
 
   /* Sandbox Status Notes:
    *
-   * write: no actual files on the filesystem are opened with write permissions
-   *    exception is /run/user/UID/dconf/user (file descriptor not available during runtime)
+   * write/writev/ftruncate/fallocate remain needed for IPC and anonymous
+   * display buffers. New writable file opens are denied. Inherited non-stdio
+   * FDs are closed before UI initialization, unsafe stdio is replaced with
+   * /dev/null, and startup checks surviving FDs after TSYNC enforcement.
+   * Landlock does not revoke permissions on previously opened descriptors.
    *
-   *
-   * mkdir: needed for first run only to create /run/user/UID/dconf (before seccomp init)
-   * wait4: required to attempt opening links (which is then blocked)
-   *
+   * wait4: required to attempt opening links (which is then blocked).
    *
    * Note about clone3():
    * Since the seccomp mechanism is unable to examine system-call arguments that are passed in separate structures
@@ -359,8 +357,8 @@ int seccomp_enable_strict_filter(zathura_t* zathura) {
 
   /* applying filter... */
   /* synchronize the filter across all threads of the process; without this
-   * the filter would only apply to the calling thread, leaving worker
-   * threads created during zatura_init (e.g. the renderer pool) unsandboxed */
+   * the filter would only apply to the calling thread. GTK/GLib background
+   * threads may exist already; document rendering threads are created later. */
   const int tsync_err = seccomp_attr_set(ctx, SCMP_FLTATR_CTL_TSYNC, 1);
   if (tsync_err < 0) {
     girara_error("seccomp_attr_set(TSYNC) failed: %s", g_strerror(-tsync_err));

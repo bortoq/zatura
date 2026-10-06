@@ -89,6 +89,16 @@ landlock = cc.check_header('linux/landlock.h', required: get_option('landlock'))
 if landlock
   landlock = cc.has_member('struct landlock_ruleset_attr', 'scoped', args: ['-D_GNU_SOURCE'], prefix: ['#include <linux/landlock.h>'])
 endif
+if get_option('landlock').enabled() and not landlock
+  error('Requested Landlock sandbox needs headers with scoped ruleset support')
+endif
+if landlock and not seccomp.found()
+  if get_option('landlock').enabled()
+    error('Landlock sandbox requires seccomp for filesystem metadata restrictions')
+  endif
+  message('Disabling automatic Landlock sandbox: seccomp is unavailable')
+  landlock = false
+endif
 
 if synctex.found()
   build_dependencies += synctex
@@ -184,6 +194,9 @@ libzatura_dep = declare_dependency(link_with: libzatura)
 # zatura-sandbox executable
 if seccomp.found() or landlock or target_machine.system() == 'openbsd'
   sandbox_sources = files()
+  if target_machine.system() == 'linux'
+    sandbox_sources += files('zatura/sandbox-fds.c')
+  endif
   sandbox_defines = ['-DWITH_SANDBOX']
   sandbox_dependencies = []
   if seccomp.found()

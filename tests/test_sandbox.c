@@ -10,6 +10,9 @@
 #endif
 
 #include "tests.h"
+#ifdef __linux__
+#include "sandbox-fds.h"
+#endif
 
 #include <gtk/gtk.h>
 #ifdef GDK_WINDOWING_X11
@@ -27,13 +30,17 @@ static void test_create(void) {
 
 #ifdef WITH_LANDLOCK
   if (landlock_drop_write() != 0) {
-    g_test_skip("Landlock ABI 6 is unavailable; strict startup refuses this kernel");
+    g_test_skip("Landlock ABI 8 is unavailable; strict startup refuses this kernel");
     zathura_free(zathura);
     return;
   }
 #endif
 #ifdef WITH_SECCOMP
   g_assert_cmpint(seccomp_enable_strict_filter(zathura), ==, 0);
+#endif
+
+#ifdef __linux__
+  g_assert_cmpint(sandbox_check_fds(NULL), ==, 0);
 #endif
 
   g_assert_null(zathura_document_open(zathura, NULL, NULL, NULL, NULL));
@@ -45,6 +52,9 @@ static void test_create(void) {
 }
 
 int main(int argc, char* argv[]) {
+#ifdef __linux__
+  if (sandbox_prepare_inherited_fds() != 0) return 1;
+#endif
   setup_logger();
 
   gtk_init();

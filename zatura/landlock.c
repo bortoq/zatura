@@ -53,7 +53,7 @@ static inline int landlock_restrict_self(const int ruleset_fd, const __u32 flags
 #define LANDLOCK_SCOPE_ABSTRACT_UNIX_SOCKET (1ULL << 0)
 #endif
 
-static int landlock_drop(__u64 fs_access, __u64 net_access, __u64 scoped, int abi) {
+static int landlock_drop(__u64 fs_access, __u64 net_access, __u64 scoped) {
   const struct landlock_ruleset_attr ruleset_attr = {
       .handled_access_fs  = fs_access,
       .handled_access_net = net_access,
@@ -70,11 +70,10 @@ static int landlock_drop(__u64 fs_access, __u64 net_access, __u64 scoped, int ab
     close(ruleset_fd);
     return -1;
   }
-  /* TSYNC propagates the landlock domain to all threads of the process; without
-   * it, the domain only applies to the calling thread, leaving worker threads
-   * created during zatura_init (e.g. the renderer pool) outside the sandbox.
-   * Available since landlock ABI v8 (linux 7.0). */
-  const __u32 flags = (abi >= 8) ? LANDLOCK_RESTRICT_SELF_TSYNC : 0;
+  /* GTK/GLib may already have background threads. Rendering threads are
+   * created later, while opening a document. ABI 8 TSYNC covers all current
+   * threads, which then pass their domain to subsequently created threads. */
+  const __u32 flags = LANDLOCK_RESTRICT_SELF_TSYNC;
   if (landlock_restrict_self(ruleset_fd, flags)) {
     girara_error("landlock_restrict_self failed: %s", g_strerror(errno));
     close(ruleset_fd);
@@ -117,8 +116,12 @@ static bool session_is_wayland(void) {
 
 int landlock_drop_write(void) {
   const int abi = landlock_check_kernel();
-  if (abi < 6) {
-    girara_warning("Landlock is unavailable or older than ABI 6 (Linux 6.12); strict sandbox cannot start.");
+  if (abi < 0) {
+    girara_error("Failed to probe Landlock ABI.");
+    return -1;
+  }
+  if (abi < 8) {
+    girara_warning("Landlock ABI 8 with TSYNC is required; strict sandbox cannot start.");
     return 1; /* unsupported; the strict sandbox must refuse to start */
   }
 
@@ -129,7 +132,7 @@ int landlock_drop_write(void) {
   if (session_is_wayland()) {
     scoped |= LANDLOCK_SCOPE_ABSTRACT_UNIX_SOCKET;
   }
-  return landlock_drop(fs, net, scoped, abi);
+  return landlock_drop(fs, net, scoped);
 }
 
 static int landlock_write_fd(const int dir_fd) {

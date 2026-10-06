@@ -18,4 +18,4 @@ export ZATURA_RUNTIME_DIR="$prefix"
 meson test -C "$build" --print-errorlogs
 python3 tools/require-engine-tests.py "$build/meson-logs/testlog.json" \
   xvfb_reflow xvfb_content_anchors xvfb_view_history xvfb_pdf_effects \
-  xvfb_cache_budget seccomp-open xvfb_sandbox weston_sandbox
+  xvfb_cache_budget seccomp-open sandbox-fds xvfb_sandbox weston_sandbox

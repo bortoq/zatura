@@ -73,3 +73,8 @@ Only libraries missing from GNOME Platform are copied. The directory should
 come from the matching AppImage build; its license notices are copied too.
 Flatpak checks can also use an existing headless display when `xvfb-run` is
 unavailable.
+
+The native script deliberately disables seccomp and Landlock. Sandbox behavior
+and its descriptor/kernel requirements are described in [SANDBOX.md](SANDBOX.md).
+Before publishing new artifacts, bump the project version/tag; do not reuse the
+identifiers of an older public release.

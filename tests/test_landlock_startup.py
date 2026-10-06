@@ -7,7 +7,7 @@ import tempfile
 
 probe, viewer, smoke = sys.argv[1:]
 abi = int(subprocess.check_output([probe], text=True).strip())
-if abi >= 6:
+if abi >= 8:
     subprocess.run([sys.executable, smoke, viewer], check=True)
 else:
     with tempfile.TemporaryDirectory(prefix='zatura-landlock-') as work:

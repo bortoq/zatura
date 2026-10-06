@@ -27,8 +27,16 @@ another ABI are incompatible.
 
 Native builds require a C23 compiler, Meson >= 1.6, GTK >= 4.12, GLib >= 2.84,
 Girara >= 2026.07.07, Cairo, libxkbcommon, libmagic, JSON-GLib, SQLite >= 3.35,
-xxhash, libarchive, gettext and pkgconf. SyncTeX and seccomp are optional.
+xxhash, libarchive, gettext and pkgconf. SyncTeX, seccomp and Landlock are optional.
 Sphinx builds manuals; Doxygen/Breathe build API documentation.
+
+The native packaging script builds the ordinary `zatura` viewer with seccomp and
+Landlock disabled. The separate experimental `zatura-sandbox` executable can be
+built with `-Dseccomp=enabled -Dlandlock=enabled`. Its Landlock configuration
+requires kernel ABI 8 with TSYNC; it refuses older kernels because GTK/GLib may
+already have background threads. Explicit seccomp-only builds
+(`-Dlandlock=disabled`) are available, but X11 still permits incomplete process
+isolation. See [sandbox details and tests](doc/SANDBOX.md).
 
 ```sh
 make configure PREFIX=/opt/zatura MESON_ARGS='-Dbuildtype=release'

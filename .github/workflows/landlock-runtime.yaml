@@ -1,0 +1,26 @@
+name: Landlock ABI 8 runtime
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  landlock-runtime:
+    # Docker shares the host kernel; a newer container cannot provide TSYNC.
+    runs-on: [self-hosted, linux, landlock-abi8]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch pinned Girara sources
+        run: |
+          git clone https://github.com/pwmt/girara.git subprojects/girara
+          git -C subprojects/girara checkout e120cc0c4f486af935f09a07420606925a6f9305
+      - name: Build test environment
+        run: docker build -t zatura-native -f packaging/Dockerfile.native .
+      - name: Build PDF engine
+        run: docker run --rm --init --user "$(id -u):$(id -g)" --env HOME=/tmp -v /etc/passwd:/etc/passwd:ro -v "$PWD:/src" zatura-native
+      - name: Require real multithreaded Landlock enforcement
+        run: docker run --rm --init --user "$(id -u):$(id -g)" --env HOME=/tmp --env LANDLOCK_REQUIRE_TSYNC=1 --entrypoint /src/tools/test-native-sandbox.sh -v /etc/passwd:/etc/passwd:ro -v "$PWD:/src" zatura-native
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: landlock-runtime-test-logs
+          path: build/native-sandbox/meson-logs/
