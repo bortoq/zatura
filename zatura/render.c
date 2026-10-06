@@ -643,6 +643,7 @@ static bool render_to_cairo_surface(cairo_surface_t* surface, zathura_page_t* pa
                                     double real_scale) {
   cairo_t* cairo = cairo_create(surface);
   if (cairo_status(cairo) != CAIRO_STATUS_SUCCESS) {
+    cairo_destroy(cairo);
     return false;
   }
 
@@ -984,6 +985,9 @@ cairo_surface_t* zathura_renderer_render_page(ZathuraRenderer* renderer, zathura
   }
   const PageEffects effects = zathura_renderer_get_page_effects(renderer);
   surface = adjusted_surface(priv, page, page_width, page_height, surface, device_factors, &effects, NULL);
+  if (surface != NULL) {
+    girara_debug("Rendered page %u synchronously.", zathura_page_get_index(page) + 1);
+  }
 
   return surface;
 }

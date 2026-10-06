@@ -6,7 +6,7 @@ pkgdesc='GTK4 document viewer with physical shortcuts'
 arch=('x86_64')
 url='https://github.com/bortoq/zatura'
 license=('Zlib')
-depends=('glibc' 'gtk4>=4.12' 'glib2>=2.84' 'json-glib' 'file' 'sqlite>=3.35' 'xxhash' 'libxkbcommon' 'libarchive' 'cairo')
+depends=('glibc' 'gtk4>=4.12' 'glib2>=2.84' 'json-glib' 'file' 'sqlite>=3.35' 'xxhash' 'libxkbcommon' 'libarchive' 'cairo' 'poppler-glib')
 provides=('zatura')
 conflicts=('zatura')
 source=("zatura.pkg.tar.zst::https://github.com/bortoq/zatura/releases/download/v${pkgver}/zatura-bin-${pkgver}-1-x86_64.pkg.tar.zst")

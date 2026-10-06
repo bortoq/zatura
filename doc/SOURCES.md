@@ -21,3 +21,10 @@ replaceable under `usr/lib` in an extracted AppImage.
 
 Older 2026.10.03.1 bundles used Alpine 3.24 and a private musl runtime; see the
 [SOURCES.md at that tag](https://github.com/bortoq/zatura/blob/v2026.10.03.1/doc/SOURCES.md).
+
+PDF-enabled builds use zathura-pdf-poppler at commit
+`165f37248f235bb192d154b06094c52ca92f5b2d`. Source Flatpak additionally builds
+Poppler 25.03.0 and OpenJPEG 2.5.4 from checksum-pinned upstream archives in
+`packaging/io.github.bortoq.zatura.json`; their license notices are installed
+under `/app/share/licenses/zatura`. Native Flatpak carries notices for libraries
+absent from the shared Platform.

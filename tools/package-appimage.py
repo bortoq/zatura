@@ -36,10 +36,12 @@ command = [a.linuxdeploy, '--appdir', str(appdir), '--executable', str(appdir/'u
            '--desktop-file', str(appdir/f'usr/share/applications/{core.APPID}.desktop'),
            '--icon-file', str(appdir/f'usr/share/icons/hicolor/scalable/apps/{core.APPID}.svg'),
            '--custom-apprun', str(root/'packaging/AppRun')]
-# Drivers and optional media/TLS backends belong to the host. Never ship a DRI stack.
+for engine in appdir.rglob('libpdf-poppler.so'):
+    command += ['--library', str(engine)]
+# Drivers and optional media backends belong to the host.
+# Poppler requires NSS/TLS libraries in its linked closure. Never ship a DRI stack.
 excluded = ['libLLVM*', 'libgallium*', 'libMesa*', '*_dri.so', 'libgs.so*',
-            'libgstreamer*', 'libgst*', 'libgnutls*', 'libnss3*', 'libnssutil3*',
-            'libsmime3*', 'libssl3.so*', 'libdav1d*', 'libSPIRV*']
+            'libgstreamer*', 'libgst*', 'libdav1d*', 'libSPIRV*']
 for pattern in excluded: command += ['--exclude-library', pattern]
 
 import os
@@ -50,7 +52,9 @@ subprocess.run(command, cwd=output, env=env, check=True)
 # GTK4/Pango need newer HarfBuzz symbols; keep the complete linked closure.
 # These are actual DT_NEEDED libraries, not optional driver/media stacks.
 import fnmatch
-linked = subprocess.run(['ldd', str(a.stage.resolve()/'usr/bin/zatura')], capture_output=True, text=True, check=True)
+linked = subprocess.run(['ldd', str(a.stage.resolve()/'usr/bin/zatura'),
+                         *[str(p) for p in a.stage.resolve().rglob('libpdf-poppler.so')]],
+                        capture_output=True, text=True, check=True)
 for soname, filename in re.findall(r'^\s*(\S+) => (/\S+)', linked.stdout, re.M):
     if any(fnmatch.fnmatch(soname, pattern) for pattern in excluded):
         raise SystemExit(f'Excluded library is genuinely linked: {soname}; review before bundling')
@@ -90,6 +94,9 @@ result = subprocess.run([str(appdir/'usr/lib/ld-linux-x86-64.so.2'), '--library-
                         capture_output=True, text=True, check=True)
 (output/'appimage-linked-libraries.txt').write_text(result.stdout)
 if 'not found' in result.stdout: raise SystemExit('AppImage contains unresolved ELF dependencies')
+for engine in appdir.rglob('libpdf-poppler.so'):
+    subprocess.run([str(appdir/'usr/lib/ld-linux-x86-64.so.2'), '--library-path',
+                    str(appdir/'usr/lib'), '--list', str(engine)], check=True, env=env)
 # linuxdeploy's patchelf pass must never touch glibc's loader. Its official
 # output plugin packages the already deployed AppDir without modifying ELF.
 import tempfile
@@ -104,4 +111,6 @@ with tempfile.TemporaryDirectory(prefix='linuxdeploy-output-') as extraction:
     subprocess.run([plugin, '--appdir', str(appdir)], cwd=output, env=env, check=True)
 archive = output/env['OUTPUT']
 if archive.stat().st_size > 40_000_000: raise SystemExit(f'AppImage exceeds 40 MB: {archive.stat().st_size}')
+subprocess.run(['xvfb-run', '-a', 'python3', str(root/'tools/check-viewer-pdf.py'),
+                str(archive.resolve()), '--appimage-extract-and-run'], check=True)
 print(f'{archive}: {archive.stat().st_size} bytes')

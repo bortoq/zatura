@@ -20,7 +20,8 @@ For Debian use `packaging/Dockerfile.native` with the repository mounted at
 `/src`. Native packages include the executable, desktop/icon, manuals and
 application metadata/license notices. Debian dependencies come from
 `dpkg-shlibdeps`; Arch uses `depends`. Document engines (API 8, ABI 9) are
-separate plugins, not embedded in the native core packages. Old distro Zathura
+built against the staged SDK; Poppler PDF ships in every package. Optional
+engines can be built with `PLUGINS` (see README). Old distro Zathura
 plugins with another ABI cannot be used.
 
 Flatpak builds against `org.gnome.Platform`; `/app` contains only application
@@ -46,3 +47,29 @@ program outside the build tree before cleaning. `~/bin/zz` uses the permanent
 installation at `~/.local/lib/zatura` on this machine.
 Run native build containers with `--user "$(id -u):$(id -g)" --env HOME=/tmp`
 to keep generated files writable for cleanup by your user.
+
+Flatpak has no blanket home-directory permission. Open documents with the GTK
+file chooser (`Alt+o`) or the desktop file association, which grant portal access
+to the selected file. Application settings use its private XDG directories.
+
+Native build inputs use a fixed Debian image digest and APT snapshot. Package
+timestamps and ownership are normalized; `SOURCE_DATE_EPOCH` defaults to the
+source commit timestamp. CI records it explicitly.
+
+Packaging requires `xvfb-run` and rejects an artifact whose installed viewer
+cannot open and finish rendering a PDF. Native packages are extracted before
+this check; AppImage is executed with extraction mode, and Flatpak checks its
+built installation before export.
+
+When exporting native Flatpak on a different distribution, supply the linked
+libraries from the build distribution, for example:
+
+```sh
+python3 tools/package-flatpak.py --stage build/native-stage \
+  --library-dir dist/Zatura.AppDir/usr/lib
+```
+
+Only libraries missing from GNOME Platform are copied. The directory should
+come from the matching AppImage build; its license notices are copied too.
+Flatpak checks can also use an existing headless display when `xvfb-run` is
+unavailable.

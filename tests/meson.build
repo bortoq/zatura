@@ -1,3 +1,13 @@
+# These syscall tests do not require GTK, Weston, Xvfb or Landlock.
+if seccomp.found()
+  seccomp_open = executable('test_seccomp_open',
+    files('test_seccomp_open.c', '../zatura/seccomp-open.c'),
+    dependencies: [seccomp],
+    include_directories: include_directories,
+  )
+  test('seccomp-open', seccomp_open)
+endif
+
 
 env = [
   'G_TEST_SRCDIR=@0@'.format(meson.current_source_dir()),
@@ -240,24 +250,31 @@ if weston.found()
     ]
   )
 
-  if seccomp.found() or landlock
-    sandbox = executable('test_sandbox', files('test_sandbox.c'),
-      dependencies: build_dependencies + [libzatura_sandbox_dep] + sandbox_dependencies,
-      include_directories: include_directories,
-      c_args: defines + sandbox_defines + flags
-    )
+endif
 
-    test('weston_sandbox', weston_session,
-      args: [sandbox],
-      timeout: 60*60,
-      protocol: 'tap',
-      env: [
-        'G_TEST_SRCDIR=@0@'.format(meson.current_source_dir()),
-        'G_TEST_BUILDDIR=@0@'.format(meson.current_build_dir()),
-        'NO_AT_BRIDGE=1',
-      'GTK_A11Y=none',
-        'WAYLAND_DISPLAY=zatura-test-weston'
-      ]
-    )
+if (seccomp.found() or landlock) and (xvfb.found() or weston.found())
+  sandbox = executable('test_sandbox', files('test_sandbox.c'),
+    dependencies: build_dependencies + [libzatura_sandbox_dep] + sandbox_dependencies,
+    include_directories: include_directories,
+    c_args: defines + sandbox_defines + flags
+  )
+  if landlock and xvfb.found()
+    landlock_abi = executable('landlock_abi', files('landlock_abi.c'))
+    test('xvfb_landlock_startup', xvfb,
+      args: xvfb_args + [find_program('python3'), meson.current_source_dir() / 'test_landlock_startup.py', landlock_abi,
+             zatura_sandbox,
+             meson.project_source_root() / 'tools/check-viewer-pdf.py'],
+      timeout: 60,
+      env: env + ['GTK_A11Y=none', 'GSK_RENDERER=cairo'])
+  endif
+  if xvfb.found()
+    test('xvfb_sandbox', xvfb, args: xvfb_args + [sandbox],
+      timeout: 60, protocol: 'tap',
+      env: env + ['GTK_A11Y=none', 'GSK_RENDERER=cairo'])
+  endif
+  if weston.found()
+    test('weston_sandbox', weston_session, args: [sandbox],
+      timeout: 60, protocol: 'tap',
+      env: env + ['GTK_A11Y=none', 'WAYLAND_DISPLAY=zatura-test-weston'])
   endif
 endif

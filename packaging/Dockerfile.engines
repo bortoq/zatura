@@ -1,0 +1,9 @@
+FROM alpine:3.24.1@sha256:28bd5fe8b56d1bd048e5babf5b10710ebe0bae67db86916198a6eec434943f8b
+RUN apk add --no-cache build-base meson ninja pkgconf gettext-dev glib-dev \
+    gtk4.0-dev json-glib-dev file-dev sqlite-dev xxhash-dev libxkbcommon-dev \
+    cairo-dev poppler-dev mupdf-dev djvulibre-dev libspectre-dev libarchive-dev \
+    shared-mime-info ghostscript xvfb-run xvfb dbus font-dejavu git \
+    ca-certificates libseccomp-dev mesa-dev weston
+RUN apk add --no-cache weston-backend-headless weston-shell-desktop
+WORKDIR /src
+ENTRYPOINT ["/src/tools/test-engines.sh"]

@@ -1,27 +1,27 @@
 #!/bin/sh
-
+# SPDX-License-Identifier: Zlib
+set -eu
 export XDG_RUNTIME_DIR=$(mktemp -d)
-mkdir -p "$XDG_RUNTIME_DIR"
-
-# headless GPU drivers can lose the Vulkan surface and abort, so render in software
 export GSK_RENDERER=cairo
-
 weston --backend=headless-backend.so --socket=zatura-test-weston --idle-time=0 &
-WESTON_PID=$!
-
-# Wait for the socket to exist
-for i in $(seq 10); do
-  [ -e "$XDG_RUNTIME_DIR/zatura-test-weston" ] && break
-  sleep 0.5
+weston_pid=$!
+cleanup() {
+  kill "$weston_pid" 2>/dev/null || true
+  wait "$weston_pid" 2>/dev/null || true
+  rm -rf "$XDG_RUNTIME_DIR"
+}
+trap cleanup EXIT
+trap 'exit 1' HUP INT TERM
+for i in $(seq 20); do
+  [ -S "$XDG_RUNTIME_DIR/zatura-test-weston" ] && break
+  if ! kill -0 "$weston_pid" 2>/dev/null; then
+    echo 'Weston exited before creating its test socket' >&2
+    exit 1
+  fi
+  sleep 0.25
 done
-
-# run tests
-$@
-RET=$?
-
-# Clean up Weston
-kill $WESTON_PID
-wait $WESTON_PID
-
-rm -rf "$XDG_RUNTIME_DIR"
-exit $RET
+if [ ! -S "$XDG_RUNTIME_DIR/zatura-test-weston" ]; then
+  echo 'Weston did not create its test socket' >&2
+  exit 1
+fi
+"$@"

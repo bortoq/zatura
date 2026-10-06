@@ -1,8 +1,13 @@
-FROM debian:trixie-slim
+FROM debian:trixie-slim@sha256:a99cfc517144bc59b1978475ec53b46ecabec7e43635402ee5b77cc54cd1b20a
+# Fixed archive snapshot; update together with the base digest.
+RUN rm /etc/apt/sources.list.d/debian.sources && printf '%s\n' \
+    'deb [check-valid-until=no] http://snapshot.debian.org/archive/debian/20261001T000000Z/ trixie main' \
+    'deb [check-valid-until=no] http://snapshot.debian.org/archive/debian-security/20261001T000000Z/ trixie-security main' \
+    > /etc/apt/sources.list
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc make meson ninja-build pkgconf libgtk-4-dev libglib2.0-dev \
     libjson-glib-dev libmagic-dev libsqlite3-dev libxxhash-dev libxkbcommon-dev \
     libarchive-dev gettext python3-sphinx dpkg-dev curl ca-certificates file \
-    zstd xvfb xauth git && rm -rf /var/lib/apt/lists/*
+    zstd xvfb xauth git libpoppler-glib-dev libseccomp-dev libepoxy-dev && rm -rf /var/lib/apt/lists/*
 WORKDIR /src
 ENTRYPOINT ["/src/tools/build-native.sh"]

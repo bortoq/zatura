@@ -21,10 +21,11 @@ chmod +x Zatura-*.AppImage
 # Without FUSE: add --appimage-extract-and-run.
 ```
 
-Compact release packages contain the core. Install separate document plugins
-(API 8 / ABI 9); older distribution plugins with another ABI are incompatible.
+Packages built from this tree include the compatible Poppler PDF engine (API 8 / ABI 9).
+Additional formats require optional engines; older distribution plugins with
+another ABI are incompatible.
 
-Native builds require a C23 compiler, Meson >= 1.5, GTK >= 4.12, GLib >= 2.84,
+Native builds require a C23 compiler, Meson >= 1.6, GTK >= 4.12, GLib >= 2.84,
 Girara >= 2026.07.07, Cairo, libxkbcommon, libmagic, JSON-GLib, SQLite >= 3.35,
 xxhash, libarchive, gettext and pkgconf. SyncTeX and seccomp are optional.
 Sphinx builds manuals; Doxygen/Breathe build API documentation.
@@ -34,8 +35,14 @@ make configure PREFIX=/opt/zatura MESON_ARGS='-Dbuildtype=release'
 make build
 make test
 make install
-make plugins RUNTIME=/opt/zatura
+make plugins RUNTIME=/opt/zatura  # requires libpoppler-glib-dev (Debian) or poppler-glib (Arch)
 ```
+
+`make plugins` builds the pinned Poppler PDF engine by default and discovers
+multiarch SDK directories automatically. For all engines, install MuPDF >=1.26,
+DjVuLibre, libspectre and libarchive development packages, then run
+`PLUGINS="pdf-poppler pdf-mupdf djvu ps cb" make plugins RUNTIME=/opt/zatura`.
+With only `PLUGINS=pdf-mupdf`, MuPDF also handles PDF.
 
 Keep a separate prefix from Zathura because compatibility headers share names.
 `DESTDIR=/tmp/package-root make install` stages an installation.

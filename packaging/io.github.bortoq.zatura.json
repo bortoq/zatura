@@ -4,20 +4,129 @@
   "runtime-version": "49",
   "sdk": "org.gnome.Sdk",
   "command": "zatura",
-  "finish-args": ["--share=ipc", "--socket=wayland", "--socket=fallback-x11", "--device=dri", "--filesystem=home"],
-  "cleanup": ["/include", "/lib/pkgconfig", "*.a", "/share/doc", "/share/gtk-doc"],
+  "finish-args": [
+    "--share=ipc",
+    "--socket=wayland",
+    "--socket=fallback-x11",
+    "--device=dri"
+  ],
+  "cleanup": [
+    "/include",
+    "/lib/pkgconfig",
+    "*.a",
+    "/share/doc",
+    "/share/gtk-doc"
+  ],
   "modules": [
     {
       "name": "girara",
       "buildsystem": "meson",
-      "config-opts": ["--default-library=static", "-Ddocs=disabled"],
-      "sources": [{"type": "git", "url": "https://github.com/pwmt/girara.git", "commit": "e120cc0c4f486af935f09a07420606925a6f9305"}]
+      "config-opts": [
+        "--default-library=static",
+        "-Ddocs=disabled"
+      ],
+      "sources": [
+        {
+          "type": "git",
+          "url": "https://github.com/pwmt/girara.git",
+          "commit": "e120cc0c4f486af935f09a07420606925a6f9305"
+        }
+      ]
     },
     {
       "name": "zatura",
       "buildsystem": "meson",
-      "config-opts": ["--default-library=static", "-Dseccomp=disabled", "-Dlandlock=disabled", "-Dsynctex=disabled", "-Dmanpages=disabled", "-Dconvert-icon=disabled", "-Dshell-completions=disabled", "-Dtests-x11=disabled", "-Dtests-wayland=disabled"],
-      "sources": [{"type": "dir", "path": "..", "skip": [".git", "build", "build-ci", "dist", "subprojects/girara"]}]
+      "config-opts": [
+        "--default-library=static",
+        "-Dseccomp=disabled",
+        "-Dlandlock=disabled",
+        "-Dsynctex=disabled",
+        "-Dmanpages=disabled",
+        "-Dconvert-icon=disabled",
+        "-Dshell-completions=disabled",
+        "-Dtests-x11=disabled",
+        "-Dtests-wayland=disabled"
+      ],
+      "sources": [
+        {
+          "type": "dir",
+          "path": "..",
+          "skip": [
+            ".git",
+            "build",
+            "build-ci",
+            "dist",
+            "subprojects/girara"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "openjpeg",
+      "buildsystem": "cmake-ninja",
+      "config-opts": [
+        "-DBUILD_CODEC=OFF",
+        "-DBUILD_SHARED_LIBS=ON",
+        "-DBUILD_STATIC_LIBS=OFF",
+        "-DBUILD_TESTING=OFF"
+      ],
+      "sources": [
+        {
+          "type": "archive",
+          "url": "https://github.com/uclouvain/openjpeg/archive/refs/tags/v2.5.4.tar.gz",
+          "sha256": "a695fbe19c0165f295a8531b1e4e855cd94d0875d2f88ec4b61080677e27188a"
+        }
+      ],
+      "post-install": [
+        "install -Dm644 LICENSE /app/share/licenses/zatura/openjpeg"
+      ]
+    },
+    {
+      "name": "poppler",
+      "buildsystem": "cmake-ninja",
+      "config-opts": [
+        "-DENABLE_QT5=OFF",
+        "-DENABLE_QT6=OFF",
+        "-DENABLE_CPP=OFF",
+        "-DENABLE_GLIB=ON",
+        "-DENABLE_UTILS=OFF",
+        "-DENABLE_BOOST=OFF",
+        "-DENABLE_LIBCURL=OFF",
+        "-DENABLE_NSS3=OFF",
+        "-DENABLE_GPGME=OFF",
+        "-DENABLE_LIBTIFF=OFF",
+        "-DENABLE_GOBJECT_INTROSPECTION=OFF",
+        "-DBUILD_GTK_TESTS=OFF",
+        "-DBUILD_QT5_TESTS=OFF",
+        "-DBUILD_QT6_TESTS=OFF",
+        "-DBUILD_CPP_TESTS=OFF",
+        "-DBUILD_MANUAL_TESTS=OFF"
+      ],
+      "sources": [
+        {
+          "type": "archive",
+          "url": "https://poppler.freedesktop.org/poppler-25.03.0.tar.xz",
+          "sha256": "97da4ff88517a6bbd729529f195f85c8d7a0c3bb4a3d57cb0c685cbb052fe837"
+        }
+      ],
+      "post-install": [
+        "install -Dm644 COPYING /app/share/licenses/zatura/poppler"
+      ]
+    },
+    {
+      "name": "pdf-poppler",
+      "buildsystem": "meson",
+      "sources": [
+        {
+          "type": "git",
+          "url": "https://github.com/pwmt/zathura-pdf-poppler.git",
+          "commit": "165f37248f235bb192d154b06094c52ca92f5b2d"
+        }
+      ],
+      "post-install": [
+        "install -Dm644 LICENSE /app/share/licenses/zatura/pdf-poppler",
+        "rm -f /app/share/applications/org.pwmt.zathura-pdf-poppler.desktop /app/share/metainfo/org.pwmt.zathura-pdf-poppler.metainfo.xml"
+      ]
     }
   ]
 }

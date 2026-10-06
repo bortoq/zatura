@@ -10,4 +10,5 @@ Sources from https://github.com/pwmt, version 2026.07.18.
 | ps | `dda8e707c8abef089c927a72a07cc2c45e799573` |
 
 Local MuPDF changes: direct FB2 ZIP member reading; optional v1/v2 reflow extensions with content bookmarks and mirrored page margins; FB2 XML and XPS MIME aliases; prefer zatura/epub.css with legacy fallback. Plugin desktop entries launch zatura.
-PDF support is disabled for MuPDF to retain the existing Poppler backend.
+The standard plugin build includes pinned Poppler for PDF; MuPDF PDF support
+is disabled only when Poppler is selected in the same build.

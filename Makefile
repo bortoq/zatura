@@ -39,6 +39,7 @@ deb arch:
 	$(PYTHON) tools/package-linux.py $@ --stage "$(NATIVE_STAGE)" --output "$(DISTDIR)"
 flatpak:
 	$(FLATPAK_BUILDER) --force-clean --repo="$(DISTDIR)/flatpak-repo" "$(BUILDDIR)/flatpak" packaging/io.github.bortoq.zatura.json
+	xvfb-run -a $(PYTHON) tools/check-viewer-pdf.py --flatpak-build "$(BUILDDIR)/flatpak"
 	flatpak build-bundle "$(DISTDIR)/flatpak-repo" "$(DISTDIR)/zatura-$(PACKAGE_VERSION)-x86_64.flatpak" io.github.bortoq.zatura --runtime-repo=https://flathub.org/repo/flathub.flatpakrepo
 	$(PYTHON) tools/check-package-size.py "$(DISTDIR)/zatura-$(PACKAGE_VERSION)-x86_64.flatpak" 15000000
 flatpak-native:

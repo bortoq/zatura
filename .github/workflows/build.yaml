@@ -8,6 +8,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Set reproducible package timestamp
+        run: echo "SOURCE_DATE_EPOCH=$(git show -s --format=%ct HEAD)" >> "$GITHUB_ENV"
       - name: Fetch pinned Girara sources
         run: |
           git clone https://github.com/pwmt/girara.git subprojects/girara
@@ -15,10 +17,30 @@ jobs:
       - name: Build container
         run: docker build -t zatura-native -f packaging/Dockerfile.native .
       - name: Build native binary and run regression tests
-        run: docker run --rm --user "$(id -u):$(id -g)" --env HOME=/tmp -v /etc/passwd:/etc/passwd:ro -v "$PWD:/src" zatura-native
+        run: docker run --rm --init --user "$(id -u):$(id -g)" --env HOME=/tmp --env SOURCE_DATE_EPOCH -v /etc/passwd:/etc/passwd:ro -v "$PWD:/src" zatura-native
+      - name: Verify seccomp and mandatory Landlock startup
+        run: docker run --rm --init --user "$(id -u):$(id -g)" --env HOME=/tmp --entrypoint /src/tools/test-native-sandbox.sh -v /etc/passwd:/etc/passwd:ro -v "$PWD:/src" zatura-native
       - name: Create dependency-based Debian package
-        run: docker run --rm --user "$(id -u):$(id -g)" --env HOME=/tmp --entrypoint python3 -v "$PWD:/src" zatura-native tools/package-linux.py deb
+        run: docker run --rm --init --user "$(id -u):$(id -g)" --env HOME=/tmp --env SOURCE_DATE_EPOCH --entrypoint python3 -v "$PWD:/src" zatura-native tools/package-linux.py deb
       - uses: actions/upload-artifact@v4
         with:
           name: zatura-native-debian
           path: dist/*.deb
+
+  engines-and-sandbox:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch pinned Girara sources
+        run: |
+          git clone https://github.com/pwmt/girara.git subprojects/girara
+          git -C subprojects/girara checkout e120cc0c4f486af935f09a07420606925a6f9305
+      - name: Build MuPDF and sandbox test environment
+        run: docker build -t zatura-engines -f packaging/Dockerfile.engines .
+      - name: Require PDF, reflow, anchors, history and sandbox integration tests
+        run: docker run --rm --init --user "$(id -u):$(id -g)" --env HOME=/tmp -v /etc/passwd:/etc/passwd:ro -v "$PWD:/src" zatura-engines
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: engine-and-sandbox-test-logs
+          path: build/engines/meson-logs/

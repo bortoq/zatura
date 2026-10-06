@@ -118,8 +118,8 @@ static bool session_is_wayland(void) {
 int landlock_drop_write(void) {
   const int abi = landlock_check_kernel();
   if (abi < 6) {
-    girara_warning("Landlock is unavailable or older than ABI 6 (Linux 6.12); continuing without it.");
-    return 1; /* unsupported, graceful fallback */
+    girara_warning("Landlock is unavailable or older than ABI 6 (Linux 6.12); strict sandbox cannot start.");
+    return 1; /* unsupported; the strict sandbox must refuse to start */
   }
 
   const __u64 fs = _LANDLOCK_ACCESS_FS_WRITE | LANDLOCK_ACCESS_FS_EXECUTE | LANDLOCK_ACCESS_FS_REFER |

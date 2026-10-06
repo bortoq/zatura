@@ -19,15 +19,6 @@
 static void test_create(void) {
   setup_logger();
 
-#ifdef GDK_WINDOWING_X11
-  GdkDisplay* display = gdk_display_get_default();
-
-  if (GDK_IS_X11_DISPLAY(display)) {
-    g_test_skip("not running under X11");
-    return;
-  }
-#endif
-
   zathura_t* zathura = zathura_create();
   g_assert_nonnull(zathura);
   g_assert_nonnull(g_getenv("G_TEST_SRCDIR"));
@@ -35,7 +26,11 @@ static void test_create(void) {
   g_assert_true(zathura_init(zathura));
 
 #ifdef WITH_LANDLOCK
-  landlock_drop_write();
+  if (landlock_drop_write() != 0) {
+    g_test_skip("Landlock ABI 6 is unavailable; strict startup refuses this kernel");
+    zathura_free(zathura);
+    return;
+  }
 #endif
 #ifdef WITH_SECCOMP
   g_assert_cmpint(seccomp_enable_strict_filter(zathura), ==, 0);

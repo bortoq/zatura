@@ -15,6 +15,7 @@ pkgbase = zatura-bin
 	depends = libxkbcommon
 	depends = libarchive
 	depends = cairo
+	depends = poppler-glib
 	provides = zatura
 	conflicts = zatura
 	noextract = zatura.pkg.tar.zst

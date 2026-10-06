@@ -98,7 +98,7 @@ static zathura_t* init_zathura(const char* config_dir, const char* data_dir, con
 #ifdef WITH_SANDBOX
   girara_debug("Strict sandbox preventing write and network access.");
 #ifdef WITH_LANDLOCK
-  if (landlock_drop_write() < 0) {
+  if (landlock_drop_write() != 0) {
     girara_error("Failed to apply landlock write restriction.");
     zathura_free(zathura);
     return NULL;
@@ -141,6 +141,7 @@ typedef struct {
   int page_number;
   char** argv;
   zathura_t* zathura;
+  bool startup_failed;
 } zathura_app_ctx_t;
 
 static void cb_app_startup(GApplication* app, gpointer data) {
@@ -150,6 +151,7 @@ static void cb_app_startup(GApplication* app, gpointer data) {
       init_zathura(ctx->config_dir, ctx->data_dir, ctx->cache_dir, ctx->plugin_path, ctx->argv, ctx->synctex_editor);
   if (!ctx->zathura) {
     girara_error("Could not initialize zatura.");
+    ctx->startup_failed = true;
     g_application_quit(app);
     return;
   }
@@ -461,5 +463,6 @@ GIRARA_VISIBLE int main(int argc, char* argv[]) {
     run_argc     = 2;
   }
 
-  return g_application_run(G_APPLICATION(app), run_argc, run_argv);
+  const int status = g_application_run(G_APPLICATION(app), run_argc, run_argv);
+  return ctx.startup_failed ? 1 : status;
 }

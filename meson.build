@@ -1,6 +1,6 @@
 project('zatura', 'c',
   version: '2026.10.03.2',
-  meson_version: '>=1.5',
+  meson_version: '>=1.6',
   default_options: ['c_std=c23', 'warning_level=3'],
 )
 
@@ -189,7 +189,7 @@ if seccomp.found() or landlock or target_machine.system() == 'openbsd'
   if seccomp.found()
     sandbox_defines += '-DWITH_SECCOMP'
     sandbox_dependencies += seccomp
-    sandbox_sources += files('zatura/seccomp-filters.c')
+    sandbox_sources += files('zatura/seccomp-filters.c', 'zatura/seccomp-open.c')
   endif
   if landlock
     sandbox_defines += '-DWITH_LANDLOCK'

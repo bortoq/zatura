@@ -8,6 +8,7 @@ Exec=zatura %U
 Icon=io.github.bortoq.zatura
 Terminal=false
 Categories=Office;Viewer;
+MimeType=application/pdf;
 # Translators: Search terms to find this application. Do not translate or
 # localize the semicolons. The list must also end with a semicolon.
 Keywords=PDF;EPUB;FB2;PS;PostScript;DjVU;comic;document;presentation;viewer;
