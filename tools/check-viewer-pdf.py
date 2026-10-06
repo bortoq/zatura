@@ -9,7 +9,7 @@ import os
 from pathlib import Path
 import subprocess
 import tempfile
-import threading
+import signal
 import time
 
 p = argparse.ArgumentParser(description=__doc__)
@@ -49,17 +49,24 @@ with tempfile.TemporaryDirectory(prefix='zatura-pdf-smoke-') as work:
     with log.open('w') as stream:
         # Keep the sandbox's stdio on a pipe. The parent owns the log file;
         # the parser never inherits a writable filesystem descriptor.
-        viewer = subprocess.Popen(command, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+        viewer = subprocess.Popen(command, env=env, stdout=subprocess.PIPE,
+                                  stderr=subprocess.STDOUT, start_new_session=True)
+        os.set_blocking(viewer.stdout.fileno(), False)
         def collect_output():
-            for line in viewer.stdout:
-                stream.write(line)
-                stream.flush()
-        collector = threading.Thread(target=collect_output, daemon=True)
-        collector.start()
+            while True:
+                try:
+                    chunk = os.read(viewer.stdout.fileno(), 65536)
+                except BlockingIOError:
+                    break
+                if not chunk:
+                    break
+                stream.write(chunk.decode('utf-8', errors='replace'))
+            stream.flush()
         rendered = False
         try:
             deadline = time.monotonic() + 20
             while time.monotonic() < deadline:
+                collect_output()
                 output = log.read_text(errors='replace')
                 if 'Emitting signal for page 1' in output or 'Rendered page 1 synchronously.' in output:
                     rendered = True
@@ -68,14 +75,20 @@ with tempfile.TemporaryDirectory(prefix='zatura-pdf-smoke-') as work:
                     break
                 time.sleep(0.1)
         finally:
-            if viewer.poll() is None:
-                viewer.terminate()
+            # AppImage/Flatpak wrappers can exit before their viewer child.
+            # Stop the entire test process group; never block on an inherited pipe.
+            for sig in (signal.SIGTERM, signal.SIGKILL):
                 try:
-                    viewer.wait(timeout=3)
-                except subprocess.TimeoutExpired:
-                    viewer.kill()
-                    viewer.wait()
-            collector.join(timeout=3)
+                    os.killpg(viewer.pid, sig)
+                except ProcessLookupError:
+                    pass
+                if sig == signal.SIGTERM:
+                    try:
+                        viewer.wait(timeout=3)
+                    except subprocess.TimeoutExpired:
+                        pass
+            viewer.wait(timeout=3)
+            collect_output()
             viewer.stdout.close()
     if not rendered:
         raise SystemExit('Installed viewer failed PDF rendering:\n' + log.read_text(errors='replace'))
