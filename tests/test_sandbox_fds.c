@@ -5,9 +5,13 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
+#include <signal.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/mman.h>
+#include <sys/ioctl.h>
+#include <linux/fs.h>
+#include <termios.h>
 #include <sys/eventfd.h>
 #include <sys/stat.h>
 #include <sys/syscall.h>
@@ -36,12 +40,12 @@ static int child_check(int inherited, int stdio, const char* path) {
   const int allowed[] = {SCMP_SYS(read), SCMP_SYS(write), SCMP_SYS(writev), SCMP_SYS(close),
                          SCMP_SYS(fcntl), SCMP_SYS(fstatfs), SCMP_SYS(eventfd2), SCMP_SYS(fstat), SCMP_SYS(newfstatat), SCMP_SYS(stat),
                          SCMP_SYS(getdents64), SCMP_SYS(brk), SCMP_SYS(mmap), SCMP_SYS(munmap),
-                         SCMP_SYS(futex), SCMP_SYS(lseek), SCMP_SYS(ioctl), SCMP_SYS(memfd_create),
+                         SCMP_SYS(futex), SCMP_SYS(lseek), SCMP_SYS(memfd_create),
                          SCMP_SYS(ftruncate), SCMP_SYS(fallocate), SCMP_SYS(exit_group)};
   for (unsigned int i = 0; i < sizeof(allowed) / sizeof(allowed[0]); ++i) {
     if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, allowed[i], 0) < 0) return 12;
   }
-  if (!ctx || seccomp_restrict_open(ctx) < 0 || seccomp_restrict_metadata(ctx) < 0 || seccomp_load(ctx) < 0) return 12;
+  if (!ctx || seccomp_restrict_open(ctx) < 0 || seccomp_restrict_metadata(ctx) < 0 || seccomp_restrict_ioctl(ctx) < 0 || seccomp_load(ctx) < 0) return 12;
   /* Filtering new opens alone is insufficient: detect the writer that existed
    * before enforcement and abort startup rather than parsing a document. */
   if (sandbox_check_fds(&found) == 0 || errno != EACCES || found != bad) return 13;
@@ -61,11 +65,44 @@ static int child_check(int inherited, int stdio, const char* path) {
   if (syscall(SYS_mkdir, "/tmp/zatura-sandbox-must-not-create", 0700) != -1 || errno != EACCES) return 21;
   if (syscall(SYS_mkdirat, AT_FDCWD, "/tmp/zatura-sandbox-must-not-create", 0700) != -1 || errno != EACCES) return 22;
   if (ftruncate(memory, 4096) != 0 || write(memory, "SHM", 3) != 3) return 23;
+  /* Reuse stdout/stderr for read-only files after installing production rules. */
+  for (int target = STDOUT_FILENO; target <= STDERR_FILENO; ++target) {
+    struct termios terminal;
+    struct winsize window;
+    if (ioctl(target, TCGETS, &terminal) != 0 && errno != ENOTTY) return 28;
+    if (ioctl(target, TIOCGWINSZ, &window) != 0 && errno != ENOTTY) return 29;
+    if (close(target) != 0 || open(path, O_RDONLY) != target) return 24;
+    int flags = FS_NODUMP_FL;
+    const unsigned long denied[] = {FS_IOC_SETFLAGS, FS_IOC_SETVERSION, TIOCSTI, TIOCSWINSZ, TCSETS};
+    for (unsigned int i = 0; i < sizeof(denied) / sizeof(denied[0]); ++i) {
+      errno = 0;
+      if (ioctl(target, denied[i], &flags) != -1 || errno != ENOSYS) return 25;
+    }
+    struct termios term;
+    struct winsize size;
+    if (ioctl(target, TCGETS, &term) != -1 || errno != ENOTTY) return 26;
+    if (ioctl(target, TIOCGWINSZ, &size) != -1 || errno != ENOTTY) return 27;
+  }
   close(event);
   close(memory);
   close(read_fd);
   seccomp_release(ctx);
   return 0;
+}
+
+/* Match the viewer's fatal default, independently of the errno-based fixture. */
+static void check_fatal_ioctl(const char* path, int target) {
+  scmp_filter_ctx ctx = seccomp_init(SCMP_ACT_KILL_PROCESS);
+  CHECK(ctx != NULL);
+  CHECK(seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(close), 0) == 0);
+  CHECK(seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(exit_group), 0) == 0);
+  CHECK(seccomp_restrict_open(ctx) == 0);
+  CHECK(seccomp_restrict_ioctl(ctx) == 0);
+  CHECK(seccomp_load(ctx) == 0);
+  if (close(target) != 0 || open(path, O_RDONLY) != target) _exit(1);
+  int flags = FS_NODUMP_FL;
+  ioctl(target, FS_IOC_SETFLAGS, &flags);
+  _exit(1); /* Only SIGSYS is accepted by the parent. */
 }
 
 int main(void) {
@@ -74,6 +111,8 @@ int main(void) {
   CHECK(fd > STDERR_FILENO);
   const char content[] = "preserve inherited file";
   CHECK(write(fd, content, sizeof(content)) == sizeof(content));
+  int original_flags = 0;
+  const int have_flags = ioctl(fd, FS_IOC_GETFLAGS, &original_flags) == 0;
   for (int stdio = -1; stdio <= STDERR_FILENO; ++stdio) {
     pid_t child = fork();
     CHECK(child >= 0);
@@ -87,8 +126,24 @@ int main(void) {
     char actual[sizeof(content) + 1];
     CHECK(pread(fd, actual, sizeof(actual), 0) == sizeof(content));
     CHECK(memcmp(actual, content, sizeof(content)) == 0);
+    if (have_flags) {
+      int actual_flags = 0;
+      CHECK(ioctl(fd, FS_IOC_GETFLAGS, &actual_flags) == 0 && actual_flags == original_flags);
+    }
     struct stat st;
     CHECK(fstat(fd, &st) == 0 && (st.st_mode & 0777) == 0600);
+  }
+  for (int target = STDOUT_FILENO; target <= STDERR_FILENO; ++target) {
+    pid_t child = fork();
+    CHECK(child >= 0);
+    if (child == 0) check_fatal_ioctl(path, target);
+    int status;
+    CHECK(waitpid(child, &status, 0) == child);
+    CHECK(WIFSIGNALED(status) && WTERMSIG(status) == SIGSYS);
+    if (have_flags) {
+      int actual_flags = 0;
+      CHECK(ioctl(fd, FS_IOC_GETFLAGS, &actual_flags) == 0 && actual_flags == original_flags);
+    }
   }
   CHECK(close(fd) == 0);
   CHECK(unlink(path) == 0);

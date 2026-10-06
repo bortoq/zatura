@@ -22,7 +22,7 @@ Both Landlock and seccomp must synchronize their own policies independently.
 See the [kernel Landlock documentation](https://docs.kernel.org/userspace-api/landlock.html).
 
 An explicit seccomp-only build (`-Dlandlock=disabled`) can run on older kernels.
-It denies writable opens and filesystem metadata changes, but it does not
+It denies writable opens and the metadata operations listed below, but it does not
 provide Landlock's domain restrictions. X11 process isolation remains incomplete.
 Landlock builds also require seccomp for metadata syscall restrictions. An
 explicit Landlock-without-seccomp configuration is rejected during setup; auto
@@ -48,6 +48,13 @@ Failure to inspect descriptors also aborts startup. `/proc` must be mounted.
 
 Seccomp forbids new writable `open`/`openat`, `mkdir`/`mkdirat` and
 `fchmod`/`fchmodat` (which can change permissions even on read-only descriptors).
+`ioctl` permits only `TCGETS` and `TIOCGWINSZ` on stdout/stderr, which read
+terminal attributes/window size. Other requests receive the filter default
+denial (process termination in the viewer), including filesystem flag/version
+changes and terminal mutations. These restrictions
+apply even when fd 1/2 are closed and reused for a read-only file.
+This enumerated policy is not a formal proof against every possible metadata
+change through other kernel or IPC interfaces.
 `write`, `writev`, `ftruncate` and `fallocate` remain available for IPC and
 anonymous display buffers; their safety depends on the descriptor contract,
 not on pretending that Landlock revokes rights on previously opened FDs.
@@ -59,7 +66,9 @@ single-process sandbox, not a separate parser process.
 - `sandbox-fds`: real inherited writer FD plus stdin/stdout/stderr redirection;
   checks `write`, `writev`, `pwrite`, `ftruncate` and `fallocate`, verifies unchanged
   bytes and permissions, checks surviving writer rejection after seccomp, and
-  retains usable memfd/eventfd display buffers.
+  retains usable memfd/eventfd display buffers. Reuses fd 1/2 after enforcement
+  and requires filesystem/terminal mutation ioctls to fail; verifies unchanged
+  inode flags when the filesystem supports reading them.
 - `landlock-abi-policy`: deterministic syscall-wrapped tests of unsupported ABIs,
   specifically 6 and 7, plus required TSYNC flags on ABI 8 and later. These are
   boundary tests, not proof of kernel runtime enforcement.

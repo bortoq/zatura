@@ -14,8 +14,6 @@
 #include <linux/sched.h> /* for clone filter */
 #include <unistd.h>      /* for fstat */
 #include <sys/mman.h>    /* for mmap/mprotect arguments */
-#include <sys/ioctl.h>   /* for TIOCSTI */
-#include <termios.h>
 
 #include <gtk/gtk.h>
 #ifdef GDK_WINDOWING_X11
@@ -107,7 +105,7 @@ int seccomp_enable_strict_filter(zathura_t* zathura) {
   ALLOW_RULE(inotify_add_watch); /* required by filemonitor feature */
   ALLOW_RULE(inotify_init1);     /* used by filemonitor, inotify_init (glib<2.9) */
   ALLOW_RULE(inotify_rm_watch);  /* used by filemonitor */
-  /* ALLOW_RULE (ioctl); specified below  */
+  /* Terminal ioctl requests are restricted by the shared helper below. */
   ALLOW_RULE(lseek);
 #if defined(__NR_lsm_get_self_attr) && defined(__SNR_lsm_get_self_attr)
   ALLOW_RULE(lsm_get_self_attr);
@@ -250,12 +248,6 @@ int seccomp_enable_strict_filter(zathura_t* zathura) {
               F_SETFD | \
               FD_CLOEXEC )); */
 
-  /* Special requirements for ioctl, allowed on stdout/stderr */
-  /* deny TIOCSTI to prevent keystroke injection into the controlling TTY */
-  ADD_RULE("errno", SCMP_ACT_ERRNO(EPERM), ioctl, 1, SCMP_CMP(1, SCMP_CMP_EQ, (scmp_datum_t)TIOCSTI));
-  ADD_RULE("allow", SCMP_ACT_ALLOW, ioctl, 1, SCMP_CMP(0, SCMP_CMP_EQ, 1));
-  ADD_RULE("allow", SCMP_ACT_ALLOW, ioctl, 1, SCMP_CMP(0, SCMP_CMP_EQ, 2));
-
   /* special restrictions for prctl, only allow PR_SET_NAME/PR_SET_PDEATHSIG */
   ADD_RULE("allow", SCMP_ACT_ALLOW, prctl, 1, SCMP_CMP(0, SCMP_CMP_EQ, PR_SET_NAME));
   ADD_RULE("allow", SCMP_ACT_ALLOW, prctl, 1, SCMP_CMP(0, SCMP_CMP_EQ, PR_SET_PDEATHSIG));
@@ -270,8 +262,8 @@ int seccomp_enable_strict_filter(zathura_t* zathura) {
    *         SCMP_CMP(2, SCMP_CMP_MASKED_EQ, PROT_READ | PROT_WRITE | PROT_NONE, PROT_READ | PROT_WRITE | PROT_NONE));
    */
 
-  if (seccomp_restrict_open(ctx) < 0 || seccomp_restrict_metadata(ctx) < 0) {
-    girara_error("Failed to restrict open/openat flags.");
+  if (seccomp_restrict_open(ctx) < 0 || seccomp_restrict_metadata(ctx) < 0 || seccomp_restrict_ioctl(ctx) < 0) {
+    girara_error("Failed to install filesystem/terminal restrictions.");
     goto out;
   }
 
